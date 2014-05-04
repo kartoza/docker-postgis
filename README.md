@@ -2,6 +2,8 @@
 
 A simple docker container that runs PostGIS
 
+**Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
+you should configure the host for it in the provided 71-apt-cacher-ng file.
 
 ## Build
 
