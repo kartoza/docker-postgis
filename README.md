@@ -7,10 +7,24 @@ you should configure the host for it in the provided 71-apt-cacher-ng file.
 
 ## Build
 
-To build the image do:
+To build the image without apt-cacher do:
 
 ```
-docker build -t kartoza/postgis git://github.com/timlinux/docker-postgis
+docker build -t kartoza/postgis:2.2 git://github.com/timlinux/docker-postgis
+```
+
+To build with apt-cache do you need to clone this repo locally first and 
+modify the contents of 71-apt-cacher-ng to match your cacher host. Then 
+build using a local url instead of directly from github.
+
+```
+git clone git://github.com/timlinux/docker-postgis
+```
+
+Now edit ``71-apt-cacher-ng`` then do:
+
+```
+docker build -t kartoza/postgis:2.2 .
 ```
 
 Run
