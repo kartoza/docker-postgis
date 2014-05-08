@@ -12,8 +12,13 @@ if [ ! -d $DATADIR ]; then
   mkdir -p $DATADIR
 fi
 
-# Note that $USERNAME and $PASS below are passed via docker run e.g.
-#docker run -cidfile=/home/timlinux/postgis-current-container.id -name=postgis -e USERNAME=qgis -e PASS=qgis -d -v /var/docker-data/postgres-dat:/var/lib/postgresql -t qgis/postgis:6 /start.sh
+# Note that $USERNAME and $PASS below are optional paramters that can be passed
+# via docker run e.g.
+#docker run --name="postgis" -e USERNAME=qgis -e PASS=qgis -d -v 
+#/var/docker-data/postgres-dat:/var/lib/postgresql -t qgis/postgis:6
+
+# If you dont specify a user/password in docker run, we will generate one
+# here and create a user called 'docker' to go with it.
 
 
 # test if DATADIR has content
@@ -21,8 +26,22 @@ if [ ! "$(ls -A $DATADIR)" ]; then
   echo "Initializing Postgres Database at $DATADIR"
   chown -R postgres $DATADIR
   su postgres sh -c "$INITDB $DATADIR"
-  su postgres sh -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER PASSWORD '$PASS';"
 fi
+
+# Make sure we have a user set up
+if [ -z "$USERNAME" ]; then
+  USERNAME=postgis
+fi  
+if [ -z "$PASS" ]; then
+  PASS=postgis
+  #PASS=`pwgen -c -n -1 12`
+fi  
+# redirect user/pass into a file so we can echo it into
+# docker logs when container starts
+# so that we can tell user their password
+echo "postgresql user: $USERNAME" > /PGPASSWORD.txt
+echo "postgresql password: $PASS" >> /PGPASSWORD.txt
+su postgres sh -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER ENCRYPTED PASSWORD '$PASS';"
 
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 

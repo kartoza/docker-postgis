@@ -15,20 +15,24 @@ ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
 RUN apt-get -y update
 # socat can be used to proxy an external port and make it look like it is local
-RUN apt-get -y install ca-certificates socat openssh-server supervisor
+RUN apt-get -y install ca-certificates socat openssh-server supervisor rpl pwgen
 RUN mkdir /var/run/sshd
 ADD sshd.conf /etc/supervisor/conf.d/sshd.conf
 
-
-RUN echo 'root:postgis' | chpasswd
+# Ubuntu 14.04 by default only allows non pwd based root login
+# We disable that but also create an .ssh dir so you can copy
+# up your key. NOTE: This is not a particularly robust setup 
+# security wise and we recommend to NOT expose ssh as a public
+# service.
+RUN rpl "PermitRootLogin without-password" "PermitRootLogin yes" /etc/ssh/sshd_config
+RUN mkdir /root/.ssh
+RUN chmod o-rwx /root/.ssh
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
 RUN apt-get install -y postgresql-9.3-postgis-2.1
 RUN echo "host    all             all             0.0.0.0/0               md5" >> /etc/postgresql/9.3/main/pg_hba.conf
-# Note: I dont think this is relevant anymore as start.sh sets up a user
-# Please test and verify before removing though
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 # Listen on all ip addresses
 RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.3/main/postgresql.conf
@@ -51,4 +55,8 @@ RUN /setup.sh
 ADD start-postgis.sh /start-postgis.sh
 RUN chmod 0755 /start-postgis.sh
 
-CMD supervisor -n
+# Called on first run of docker - will run supervisor
+ADD start.sh /start.sh
+RUN chmod 0755 /start.sh
+
+CMD /start.sh
