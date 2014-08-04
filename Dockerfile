@@ -20,11 +20,7 @@ RUN apt-get -y install ca-certificates rpl pwgen
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
 RUN apt-get install -y postgresql-9.3-postgis-2.1
-RUN echo "host    all             all             172.17.0.0/16               md5" >> /etc/postgresql/9.3/main/pg_hba.conf
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
-# Listen on all ip addresses
-RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.3/main/postgresql.conf
-RUN echo "port = 5432" >> /etc/postgresql/9.3/main/postgresql.conf
 
 # Start with supervisor
 ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
