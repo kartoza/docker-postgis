@@ -1,1 +1,1 @@
-docker.io build -t kartoza/postgis .
+docker build -t kartoza/postgis .
