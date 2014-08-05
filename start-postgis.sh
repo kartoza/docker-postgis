@@ -82,8 +82,11 @@ else
     psql template_postgis -c 'GRANT ALL ON geography_columns TO PUBLIC;'
     echo "Granting on spatial ref sys"
     psql template_postgis -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'
-    # This should show up in docker logs afterwards
+    # Create a default db called 'gis' that you can use to get up and running quickly
+    # It will be owned by the docker db user
+    createdb -O docker -T template_postgis gis
 fi
+# This should show up in docker logs afterwards
 psql -l
 
 wait $!
