@@ -25,9 +25,8 @@ RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l dock
 # Start with supervisor
 ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
 
-# Open port 5432 and 22 so linked containers can see them
+# Open port 5432 so linked containers can see them
 EXPOSE 5432
-EXPOSE 22
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
@@ -39,4 +38,5 @@ RUN /setup.sh
 ADD start-postgis.sh /start-postgis.sh
 RUN chmod 0755 /start-postgis.sh
 
+USER postgres
 CMD /start-postgis.sh
