@@ -76,6 +76,7 @@ else
     # Needed when importing old dumps using e.g ndims for constraints
     echo "Loading legacy sql"
     psql template_postgis -f $SQLDIR/legacy_minimal.sql
+    psql template_postgis -f $SQLDIR/legacy_gist.sql
     echo "Granting on geometry columns"
     psql template_postgis -c 'GRANT ALL ON geometry_columns TO PUBLIC;'
     echo "Granting on geography columns"
