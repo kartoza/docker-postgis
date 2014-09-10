@@ -18,20 +18,33 @@ environment (though probably not for heavy load databases).
 **Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
 you should configure the host for it in the provided 71-apt-cacher-ng file.
 
-## Build
+## Getting the image
 
-To build the image without apt-cacher do:
+There are various ways to get the image onto your system:
+
+
+The preferred way (but using most bandwidth for the initial image) is to
+get our docker trusted build like this:
+
+
+```
+docker pull kartoza/postgis
+```
+
+To build the image yourself without apt-cacher (also consumes more bandwidth
+since deb packages need to be refetched each time you build) do:
 
 ```
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
 ```
 
-To build with apt-cache do you need to clone this repo locally first and 
-modify the contents of 71-apt-cacher-ng to match your cacher host. Then 
-build using a local url instead of directly from github.
+To build with apt-cache (and minimised download requirements) do you need to
+clone this repo locally first and modify the contents of 71-apt-cacher-ng to
+match your cacher host. Then build using a local url instead of directly from
+github.
 
 ```
-git clone git://github.com/timlinux/docker-postgis
+git clone git://github.com/kartoza/docker-postgis
 ```
 
 Now edit ``71-apt-cacher-ng`` then do:
@@ -50,8 +63,6 @@ sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
 ## Connect via psql
-
-To log in to your container do:
 
 Connect with psql (make sure you first install postgresql client tools on your
 host / client):
