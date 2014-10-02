@@ -2,6 +2,8 @@
 
 # This script will run as the postgres user due to the Dockerfile USER directive
 
+set -x 
+
 DATADIR="/var/lib/postgresql/9.3/main"
 CONF="/etc/postgresql/9.3/main/postgresql.conf"
 POSTGRES="/usr/lib/postgresql/9.3/bin/postgres"
@@ -35,18 +37,17 @@ fi
 
 # Make sure we have a user set up
 if [ -z "$USERNAME" ]; then
-  USERNAME=postgis
+  USERNAME=docker
 fi  
 if [ -z "$PASS" ]; then
-  PASS=postgis
-  #PASS=`pwgen -c -n -1 12`
+  PASS=docker
 fi  
 # redirect user/pass into a file so we can echo it into
 # docker logs when container starts
 # so that we can tell user their password
 echo "postgresql user: $USERNAME" > /tmp/PGPASSWORD.txt
 echo "postgresql password: $PASS" >> /tmp/PGPASSWORD.txt
-$POSTGRES --single -D $DATADIR -c config_file=$CONF" <<< "CREATE USER $USERNAME WITH SUPERUSER ENCRYPTED PASSWORD '$PASS';
+$POSTGRES --single -D $DATADIR -c config_file=$CONF <<< "CREATE USER $USERNAME WITH SUPERUSER ENCRYPTED PASSWORD '$PASS';"
 
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
