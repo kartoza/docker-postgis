@@ -62,6 +62,38 @@ To create a running container do:
 sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+You can also use the following environment variables to pass a 
+user name and password. 
+
+* -e USERNAME=<PGUSER> 
+* -e PASS=<PGPASSWORD>
+
+These will be used to create a new superuser with
+your preferred credentials. If these are not specified then the postgresql 
+user is set to 'docker' with password 'docker'.
+
+## Convenience run script
+
+For convenience we have provided a bash script for running this container
+that lets you specify a volume mount point and a username / password 
+for the new instance superuser. It takes these options:
+
+```
+OPTIONS:
+   -h      Show this message
+   -n      Container name
+   -v      Volume to mount the Postgres cluster into
+   -u      Postgres user name (defaults to 'docker')
+   -p      Postgres password  (defaults to 'docker')
+```
+
+Example usage:
+
+```
+./run-postgis-docker.sh -v /tmp/foo/ -n postgis -u foo -p bar
+
+```
+
 ## Connect via psql
 
 Connect with psql (make sure you first install postgresql client tools on your
