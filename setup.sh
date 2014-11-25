@@ -5,12 +5,11 @@ CONF="/etc/postgresql/9.3/main/postgresql.conf"
 
 # /etc/ssl/private can't be accessed from within container for some reason
 # (@andrewgodwin says it's something AUFS related)  - taken from https://github.com/orchardup/docker-postgresql/blob/master/Dockerfile
-mkdir -p /etc/ssl/private-copy
-mv /etc/ssl/private/* /etc/ssl/private-copy/
-rm -r /etc/ssl/private
-mv /etc/ssl/private-copy /etc/ssl/private
-chmod -R 0700 /etc/ssl/private
-chown -R postgres /etc/ssl/private
+cp -r /etc/ssl /tmp/ssl-copy/
+chmod -R 0700 /etc/ssl
+chown -R postgres /etc/ssl
+rm -r /etc/ssl
+mv /tmp/ssl-copy /etc/ssl
 
 # Restrict subnet to docker private network
 echo "host    all             all             172.17.0.0/16               md5" >> /etc/postgresql/9.3/main/pg_hba.conf
