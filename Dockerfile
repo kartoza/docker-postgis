@@ -38,5 +38,7 @@ RUN /setup.sh
 ADD start-postgis.sh /start-postgis.sh
 RUN chmod 0755 /start-postgis.sh
 
-USER postgres
-CMD /start-postgis.sh
+ADD perms_wrapper.sh /perms_wrapper.sh
+RUN chmod 0755 /perms_wrapper.sh
+
+CMD /perms_wrapper.sh
