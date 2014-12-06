@@ -101,5 +101,7 @@ fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
 
-wait $!
-echo "Postgres process terminated"
+PID=`cat /var/run/postgresql/9.3-main.pid`
+kill -9 ${PID}
+echo "Postgres initialisation process completed .... restarting in foreground"
+su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF"
