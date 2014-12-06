@@ -20,7 +20,6 @@ RUN apt-get -y install ca-certificates rpl pwgen
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
 RUN apt-get install -y postgresql-9.3-postgis-2.1
-RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
 ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
@@ -38,7 +37,4 @@ RUN /setup.sh
 ADD start-postgis.sh /start-postgis.sh
 RUN chmod 0755 /start-postgis.sh
 
-ADD perms_wrapper.sh /perms_wrapper.sh
-RUN chmod 0755 /perms_wrapper.sh
-
-CMD /perms_wrapper.sh
+CMD /start-postgis.sh
