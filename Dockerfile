@@ -1,6 +1,6 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
 FROM ubuntu:trusty
-MAINTAINER Tim Sutton<tim@linfiniti.com>
+MAINTAINER Tim Sutton<tim@kartoza.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
@@ -38,5 +38,7 @@ RUN /setup.sh
 ADD start-postgis.sh /start-postgis.sh
 RUN chmod 0755 /start-postgis.sh
 
-USER postgres
-CMD /start-postgis.sh
+ADD perms_wrapper.sh /perms_wrapper.sh
+RUN chmod 0755 /perms_wrapper.sh
+
+CMD /perms_wrapper.sh
