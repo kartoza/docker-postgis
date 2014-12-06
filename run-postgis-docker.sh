@@ -1,43 +1,83 @@
 #!/bin/bash
 # Commit and redeploy the user map container
 
-# Note this script hosts the postgis cluster on the host filesystem
-# If you want to use the container with the cluster embedded
-# In the container, run it like this:
+usage()
+{
+cat << EOF
+usage: $0 options
+
+This script runs a new docker postgis instance for you.
+
+OPTIONS:
+   -h      Show this message
+   -n      Container name
+   -v      Volume to mount the Postgres cluster into
+   -u      Postgres user name (defaults to 'docker')
+   -p      Postgres password  (defaults to 'docker')
+EOF
+}
+
+while getopts ":h:n:v:u:p:" OPTION
+do
+     case $OPTION in
+         n)
+             CONTAINER_NAME=${OPTARG}
+             ;;
+         v)
+             VOLUME=${OPTARG}
+             ;;
+         u)
+             PGUSER=${OPTARG}
+             ;;
+         p)
+             PGPASSWORD=${OPTARG}
+             ;;
+         *)
+             usage
+             exit 1
+             ;;
+     esac
+done
 
 
-#
-if [ $# -ne 1 ]; then
-    echo "Deploy the postgis container."
-    echo "Usage:"
-    echo "$0 <version>"
-    echo "e.g.:"
-    echo "$0 2.1"
-    echo "Will run the container using tag version 2.1"
-    echo "Once it is running see the commit-and-deploy.sh script if you"
-    echo "wish to save new snapshots."
-    exit 1
+if [[ -z $VOLUME ]] || [[ -z $CONTAINER_NAME ]] || [[ -z $PGUSER ]] || [[ -z $PGPASSWORD ]] 
+then
+     usage
+     exit 1
 fi
-VERSION=$1
-HOST_DATA_DIR=/var/docker-data/postgres-dat
-PGUSER=qgis
-PGPASS=qgis
 
-IDFILE=/home/timlinux/postgis-current-container.id
+if [[ ! -z $VOLUME ]]
+then
+    VOLUME_OPTION="-v ${VOLUME}:/var/lib/postgresql"
+else
+    VOLUME_OPTION=""
+fi
 
 if [ ! -d $HOST_DATA_DIR ]
 then
     mkdir $HOST_DATA_DIR
 fi
-CMD="docker run -cidfile="$IDFILE" -name="postgis" -e USERNAME=$PGUSER -e PASS=$PGPASS -d -v $HOST_DATA_DIR:/var/lib/postgresql -t qgis/postgis:$VERSION /start.sh"
-echo 'Running:'
+chmod a+w $HOST_DATA_DIR
+
+docker kill ${CONTAINER_NAME}
+docker rm ${CONTAINER_NAME}
+
+CMD="docker run --name="${CONTAINER_NAME}" \
+        --hostname="${CONTAINER_NAME}" \
+        --restart=always \
+	-e USERNAME=${PGUSER} \
+	-e PASS=${PGPASSWORD} \
+	-d -t \
+        ${VOLUME_OPTION} \
+	kartoza/postgis /start-postgis.sh"
+
+echo 'Running\n'
 echo $CMD
 eval $CMD
-NEWID=`cat $IDFILE`
-echo "Postgis has been deployed as $NEWID"
-docker ps -a | grep $NEWID
-echo "If there was no pre-existing database, you can access this using"
-IPADDRESS=`docker inspect postgis | grep IPAddress | grep -o '[0-9\.]*'`
+
+docker ps | grep ${CONTAINER_NAME}
+
+echo "Connect using:"
 echo "psql -l -p 5432 -h $IPADDRESS -U $PGUSER"
 echo "and password $PGPASS"
 echo
