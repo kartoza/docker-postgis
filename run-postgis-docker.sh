@@ -53,11 +53,11 @@ else
     VOLUME_OPTION=""
 fi
 
-if [ ! -d $HOST_DATA_DIR ]
+if [ ! -d $VOLUME ]
 then
-    mkdir $HOST_DATA_DIR
+    mkdir $VOLUME
 fi
-chmod a+w $HOST_DATA_DIR
+chmod a+w $VOLUME
 
 docker kill ${CONTAINER_NAME}
 docker rm ${CONTAINER_NAME}

@@ -96,7 +96,7 @@ else
     su - postgres -c "psql template_postgis -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
-    su - postgres -c "createdb -O docker -T template_postgis gis"
+    su - postgres -c "createdb -O $USERNAME -T template_postgis gis"
 fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
