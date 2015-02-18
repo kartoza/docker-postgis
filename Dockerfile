@@ -1,5 +1,5 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM ubuntu:trusty
+FROM  resin/rpi-raspbian
 MAINTAINER Tim Sutton<tim@linfiniti.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
@@ -12,7 +12,7 @@ RUN  dpkg-divert --local --rename --add /sbin/initctl
 # Or comment this line out if you do not with to use caching
 ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
-RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
+#RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
 RUN apt-get -y update
 RUN apt-get -y install ca-certificates rpl pwgen
 
