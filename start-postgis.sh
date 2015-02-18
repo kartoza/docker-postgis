@@ -2,11 +2,11 @@
 
 # This script will run as the postgres user due to the Dockerfile USER directive
 
-DATADIR="/var/lib/postgresql/9.3/main"
-CONF="/etc/postgresql/9.3/main/postgresql.conf"
-POSTGRES="/usr/lib/postgresql/9.3/bin/postgres"
-INITDB="/usr/lib/postgresql/9.3/bin/initdb"
-SQLDIR="/usr/share/postgresql/9.3/contrib/postgis-2.1/"
+DATADIR="/var/lib/postgresql/9.4/main"
+CONF="/etc/postgresql/9.4/main/postgresql.conf"
+POSTGRES="/usr/lib/postgresql/9.4/bin/postgres"
+INITDB="/usr/lib/postgresql/9.4/bin/initdb"
+SQLDIR="/usr/share/postgresql/9.4/contrib/postgis-2.1/"
 
 # test if DATADIR is existent
 if [ ! -d $DATADIR ]; then
