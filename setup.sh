@@ -1,7 +1,7 @@
 # Add any additional setup tasks here
 
 # These tasks are run as root
-CONF="/etc/postgresql/9.3/main/postgresql.conf"
+CONF="/etc/postgresql/9.4/main/postgresql.conf"
 
 # /etc/ssl/private can't be accessed from within container for some reason
 # (@andrewgodwin says it's something AUFS related)  - taken from https://github.com/orchardup/docker-postgresql/blob/master/Dockerfile
@@ -13,10 +13,10 @@ chmod -R 0700 /etc/ssl/private
 chown -R postgres /etc/ssl/private
 
 # Restrict subnet to docker private network
-echo "host    all             all             0.0.0.0/0                   md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+echo "host    all             all             0.0.0.0/0                   md5" >> /etc/postgresql/9.4/main/pg_hba.conf
 # Listen on all ip addresses
-echo "listen_addresses = '*'" >> /etc/postgresql/9.3/main/postgresql.conf
-echo "port = 5432" >> /etc/postgresql/9.3/main/postgresql.conf
+echo "listen_addresses = '*'" >> /etc/postgresql/9.4/main/postgresql.conf
+echo "port = 5432" >> /etc/postgresql/9.4/main/postgresql.conf
 
 # Enable ssl
 
