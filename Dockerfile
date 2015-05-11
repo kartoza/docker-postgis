@@ -13,7 +13,7 @@ RUN  dpkg-divert --local --rename --add /sbin/initctl
 ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
 RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" > /etc/apt/sources.list
-RUN deb http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main
+RUN wget https://www.postgresql.org/media/keys/ACCC4CF8.asc
 RUN apt-key add ACCC4CF8.asc
 
 RUN apt-get -y update
