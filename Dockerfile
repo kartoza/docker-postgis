@@ -2,7 +2,7 @@
 FROM  ubuntu:trusty
 MAINTAINER Tim Sutton<tim@linfiniti.com>
 
-RUN  export DEBIAN_FRONTEND=noninteractive
+#RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 #RUN  ln -s /bin/true /sbin/initctl
