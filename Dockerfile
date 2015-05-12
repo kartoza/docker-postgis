@@ -10,17 +10,18 @@ RUN  dpkg-divert --local --rename --add /sbin/initctl
 # Use local cached debs from host (saves your bandwidth!)
 # Change ip below to that of your apt-cacher-ng host
 # Or comment this line out if you do not with to use caching
-ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
-
-
-
+#ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 RUN apt-get -y update
-RUN apt-get -y install ca-certificates rpl pwgen wget postgresql postgis   slony1-2-bin
+RUN apt-get -y install ca-certificates rpl pwgen wget 
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
-#RUN apt-get install -y postgresql postgis  postgresql-9.3-slony1-2 slony1-2-bin
+
+RUN sudo echo "deb-src http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
+RUN wget –quiet -O – https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
+RUN apt-get -y update
+RUN apt-get install -y postgresql-9.3 postgis  postgresql-9.3-slony1-2 slony1-2-bin
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
