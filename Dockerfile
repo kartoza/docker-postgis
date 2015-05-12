@@ -15,12 +15,12 @@ ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
 
 RUN apt-get -y update
-RUN apt-get -y install ca-certificates rpl pwgen wget
+RUN apt-get -y install ca-certificates rpl pwgen wget postgresql postgis  postgresql-9.3-slony1-2 slony1-2-bin
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
-RUN apt-get install -y postgresql-9.3 postgis  postgresql-9.3-slony1-2 slony1-2-bin
+#RUN apt-get install -y postgresql postgis  postgresql-9.3-slony1-2 slony1-2-bin
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
