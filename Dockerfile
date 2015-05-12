@@ -15,7 +15,7 @@ ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
 
 RUN apt-get -y update
-RUN apt-get -y install ca-certificates rpl pwgen wget postgresql postgis  postgresql-9.3-slony1-2 slony1-2-bin
+RUN apt-get -y install ca-certificates rpl pwgen wget postgresql postgis   slony1-2-bin
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
