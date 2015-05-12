@@ -17,8 +17,8 @@ RUN apt-get -y install ca-certificates rpl pwgen wget
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
-
-RUN apt-get install -y postgresql postgis  postgresql-9.4-slony1-2 slony1-2-bin
+RUN apt-get install postgresql-9.3-postgis-2.1  postgresql-9.3-slony1-2 slony1-2-bin
+#RUN apt-get install -y postgresql postgis  postgresql-9.4-slony1-2 slony1-2-bin
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
