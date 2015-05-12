@@ -1,5 +1,5 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM  resin/rpi-raspbian
+FROM  resin/rpi-raspbian:wheezy
 MAINTAINER Tim Sutton<tim@linfiniti.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
@@ -18,11 +18,6 @@ RUN apt-get -y update
 RUN apt-get upgrade
 RUN apt-get -y install ca-certificates rpl pwgen wget
 
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-
-RUN apt-get -y update
-RUN apt-get upgrade
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
