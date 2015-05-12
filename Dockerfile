@@ -1,5 +1,5 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM  resin/rpi-raspbian:wheezy
+FROM  resin/rpi-raspbian
 MAINTAINER Tim Sutton<tim@linfiniti.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
@@ -18,10 +18,7 @@ RUN apt-get -y install ca-certificates rpl pwgen wget
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
 
-RUN sudo echo "deb-src http://apt.postgresql.org/pub/repos/apt/ wheezy-pgdg main" >> /etc/apt/sources.list.d/pgdg.list
-RUN wget –quiet -O – https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
-RUN apt-get -y update
-RUN apt-get install -y postgresql-9.3 postgis  postgresql-9.3-slony1-2 slony1-2-bin
+RUN apt-get install -y postgresql postgis  postgresql-9.4-slony1-2 slony1-2-bin
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
