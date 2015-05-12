@@ -15,7 +15,6 @@ ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
 
 RUN apt-get -y update
-RUN apt-get upgrade
 RUN apt-get -y install ca-certificates rpl pwgen wget
 
 #-------------Application Specific Stuff ----------------------------------------------------
