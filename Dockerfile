@@ -11,7 +11,7 @@ ENV  DEBIAN_FRONTEND noninteractive
 # Change ip below to that of your apt-cacher-ng host
 # Or comment this line out if you do not with to use caching
 #ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
-RUN apt-get -y update
+RUN apt-get  update
 RUN apt-get -y install ca-certificates rpl pwgen wget postgresql-9.3 postgis  postgresql-9.3-slony1-2 slony1-2-bin
 
 #-------------Application Specific Stuff ----------------------------------------------------
