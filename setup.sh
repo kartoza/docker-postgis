@@ -11,10 +11,10 @@ echo "host    replication     postgres        0.0.0.0/0                   trust"
 echo "listen_addresses = '*'" >> /etc/postgresql/9.4/main/postgresql.conf
 echo "port = 5432" >> /etc/postgresql/9.4/main/postgresql.conf
 #replication parameters
-echo "wal_level = logical" >> /etc/postgresql/9.4/main/postgresql.conf
-echo "max_wal_senders = 3" >> /etc/postgresql/9.4/main/postgresql.conf
-echo "max_replication_slots = 3" >> /etc/postgresql/9.4/main/postgresql.conf
-echo "hot_standby = on" >> /etc/postgresql/9.4/main/postgresql.conf
+#echo "wal_level = logical" >> /etc/postgresql/9.4/main/postgresql.conf
+#echo "max_wal_senders = 3" >> /etc/postgresql/9.4/main/postgresql.conf
+#echo "max_replication_slots = 3" >> /etc/postgresql/9.4/main/postgresql.conf
+#echo "hot_standby = on" >> /etc/postgresql/9.4/main/postgresql.conf
 
 # Enable ssl
 
