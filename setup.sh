@@ -5,24 +5,24 @@ CONF="/etc/postgresql/9.4/main/postgresql.conf"
 
 # /etc/ssl/private can't be accessed from within container for some reason
 # (@andrewgodwin says it's something AUFS related)  - taken from https://github.com/orchardup/docker-postgresql/blob/master/Dockerfile
-mkdir -p /etc/ssl/private-copy
-mv /etc/ssl/private/* /etc/ssl/private-copy/
-rm -r /etc/ssl/private
-mv /etc/ssl/private-copy /etc/ssl/private
-chmod -R 0700 /etc/ssl/private
-chown -R postgres /etc/ssl/private
+#mkdir -p /etc/ssl/private-copy
+#mv /etc/ssl/private/* /etc/ssl/private-copy/
+#rm -r /etc/ssl/private
+#mv /etc/ssl/private-copy /etc/ssl/private
+#chmod -R 0700 /etc/ssl/private
+#chown -R postgres /etc/ssl/private
 
 # Restrict subnet to docker private network
 echo "host    all             all             0.0.0.0/0                   md5" >> /etc/postgresql/9.4/main/pg_hba.conf
 echo "host    replication     postgres        0.0.0.0/0                   trust" >> /etc/postgresql/9.4/main/pg_hba.conf
 # Listen on all ip addresses
-echo "listen_addresses = '*'" >> $CONF
-echo "port = 5432" >> $CONF
+echo "listen_addresses = '*'" >> /etc/postgresql/9.3/main/postgresql.conf
+echo "port = 5432" >> /etc/postgresql/9.3/main/postgresql.conf
 #replication parameters
-echo "wal_level = logical" >> $CONF
-echo "max_wal_senders = 3" >> $CONF
-echo "max_replication_slots" = 3 >> $CONF
-echo "hot_standby = on" >> $CONF
+echo "wal_level = logical" >> /etc/postgresql/9.3/main/postgresql.conf
+echo "max_wal_senders = 3" >> /etc/postgresql/9.3/main/postgresql.conf
+echo "max_replication_slots" = 3 >> /etc/postgresql/9.3/main/postgresql.conf
+echo "hot_standby = on" >> /etc/postgresql/9.3/main/postgresql.conf
 
 # Enable ssl
 
