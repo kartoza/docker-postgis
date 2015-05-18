@@ -1,5 +1,5 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM  ubuntu:trusty
+FROM  resin/rpi-raspbian
 MAINTAINER Tim Sutton<tim@linfiniti.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
@@ -12,13 +12,13 @@ RUN  ln -s /bin/true /sbin/initctl
 # Or comment this line out if you do not with to use caching
 #ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 RUN apt-get  -y update
-RUN apt-get -y install ca-certificates rpl pwgen wget postgresql postgis nano
+RUN apt-get -y install ca-certificates rpl pwgen wget nano
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # Next line a workaround for https://github.com/dotcloud/docker/issues/963
 #RUN apt-get install postgresql-9.3-postgis-2.1  postgresql-9.3-slony1-2 slony1-2-bin
-#RUN apt-get install -y postgresql postgis  postgresql-9.4-slony1-2 slony1-2-bin
+RUN apt-get install -y postgresql postgis
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 # Start with supervisor
