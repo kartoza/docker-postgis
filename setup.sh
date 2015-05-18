@@ -6,7 +6,7 @@ CONF="/etc/postgresql/9.4/main/postgresql.conf"
 
 # Restrict subnet to docker private network
 echo "host    all             all             0.0.0.0/0                   md5" >> /etc/postgresql/9.4/main/pg_hba.conf
-echo "host    replication     postgres        0.0.0.0/0                   trust" >> /etc/postgresql/9.4/main/pg_hba.conf
+#echo "host    replication     postgres        0.0.0.0/0                   trust" >> /etc/postgresql/9.4/main/pg_hba.conf
 # Listen on all ip addresses
 echo "listen_addresses = '*'" >> /etc/postgresql/9.4/main/postgresql.conf
 echo "port = 5432" >> /etc/postgresql/9.4/main/postgresql.conf
