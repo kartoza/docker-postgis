@@ -1,11 +1,11 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
 FROM  resin/rpi-raspbian
-MAINTAINER Tim Sutton<tim@linfiniti.com>
+MAINTAINER Julien Ancelin
 
 RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
-RUN  ln -s /bin/true /sbin/initctl
+#RUN  ln -s /bin/true /sbin/initctl
 
 # Use local cached debs from host (saves your bandwidth!)
 # Change ip below to that of your apt-cacher-ng host
