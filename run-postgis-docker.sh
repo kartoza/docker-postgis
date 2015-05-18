@@ -53,11 +53,11 @@ else
     VOLUME_OPTION=""
 fi
 
-if [ ! -d $HOST_DATA_DIR ]
+if [ ! -d $VOLUME ]
 then
-    mkdir $HOST_DATA_DIR
+    mkdir $VOLUME
 fi
-chmod a+w $HOST_DATA_DIR
+chmod a+w $VOLUME
 
 docker kill ${CONTAINER_NAME}
 docker rm ${CONTAINER_NAME}
@@ -86,5 +86,3 @@ echo "e.g. docker run -link postgis:pg .....etc"
 echo "Will make the connection details to the postgis server available"
 echo "in your app container as $PG_PORT_5432_TCP_ADDR (for the ip address)"
 echo "and $PG_PORT_5432_TCP_PORT (for the port number)."
-
-
