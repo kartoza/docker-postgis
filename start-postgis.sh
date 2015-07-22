@@ -79,21 +79,13 @@ else
     echo "Enabling template_postgis as a template"
     CMD="UPDATE pg_database SET datistemplate = TRUE WHERE datname = 'template_postgis';"
     su - postgres -c "psql -c \"$CMD\""
-    echo "Loading postgis.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/postgis.sql"
-    echo "Loading spatial_ref_sys.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/spatial_ref_sys.sql"
+    echo "Loading postgis extension"
+    su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis;'"
 
     # Needed when importing old dumps using e.g ndims for constraints
     echo "Loading legacy sql"
     su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
     su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
-    echo "Granting on geometry columns"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON geometry_columns TO PUBLIC;'"
-    echo "Granting on geography columns"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON geography_columns TO PUBLIC;'"
-    echo "Granting on spatial ref sys"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
     su - postgres -c "createdb -O $USERNAME -T template_postgis gis"
