@@ -78,7 +78,7 @@ else
     su - postgres -c "createdb template_postgis -E UTF8 -T template0"
     echo "Enabling template_postgis as a template"
     CMD="UPDATE pg_database SET datistemplate = TRUE WHERE datname = 'template_postgis';"
-    su - postgres -c "$CMD"
+    su - postgres -c "psql -c \"$CMD\""
     echo "Loading postgis.sql"
     su - postgres -c "psql template_postgis -f $SQLDIR/postgis.sql"
     echo "Loading spatial_ref_sys.sql"
