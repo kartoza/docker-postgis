@@ -70,6 +70,13 @@ RESULT=`su - postgres -c "psql -l | grep postgis | wc -l"`
 if [[ ${RESULT} == '1' ]]
 then
     echo 'Postgis Already There'
+
+    if [ ${HSTORE} == "true" ]; then
+        echo 'HSTORE is only useful when you create the postgis database.'
+    fi
+    if [ ${TOPOLOGY} == "true" ]; then
+        echo 'TOPOLOGY is only useful when you create the postgis database.'
+    fi
 else
     echo "Postgis is missing, installing now"
     # Note the dockerfile must have put the postgis.sql and spatialrefsys.sql scripts into /root/
@@ -81,6 +88,17 @@ else
     su - postgres -c "psql -c \"$CMD\""
     echo "Loading postgis extension"
     su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis;'"
+
+    if [ ${HSTORE} == "true" ]
+    then
+        echo "Enabling hstore in the template"
+        su - postgres -c "psql template_postgis -c 'CREATE EXTENSION hstore;'"
+    fi
+    if [ ${TOPOLOGY} == "true" ]
+    then
+        echo "Enabling topology in the template"
+        su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis_topology;'"
+    fi
 
     # Needed when importing old dumps using e.g ndims for constraints
     echo "Loading legacy sql"
