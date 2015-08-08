@@ -70,6 +70,13 @@ RESULT=`su - postgres -c "psql -l | grep postgis | wc -l"`
 if [[ ${RESULT} == '1' ]]
 then
     echo 'Postgis Already There'
+
+    if [ ${HSTORE} == "true" ]; then
+        echo 'HSTORE is only useful when you create the postgis database.'
+    fi
+    if [ ${TOPOLOGY} == "true" ]; then
+        echo 'TOPOLOGY is only useful when you create the postgis database.'
+    fi
 else
     echo "Postgis is missing, installing now"
     # Note the dockerfile must have put the postgis.sql and spatialrefsys.sql scripts into /root/
@@ -78,22 +85,25 @@ else
     su - postgres -c "createdb template_postgis -E UTF8 -T template0"
     echo "Enabling template_postgis as a template"
     CMD="UPDATE pg_database SET datistemplate = TRUE WHERE datname = 'template_postgis';"
-    su - postgres -c "$CMD"
-    echo "Loading postgis.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/postgis.sql"
-    echo "Loading spatial_ref_sys.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/spatial_ref_sys.sql"
+    su - postgres -c "psql -c \"$CMD\""
+    echo "Loading postgis extension"
+    su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis;'"
+
+    if [ ${HSTORE} == "true" ]
+    then
+        echo "Enabling hstore in the template"
+        su - postgres -c "psql template_postgis -c 'CREATE EXTENSION hstore;'"
+    fi
+    if [ ${TOPOLOGY} == "true" ]
+    then
+        echo "Enabling topology in the template"
+        su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis_topology;'"
+    fi
 
     # Needed when importing old dumps using e.g ndims for constraints
     echo "Loading legacy sql"
     su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
     su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
-    echo "Granting on geometry columns"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON geometry_columns TO PUBLIC;'"
-    echo "Granting on geography columns"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON geography_columns TO PUBLIC;'"
-    echo "Granting on spatial ref sys"
-    su - postgres -c "psql template_postgis -c 'GRANT ALL ON spatial_ref_sys TO PUBLIC;'"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
     su - postgres -c "createdb -O $USERNAME -T template_postgis gis"
