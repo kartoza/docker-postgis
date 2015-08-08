@@ -51,6 +51,15 @@ fi
 if [ -z "$POSTGRES_PASS" ]; then
   POSTGRES_PASS=docker
 fi  
+# Enable hstore and topology by default
+if [ -z "$HSTORE" ]; then
+  HSTORE=true
+fi  
+if [ -z "$TOPOLOGY" ]; then
+  TOPOLOGY=docker
+fi  
+
+
 # redirect user/pass into a file so we can echo it into
 # docker logs when container starts
 # so that we can tell user their password
@@ -71,10 +80,10 @@ if [[ ${RESULT} == '1' ]]
 then
     echo 'Postgis Already There'
 
-    if [ ${HSTORE} == "true" ]; then
+    if [[ ${HSTORE} == "true" ]]; then
         echo 'HSTORE is only useful when you create the postgis database.'
     fi
-    if [ ${TOPOLOGY} == "true" ]; then
+    if [[] ${TOPOLOGY} == "true" ]]; then
         echo 'TOPOLOGY is only useful when you create the postgis database.'
     fi
 else
@@ -89,12 +98,12 @@ else
     echo "Loading postgis extension"
     su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis;'"
 
-    if [ ${HSTORE} == "true" ]
+    if [[ ${HSTORE} == "true" ]]
     then
         echo "Enabling hstore in the template"
         su - postgres -c "psql template_postgis -c 'CREATE EXTENSION hstore;'"
     fi
-    if [ ${TOPOLOGY} == "true" ]
+    if [[ ${TOPOLOGY} == "true" ]]
     then
         echo "Enabling topology in the template"
         su - postgres -c "psql template_postgis -c 'CREATE EXTENSION postgis_topology;'"
