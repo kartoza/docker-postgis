@@ -18,10 +18,12 @@ RUN apt-get -y install ca-certificates rpl pwgen
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
-# Next line a workaround for https://github.com/dotcloud/docker/issues/963
-RUN apt-get install -y postgresql-9.3-postgis-2.1
-
-# Start with supervisor
+# We add postgis as well to prevent build errors (that we dont see on local builds)
+# on docker hub e.g.
+# The following packages have unmet dependencies:
+# postgresql-9.3-postgis-2.1 : Depends: libgdal1h (>= 1.9.0) but it is not going to be installed
+#                              Recommends: postgis but it is not going to be installed
+RUN apt-get install -y postgresql-9.3-postgis-2.1 postgis
 ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
 
 # Open port 5432 so linked containers can see them
