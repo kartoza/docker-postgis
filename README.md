@@ -127,7 +127,7 @@ mkdir -p ~/postgres_data
 docker run -d -v $HOME/postgres_data:/var/lib/postgresql kartoza/postgis`
 ```
 
-You need to ensure the ``postgres_data`` directory has sufficinet permissions
+You need to ensure the ``postgres_data`` directory has sufficient permissions
 for the docker process to read / write it.
 
 
