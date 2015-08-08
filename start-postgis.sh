@@ -56,7 +56,7 @@ if [ -z "$HSTORE" ]; then
   HSTORE=true
 fi  
 if [ -z "$TOPOLOGY" ]; then
-  TOPOLOGY=docker
+  TOPOLOGY=true
 fi  
 
 
