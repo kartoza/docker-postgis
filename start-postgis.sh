@@ -25,9 +25,9 @@ fi
 # needs to be done as root:
 chown -R postgres:postgres $DATADIR
 
-# Note that $USERNAME and $PASS below are optional paramters that can be passed
+# Note that $POSTGRES_USER and $POSTGRES_PASS below are optional paramters that can be passed
 # via docker run e.g.
-#docker run --name="postgis" -e USERNAME=qgis -e PASS=qgis -d -v
+#docker run --name="postgis" -e POSTGRES_USER=qgis -e POSTGRES_PASS=qgis -d -v 
 #/var/docker-data/postgres-dat:/var/lib/postgresql -t qgis/postgis:6
 
 # If you dont specify a user/password in docker run, we will generate one
@@ -45,18 +45,18 @@ if [ ! "$(ls -A $DATADIR)" ]; then
 fi
 
 # Make sure we have a user set up
-if [ -z "$USERNAME" ]; then
-  USERNAME=docker
-fi
-if [ -z "$PASS" ]; then
-  PASS=docker
-fi
+if [ -z "$POSTGRES_USER" ]; then
+  POSTGRES_USER=docker
+fi  
+if [ -z "$POSTGRES_PASS" ]; then
+  POSTGRES_PASS=docker
+fi  
 # redirect user/pass into a file so we can echo it into
 # docker logs when container starts
 # so that we can tell user their password
-echo "postgresql user: $USERNAME" > /tmp/PGPASSWORD.txt
-echo "postgresql password: $PASS" >> /tmp/PGPASSWORD.txt
-su - postgres -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF <<< \"CREATE USER $USERNAME WITH SUPERUSER ENCRYPTED PASSWORD '$PASS';\""
+echo "postgresql user: $POSTGRES_USER" > /tmp/PGPASSWORD.txt
+echo "postgresql password: $POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+su - postgres -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF <<< \"CREATE USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
 
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 

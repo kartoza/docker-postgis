@@ -65,8 +65,8 @@ docker rm ${CONTAINER_NAME}
 CMD="docker run --name="${CONTAINER_NAME}" \
         --hostname="${CONTAINER_NAME}" \
         --restart=always \
-	-e USERNAME=${PGUSER} \
-	-e PASS=${PGPASSWORD} \
+	-e POSTGRES_USER=${PGUSER} \
+	-e POSTGRES_PASS=${PGPASSWORD} \
 	-d -t \
         ${VOLUME_OPTION} \
 	kartoza/postgis /start-postgis.sh"
@@ -79,7 +79,7 @@ docker ps | grep ${CONTAINER_NAME}
 
 echo "Connect using:"
 echo "psql -l -p 5432 -h $IPADDRESS -U $PGUSER"
-echo "and password $PGPASS"
+echo "and password $PGPASSWORD"
 echo
 echo "Alternatively link to this container from another to access it"
 echo "e.g. docker run -link postgis:pg .....etc"

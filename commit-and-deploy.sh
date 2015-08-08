@@ -26,7 +26,7 @@ if [ ! -d $HOST_DATA_DIR ]
 then
     mkdir $HOST_DATA_DIR
 fi
-CMD="docker run -cidfile="$IDFILE" -name="postgis" -e USERNAME=$PGUSER -e PASS=$PGPASS -d -v $HOST_DATA_DIR:/var/lib/postgresql -t qgis/postgis:$VERSION /start.sh"
+CMD="docker run -cidfile="$IDFILE" -name="postgis" -e POSTGRES_USER=$PGUSER -e POSTGRES_PASS=$PGPASS -d -v $HOST_DATA_DIR:/var/lib/postgresql -t qgis/postgis:$VERSION /start.sh"
 echo 'Running:'
 echo $CMD
 eval $CMD
