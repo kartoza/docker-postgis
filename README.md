@@ -1,5 +1,7 @@
 # docker-postgis
 
+**Version 9.4-2.1** Provides PostgreSQL 9.4, PostGIS 2.1
+
 A simple docker container that runs PostGIS
 
 Visit our page on the docker hub at: https://registry.hub.docker.com/u/kartoza/postgis/
