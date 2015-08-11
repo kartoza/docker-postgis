@@ -1,6 +1,6 @@
 # docker-postgis
 
-**Version 9.4-2.1** Provides PostgreSQL 9.4, PostGIS 2.1
+
 
 A simple docker container that runs PostGIS
 
@@ -21,6 +21,22 @@ environment (though probably not for heavy load databases).
 
 **Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
 you should configure the host for it in the provided 71-apt-cacher-ng file.
+
+## Tagged versions
+
+The following convention is used for tagging the images we build:
+
+kartoza/postgis:[postgres_version]-[postgis-version]
+
+So for example:
+
+``kartoza/postgis:9.4-2.1`` Provides PostgreSQL 9.4, PostGIS 2.1
+
+**Note:** We highly recommend that you use tagged versions because
+successive minor versions of PostgreSQL write their database clusters
+into different database directories - which will cause your database
+to appear to be empty if you are using persistent volumes for your
+database storage.
 
 ## Getting the image
 
