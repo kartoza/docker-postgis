@@ -86,7 +86,7 @@ then
     if [[ ${HSTORE} == "true" ]]; then
         echo 'HSTORE is only useful when you create the postgis database.'
     fi
-    if [[] ${TOPOLOGY} == "true" ]]; then
+    if [[ ${TOPOLOGY} == "true" ]]; then
         echo 'TOPOLOGY is only useful when you create the postgis database.'
     fi
 else
