@@ -7,6 +7,9 @@ cat << EOF
 usage: $0 options
 
 This script runs a new docker postgis instance for you.
+To get the image run:
+docker pull kartoza/postgis
+
 
 OPTIONS:
    -h      Show this message
@@ -78,7 +81,7 @@ eval $CMD
 docker ps | grep ${CONTAINER_NAME}
 
 echo "Connect using:"
-echo "psql -l -p 5432 -h $IPADDRESS -U $PGUSER"
+echo "psql -l -p 5432 -h localhost -U $PGUSER"
 echo "and password $PGPASSWORD"
 echo
 echo "Alternatively link to this container from another to access it"
