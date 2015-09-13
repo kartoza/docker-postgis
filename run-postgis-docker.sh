@@ -7,6 +7,9 @@ cat << EOF
 usage: $0 options
 
 This script runs a new docker postgis instance for you.
+To get the image run:
+docker pull kartoza/postgis
+
 
 OPTIONS:
    -h      Show this message
@@ -77,6 +80,8 @@ eval $CMD
 
 docker ps | grep ${CONTAINER_NAME}
 
+IPADDRESS=`docker inspect postgis | grep IPAddress | grep -o '[0-9\.]*'`
+
 echo "Connect using:"
 echo "psql -l -p 5432 -h $IPADDRESS -U $PGUSER"
 echo "and password $PGPASSWORD"
@@ -86,5 +91,4 @@ echo "e.g. docker run -link postgis:pg .....etc"
 echo "Will make the connection details to the postgis server available"
 echo "in your app container as $PG_PORT_5432_TCP_ADDR (for the ip address)"
 echo "and $PG_PORT_5432_TCP_PORT (for the port number)."
-
 
