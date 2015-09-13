@@ -80,8 +80,10 @@ eval $CMD
 
 docker ps | grep ${CONTAINER_NAME}
 
+IPADDRESS=`docker inspect postgis | grep IPAddress | grep -o '[0-9\.]*'`
+
 echo "Connect using:"
-echo "psql -l -p 5432 -h localhost -U $PGUSER"
+echo "psql -l -p 5432 -h $IPADDRESS -U $PGUSER"
 echo "and password $PGPASSWORD"
 echo
 echo "Alternatively link to this container from another to access it"
