@@ -1,5 +1,5 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM ubuntu:14.04
+FROM debian:stable
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
 RUN  export DEBIAN_FRONTEND=noninteractive
@@ -23,7 +23,8 @@ RUN apt-get -y install ca-certificates rpl pwgen
 # The following packages have unmet dependencies:
 # postgresql-9.3-postgis-2.1 : Depends: libgdal1h (>= 1.9.0) but it is not going to be installed
 #                              Recommends: postgis but it is not going to be installed
-RUN apt-get install -y postgresql-9.3-postgis-2.1 postgis 
+RUN apt-get install -y postgresql-9.4-postgis-2.1 postgis 
+ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
