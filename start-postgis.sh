@@ -7,6 +7,7 @@ CONF="/etc/postgresql/9.4/main/postgresql.conf"
 POSTGRES="/usr/lib/postgresql/9.4/bin/postgres"
 INITDB="/usr/lib/postgresql/9.4/bin/initdb"
 SQLDIR="/usr/share/postgresql/9.4/contrib/postgis-2.1/"
+LOCALONLY="-c listen_addresses='127.0.0.1, ::1'"
 
 # /etc/ssl/private can't be accessed from within container for some reason
 # (@andrewgodwin says it's something AUFS related)  - taken from https://github.com/orchardup/docker-postgresql/blob/master/Dockerfile
@@ -72,11 +73,15 @@ su - postgres -c "$POSTGRES --single -D $DATADIR -c config_file=$CONF <<< \"CREA
 
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
-su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF &"
+su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF $LOCALONLY &"
 
-# Wait for the db to start up before trying to use it....
+# wait for postgres to come up
+until `nc -z 127.0.0.1 5432`; do
+    echo "$(date) - waiting for postgres (localhost-only)..."
+    sleep 1
+done
+echo "postgres ready"
 
-sleep 10
 
 RESULT=`su - postgres -c "psql -l | grep postgis | wc -l"`
 if [[ ${RESULT} == '1' ]]
@@ -126,4 +131,4 @@ su - postgres -c "psql -l"
 PID=`cat /var/run/postgresql/9.4-main.pid`
 kill -9 ${PID}
 echo "Postgres initialisation process completed .... restarting in foreground"
-su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF"
+exec su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF"
