@@ -126,4 +126,5 @@ su - postgres -c "psql -l"
 PID=`cat /var/run/postgresql/9.4-main.pid`
 kill -9 ${PID}
 echo "Postgres initialisation process completed .... restarting in foreground"
-su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF"
+SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
+su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
