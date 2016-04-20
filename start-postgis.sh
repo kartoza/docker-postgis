@@ -2,11 +2,11 @@
 
 # This script will run as the postgres user due to the Dockerfile USER directive
 
-DATADIR="/var/lib/postgresql/9.4/main"
-CONF="/etc/postgresql/9.4/main/postgresql.conf"
-POSTGRES="/usr/lib/postgresql/9.4/bin/postgres"
-INITDB="/usr/lib/postgresql/9.4/bin/initdb"
-SQLDIR="/usr/share/postgresql/9.4/contrib/postgis-2.1/"
+DATADIR="/var/lib/postgresql/9.5/main"
+CONF="/etc/postgresql/9.5/main/postgresql.conf"
+POSTGRES="/usr/lib/postgresql/9.5/bin/postgres"
+INITDB="/usr/lib/postgresql/9.5/bin/initdb"
+SQLDIR="/usr/share/postgresql/9.5/contrib/postgis-2.2/"
 LOCALONLY="-c listen_addresses='127.0.0.1, ::1'"
 
 # /etc/ssl/private can't be accessed from within container for some reason
@@ -18,8 +18,8 @@ rm -r /etc/ssl
 mv /tmp/ssl-copy /etc/ssl
 
 # Needed under debian, wasnt needed under ubuntu
-mkdir /var/run/postgresql/9.4-main.pg_stat_tmp
-chmod 0777 /var/run/postgresql/9.4-main.pg_stat_tmp
+mkdir /var/run/postgresql/9.5-main.pg_stat_tmp
+chmod 0777 /var/run/postgresql/9.5-main.pg_stat_tmp
 
 # test if DATADIR is existent
 if [ ! -d $DATADIR ]; then
@@ -128,7 +128,7 @@ fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
 
-PID=`cat /var/run/postgresql/9.4-main.pid`
+PID=`cat /var/run/postgresql/9.5-main.pid`
 kill -9 ${PID}
 echo "Postgres initialisation process completed .... restarting in foreground"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
