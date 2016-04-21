@@ -3,7 +3,7 @@
 # This script will run as the postgres user due to the Dockerfile USER directive
 
 DATADIR="/var/lib/postgresql/9.4/main"
-CONF="/etc/postgresql/9.4/main/postgresql.conf"
+CONF="$DATADIR/postgresql.conf"
 POSTGRES="/usr/lib/postgresql/9.4/bin/postgres"
 INITDB="/usr/lib/postgresql/9.4/bin/initdb"
 SQLDIR="/usr/share/postgresql/9.4/contrib/postgis-2.1/"
