@@ -13,6 +13,12 @@ RUN  dpkg-divert --local --rename --add /sbin/initctl
 ADD 71-apt-cacher-ng /etc/apt/apt.conf.d/71-apt-cacher-ng
 
 #RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
+# Add the PostgreSQL PGP key to verify their Debian packages.
+# It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
+RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
+# Add PostgreSQL's repository. It contains the most recent stable release
+#     of PostgreSQL, ``9.5``.
+RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list.d/pgdg.list
 RUN apt-get -y update
 RUN apt-get -y install ca-certificates rpl pwgen
 
@@ -23,7 +29,7 @@ RUN apt-get -y install ca-certificates rpl pwgen
 # The following packages have unmet dependencies:
 # postgresql-9.3-postgis-2.1 : Depends: libgdal1h (>= 1.9.0) but it is not going to be installed
 #                              Recommends: postgis but it is not going to be installed
-RUN apt-get install -y postgresql-9.4-postgis-2.1 postgis netcat
+RUN apt-get install -y postgresql-9.5-postgis-2.2 netcat
 ADD postgres.conf /etc/supervisor/conf.d/postgres.conf
 
 # Open port 5432 so linked containers can see them
