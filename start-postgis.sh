@@ -63,6 +63,12 @@ if [ -z "$TOPOLOGY" ]; then
   TOPOLOGY=true
 fi  
 
+# Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
+# Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16' 
+if [ "$ALLOW_IP_RANGE" ]
+then
+  echo "host    all             all             $ALLOW_IP_RANGE              md5" >> /etc/postgresql/9.4/main/pg_hba.conf
+fi
 
 # redirect user/pass into a file so we can echo it into
 # docker logs when container starts
