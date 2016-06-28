@@ -30,7 +30,7 @@ kartoza/postgis:[postgres_version]-[postgis-version]
 
 So for example:
 
-``kartoza/postgis:9.4-2.1`` Provides PostgreSQL 9.4, PostGIS 2.1
+``kartoza/postgis:9.5-2.2`` Provides PostgreSQL 9.5, PostGIS 2.2
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
