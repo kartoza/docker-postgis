@@ -139,7 +139,7 @@ You can then go on to use any normal postgresql commands against the container.
 Under ubuntu 14.04 the postgresql client can be installed like this:
 
 ```
-sudo apt-get install postgresql-client-9.4
+sudo apt-get install postgresql-client-9.5
 ```
 
 
