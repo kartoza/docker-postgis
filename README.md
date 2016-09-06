@@ -82,6 +82,8 @@ To create a running container do:
 sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+## Environment variables
+
 You can also use the following environment variables to pass a 
 user name and password. 
 
@@ -91,6 +93,12 @@ user name and password.
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
 user is set to 'docker' with password 'docker'.
+
+You can open up the PG port by using the following environment variable. By default 
+the container will allow connections only from the docker private subnet.
+
+* -e ALLOW_IP_RANGE=<0.0.0.0/0>
+
 
 ## Convenience run script
 
