@@ -92,6 +92,12 @@ These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
 user is set to 'docker' with password 'docker'.
 
+You can open up the PG port by using the following environment variable. By default 
+the container will allow connections only from the docker private subnet.
+
+* -e ALLOW_IP_RANGE=<0.0.0.0/0>
+
+
 ## Convenience run script
 
 For convenience we have provided a bash script for running this container
