@@ -82,6 +82,8 @@ To create a running container do:
 sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+## Environment variables
+
 You can also use the following environment variables to pass a 
 user name and password. 
 
