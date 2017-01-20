@@ -55,6 +55,10 @@ fi
 if [ -z "$POSTGRES_PASS" ]; then
   POSTGRES_PASS=docker
 fi  
+# Set a default database name
+if [ -z "$POSTGRES_DBNAME" ]; then
+  POSTGRES_DBNAME=gis
+fi
 # Enable hstore and topology by default
 if [ -z "$HSTORE" ]; then
   HSTORE=true
@@ -129,7 +133,7 @@ else
     su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
-    su - postgres -c "createdb -O $POSTGRES_USER -T template_postgis gis"
+    su - postgres -c "createdb -O $POSTGRES_USER -T template_postgis $POSTGRES_DBNAME"
 fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
