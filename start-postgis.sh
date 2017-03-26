@@ -18,7 +18,7 @@ rm -r /etc/ssl
 mv /tmp/ssl-copy /etc/ssl
 
 # Needed under debian, wasnt needed under ubuntu
-mkdir /var/run/postgresql/9.5-main.pg_stat_tmp
+mkdir -p /var/run/postgresql/9.5-main.pg_stat_tmp
 chmod 0777 /var/run/postgresql/9.5-main.pg_stat_tmp
 
 # test if DATADIR is existent
