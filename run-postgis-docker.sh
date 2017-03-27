@@ -15,12 +15,14 @@ OPTIONS:
    -h      Show this message
    -n      Container name
    -v      Volume to mount the Postgres cluster into
+   -l      local port (defaults to 25432)
    -u      Postgres user name (defaults to 'docker')
    -p      Postgres password  (defaults to 'docker')
+   -d      database name (defaults to 'gis')
 EOF
 }
 
-while getopts ":h:n:v:u:p:" OPTION
+while getopts ":h:n:v:l:u:p:d:" OPTION
 do
      case $OPTION in
          n)
@@ -29,11 +31,17 @@ do
          v)
              VOLUME=${OPTARG}
              ;;
+         l)
+             LOCALPORT=${optarg}
+             ;;
          u)
-             PGUSER=${OPTARG}
+             PGUSER=${optarg}
              ;;
          p)
              PGPASSWORD=${OPTARG}
+             ;;
+         p)
+             DATADIR=${OPTARG}
              ;;
          *)
              usage
@@ -43,12 +51,19 @@ do
 done
 
 
-if [[ -z $VOLUME ]] || [[ -z $CONTAINER_NAME ]] || [[ -z $PGUSER ]] || [[ -z $PGPASSWORD ]] 
+if [[ -z $VOLUME ]] || [[ -z $CONTAINER_NAME ]] || [[ -z $PGUSER ]] || [[ -z $PGPASSWORD ]] || [[ -z $DATADIR ]] || [[ -z $LOCALPORT ]]
+
 then
      usage
      exit 1
 fi
 
+if [[ ! -z $LOCALPORT]]
+then
+    LOCALPORT=${LOCALPORT}
+else
+    LOCALPORT=25432
+fi
 if [[ ! -z $VOLUME ]]
 then
     VOLUME_OPTION="-v ${VOLUME}:/var/lib/postgresql"
@@ -70,8 +85,10 @@ CMD="docker run --name="${CONTAINER_NAME}" \
         --restart=always \
 	-e POSTGRES_USER=${PGUSER} \
 	-e POSTGRES_PASS=${PGPASSWORD} \
+	-e DATADIR=${DATADIR} \
 	-d -t \
         ${VOLUME_OPTION} \
+    -p "${LOCALPORT}:5432" \
 	kartoza/postgis /start-postgis.sh"
 
 echo 'Running\n'
