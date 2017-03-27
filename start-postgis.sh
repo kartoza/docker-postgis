@@ -128,9 +128,10 @@ else
     fi
 
     # Needed when importing old dumps using e.g ndims for constraints
-    echo "Loading legacy sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
+    # commented out these lines since it seems these scripts are removed in Postgis 2.2
+    #echo "Loading legacy sql"
+    #su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
+    #su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
     su - postgres -c "createdb -O $POSTGRES_USER -T template_postgis $POSTGRES_DBNAME"
