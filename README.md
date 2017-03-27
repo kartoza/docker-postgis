@@ -30,7 +30,7 @@ kartoza/postgis:[postgres_version]-[postgis-version]
 
 So for example:
 
-``kartoza/postgis:9.4-2.1`` Provides PostgreSQL 9.4, PostGIS 2.1
+``kartoza/postgis:9.5-2.2`` Provides PostgreSQL 9.5, PostGIS 2.2
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -82,6 +82,8 @@ To create a running container do:
 sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+## Environment variables
+
 You can also use the following environment variables to pass a 
 user name, password and/or default database name.
 
@@ -92,6 +94,12 @@ user name, password and/or default database name.
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
 user is set to 'docker' with password 'docker'.
+
+You can open up the PG port by using the following environment variable. By default 
+the container will allow connections only from the docker private subnet.
+
+* -e ALLOW_IP_RANGE=<0.0.0.0/0>
+
 
 ## Convenience run script
 
@@ -132,7 +140,7 @@ You can then go on to use any normal postgresql commands against the container.
 Under ubuntu 14.04 the postgresql client can be installed like this:
 
 ```
-sudo apt-get install postgresql-client-9.3
+sudo apt-get install postgresql-client-9.5
 ```
 
 
