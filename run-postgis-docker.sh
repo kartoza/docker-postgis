@@ -22,7 +22,7 @@ OPTIONS:
 EOF
 }
 
-while getopts ":h:n:v:u:p:d:" OPTION
+while getopts ":h:n:v:l:u:p:d:" OPTION
 do
      case $OPTION in
          n)
