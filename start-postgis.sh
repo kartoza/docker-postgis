@@ -135,7 +135,13 @@ fi
 su - postgres -c "psql -l"
 
 PID=`cat /var/run/postgresql/9.5-main.pid`
-kill -9 ${PID}
+kill -TERM ${PID}
+
+# Wait for background postgres main process to exit
+while [ "$(ls -A /var/run/postgresql/9.5-main.pid 2>/dev/null)" ]; do
+  sleep 1
+done
+
 echo "Postgres initialisation process completed .... restarting in foreground"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
