@@ -112,14 +112,16 @@ OPTIONS:
    -h      Show this message
    -n      Container name
    -v      Volume to mount the Postgres cluster into
+   -l      local port (defaults to 25432)
    -u      Postgres user name (defaults to 'docker')
    -p      Postgres password  (defaults to 'docker')
+   -d      database name (defaults to 'gis')
 ```
 
 Example usage:
 
 ```
-./run-postgis-docker.sh -v /tmp/foo/ -n postgis -u foo -p bar
+./run-postgis-docker.sh -p 6789 -v /tmp/foo/ -n postgis -u foo -p bar
 
 ```
 
