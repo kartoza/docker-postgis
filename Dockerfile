@@ -29,7 +29,8 @@ RUN apt-get -y install ca-certificates rpl pwgen
 # The following packages have unmet dependencies:
 # postgresql-9.3-postgis-2.1 : Depends: libgdal1h (>= 1.9.0) but it is not going to be installed
 #                              Recommends: postgis but it is not going to be installed
-RUN apt-get install -y postgresql-9.5-postgis-2.2 netcat
+
+RUN apt-get install -y postgresql-9.4-postgis-2.1 postgis 
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
