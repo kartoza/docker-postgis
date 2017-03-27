@@ -18,7 +18,7 @@ rm -r /etc/ssl
 mv /tmp/ssl-copy /etc/ssl
 
 # Needed under debian, wasnt needed under ubuntu
-mkdir /var/run/postgresql/9.5-main.pg_stat_tmp
+mkdir -p /var/run/postgresql/9.5-main.pg_stat_tmp
 chmod 0777 /var/run/postgresql/9.5-main.pg_stat_tmp
 
 # test if DATADIR is existent
@@ -128,9 +128,10 @@ else
     fi
 
     # Needed when importing old dumps using e.g ndims for constraints
-    echo "Loading legacy sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
-    su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
+    # commented out these lines since it seems these scripts are removed in Postgis 2.2
+    #echo "Loading legacy sql"
+    #su - postgres -c "psql template_postgis -f $SQLDIR/legacy_minimal.sql"
+    #su - postgres -c "psql template_postgis -f $SQLDIR/legacy_gist.sql"
     # Create a default db called 'gis' that you can use to get up and running quickly
     # It will be owned by the docker db user
     su - postgres -c "createdb -O $POSTGRES_USER -T template_postgis $POSTGRES_DBNAME"
@@ -139,7 +140,13 @@ fi
 su - postgres -c "psql -l"
 
 PID=`cat /var/run/postgresql/9.5-main.pid`
-kill -9 ${PID}
+kill -TERM ${PID}
+
+# Wait for background postgres main process to exit
+while [ "$(ls -A /var/run/postgresql/9.5-main.pid 2>/dev/null)" ]; do
+  sleep 1
+done
+
 echo "Postgres initialisation process completed .... restarting in foreground"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
