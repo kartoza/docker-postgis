@@ -51,7 +51,7 @@ do
 done
 
 
-if [[ -z $VOLUME ]] || [[ -z $CONTAINER_NAME ]] || [[ -z $PGUSER ]] || [[ -z $PGPASSWORD ]] || [[ -z $DATADIR ]] 
+if [[ -z $VOLUME ]] || [[ -z $CONTAINER_NAME ]] || [[ -z $PGUSER ]] || [[ -z $PGPASSWORD ]] || [[ -z $DATADIR ]] || [[ -z $LOCALPORT ]]
 
 then
      usage
