@@ -7,23 +7,18 @@ ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
 RUN apt-get -y update
-RUN apt-get -y install gnupg
-#RUN echo "deb http://archive.ubuntu.com/ubuntu trusty main universe" > /etc/apt/sources.list
-# Add the PostgreSQL PGP key to verify their Debian packages.
-# It should be the same key as https://www.postgresql.org/media/keys/ACCC4CF8.asc
-RUN apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys B97B0AFCAA1A47F044F244A07FCC7D46ACCC4CF8
-# Add PostgreSQL's repository. It contains the most recent stable release
-#     of PostgreSQL, ``9.5``.
-RUN echo "deb http://apt.postgresql.org/pub/repos/apt/ jessie-pgdg main" > /etc/apt/sources.list.d/pgdg.list
+RUN apt-get -y install gnupg2 wget ca-certificates rpl pwgen
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 RUN apt-get -y update
-RUN apt-get -y install ca-certificates rpl pwgen
+#RUN apt-get -y upgrade
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-RUN apt-get install -y postgresql-9.5-postgis-2.2 
+RUN apt-get install -y postgresql-client-9.6 postgresql-common postgresql-9.6 postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
