@@ -1,1 +1,1 @@
-docker build -t kartoza/postgis:9.6-2.4 .
+docker build -t kartoza/postgis:9.5-2.4 .
