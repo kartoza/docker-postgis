@@ -2,11 +2,11 @@
 
 # This script will run as the postgres user due to the Dockerfile USER directive
 
-DATADIR="/var/lib/postgresql/9.6/main"
-CONF="/etc/postgresql/9.6/main/postgresql.conf"
-POSTGRES="/usr/lib/postgresql/9.6/bin/postgres"
-INITDB="/usr/lib/postgresql/9.6/bin/initdb"
-SQLDIR="/usr/share/postgresql/9.6/contrib/postgis-2.2/"
+DATADIR="/var/lib/postgresql/10.0/main"
+CONF="/etc/postgresql/10.0/main/postgresql.conf"
+POSTGRES="/usr/lib/postgresql/10.0/bin/postgres"
+INITDB="/usr/lib/postgresql/10.0/bin/initdb"
+SQLDIR="/usr/share/postgresql/10.0/contrib/postgis-2.2/"
 LOCALONLY="-c listen_addresses='127.0.0.1, ::1'"
 
 # /etc/ssl/private can't be accessed from within container for some reason
@@ -18,8 +18,8 @@ rm -r /etc/ssl
 mv /tmp/ssl-copy /etc/ssl
 
 # Needed under debian, wasnt needed under ubuntu
-mkdir -p /var/run/postgresql/9.6-main.pg_stat_tmp
-chmod 0777 /var/run/postgresql/9.6-main.pg_stat_tmp
+mkdir -p /var/run/postgresql/10.0-main.pg_stat_tmp
+chmod 0777 /var/run/postgresql/10.0-main.pg_stat_tmp
 
 # test if DATADIR is existent
 if [ ! -d $DATADIR ]; then
@@ -71,7 +71,7 @@ fi
 # Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16' 
 if [ "$ALLOW_IP_RANGE" ]
 then
-  echo "host    all             all             $ALLOW_IP_RANGE              md5" >> /etc/postgresql/9.6/main/pg_hba.conf
+  echo "host    all             all             $ALLOW_IP_RANGE              md5" >> /etc/postgresql/10.0/main/pg_hba.conf
 fi
 
 # redirect user/pass into a file so we can echo it into
@@ -139,11 +139,11 @@ fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
 
-PID=`cat /var/run/postgresql/9.6-main.pid`
+PID=`cat /var/run/postgresql/10.0-main.pid`
 kill -TERM ${PID}
 
 # Wait for background postgres main process to exit
-while [ "$(ls -A /var/run/postgresql/9.6-main.pid 2>/dev/null)" ]; do
+while [ "$(ls -A /var/run/postgresql/10.0-main.pid 2>/dev/null)" ]; do
   sleep 1
 done
 
