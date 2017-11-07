@@ -1,2 +1,4 @@
 .idea
 *.*~
+*/replication/pg-*
+.DS_Store
