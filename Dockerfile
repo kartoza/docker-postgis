@@ -30,12 +30,15 @@ EXPOSE 5432
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
+ADD env-data.sh /env-data.sh
 ADD setup.sh /setup.sh
-RUN chmod 0755 /setup.sh
+RUN chmod +x /setup.sh
 RUN /setup.sh
 
 # We will run any commands in this when the container starts
-ADD start-postgis.sh /start-postgis.sh
-RUN chmod 0755 /start-postgis.sh
+ADD docker-entrypoint.sh /docker-entrypoint.sh
+ADD setup-replication.sh /docker-entrypoint-initdb.d/
+RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint-initdb.d/setup-replication.sh
 
-CMD /start-postgis.sh
+ENTRYPOINT /docker-entrypoint.sh
