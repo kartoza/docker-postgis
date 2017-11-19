@@ -10,6 +10,10 @@ if [ ! -d $DATADIR ]; then
 	mkdir -p $DATADIR
 fi
 
+# Set proper permissions
+# needs to be done as root:
+chown -R postgres:postgres $DATADIR
+
 # test if DATADIR has content
 if [ ! "$(ls -A $DATADIR)" ]; then
 	# No content yet - first time pg is being run!
@@ -20,22 +24,15 @@ if [ ! "$(ls -A $DATADIR)" ]; then
 	su - postgres -c "$INITDB $DATADIR"
 fi
 
-# Set proper permissions
-# needs to be done as root:
-chown -R postgres:postgres $DATADIR
-
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
 su - postgres -c "$POSTGRES -D $DATADIR -c config_file=$CONF $LOCALONLY &"
 
 # wait for postgres to come up
-# The commented script below somehow unreliable
-# until `nc -z 127.0.0.1 5432`; do
-#    echo "$(date) - waiting for postgres (localhost-only)..."
-#    sleep 1
-# done
-sleep 10
+until su - postgres -c "psql -l"; do
+	sleep 1
+done
 echo "postgres ready"
 
 RESULT=`su - postgres -c "psql -l | grep -w template_postgis | wc -l"`
