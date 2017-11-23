@@ -12,7 +12,7 @@ cat $ROOT_CONF/pg_hba.conf.template > $ROOT_CONF/pg_hba.conf
 if [ "$ALLOW_IP_RANGE" ]
 then
 	echo "Add rule to pg_hba: $ALLOW_IP_RANGE"
- 	echo "hostssl    all             all             $ALLOW_IP_RANGE              md5" >> $ROOT_CONF/pg_hba.conf
+ 	echo "host    all             all             $ALLOW_IP_RANGE              md5" >> $ROOT_CONF/pg_hba.conf
 fi
 
 # check password first so we can output the warning before postgres
@@ -44,5 +44,5 @@ if [ -z "$REPLICATE_FROM" ]; then
 	# if env not set, then assume this is master instance
 	# add rules to pg_hba.conf to allow replication from all
 	echo "Add rule to pg_hba: replication user"
-	echo "hostssl replication all 0.0.0.0/0 $authMethod" >> $ROOT_CONF/pg_hba.conf
+	echo "host replication all 0.0.0.0/0 $authMethod" >> $ROOT_CONF/pg_hba.conf
 fi
