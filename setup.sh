@@ -10,8 +10,8 @@ echo "host    all             all             172.18.0.0/16               md5" >
 # And allow access from DockerToolbox / Boottodocker on OSX
 echo "host    all             all             192.168.0.0/16               md5" >> /etc/postgresql/10.0/main/pg_hba.conf
 # Listen on all ip addresses
-echo "listen_addresses = '*'" >> /etc/postgresql/10.0/main/postgresql.conf
-echo "port = 5432" >> /etc/postgresql/10.0/main/postgresql.conf
+echo "listen_addresses = '*'" >> /etc/postgresql/10/main/postgresql.conf
+echo "port = 5432" >> /etc/postgresql/10/main/postgresql.conf
 
 # Enable ssl
 
