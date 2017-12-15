@@ -53,7 +53,7 @@ fi
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ ! -z "$POSTGRES_PASSWORD" ]; then
-	POSTGRES_PASS=$POSTGRESS_PASSWORD
+	POSTGRES_PASS=$POSTGRES_PASSWORD
 fi
 if [ ! -z "$PGDATA" ]; then
 	DATADIR=$PGDATA
