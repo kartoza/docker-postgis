@@ -1,6 +1,7 @@
 #!/bin/bash
 # Commit and redeploy the user map container
 
+set -x
 usage()
 {
 cat << EOF
@@ -18,11 +19,12 @@ OPTIONS:
    -l      local port (defaults to 25432)
    -u      Postgres user name (defaults to 'docker')
    -p      Postgres password  (defaults to 'docker')
-   -d      database name (defaults to 'gis')
+   -d      database cluster path (defaults to debian package defaults)
+   -z      database name (defaults to 'gis')
 EOF
 }
 
-while getopts ":h:n:v:l:u:p:d:" OPTION
+while getopts ":h:n:v:l:u:p:d:z:" OPTION
 do
      case $OPTION in
          n)
@@ -32,10 +34,10 @@ do
              VOLUME=${OPTARG}
              ;;
          l)
-             LOCALPORT=${optarg}
+             LOCALPORT=${OPTARG}
              ;;
          u)
-             PGUSER=${optarg}
+             PGUSER=${OPTARG}
              ;;
          p)
              PGPASSWORD=${OPTARG}
@@ -43,7 +45,10 @@ do
          d)
              DATADIR=${OPTARG}
              ;;
-         *)
+         z)
+             DBNAME=${OPTARG}
+             ;;
+         \?)
              usage
              exit 1
              ;;
@@ -86,6 +91,7 @@ CMD="docker run --name="${CONTAINER_NAME}" \
 	-e POSTGRES_USER=${PGUSER} \
 	-e POSTGRES_PASS=${PGPASSWORD} \
 	-e DATADIR=${DATADIR} \
+	-e POSTGRES_DBNAME=${DBNAME} \
 	-d -t \
         ${VOLUME_OPTION} \
     -p "${LOCALPORT}:5432" \
