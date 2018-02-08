@@ -40,7 +40,7 @@ do
          p)
              PGPASSWORD=${OPTARG}
              ;;
-         p)
+         d)
              DATADIR=${OPTARG}
              ;;
          *)
