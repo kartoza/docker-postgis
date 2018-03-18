@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
 DATADIR="/var/lib/postgresql/9.6/main"
-ARCHIVE_DIR="/opt/archivedir"
 ROOT_CONF="/etc/postgresql/9.6/main"
 CONF="$ROOT_CONF/postgresql.conf"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
@@ -59,9 +58,7 @@ fi
 if [ ! -z "${PGDATA}" ]; then
 	DATADIR=${PGDATA}
 fi
-if [ ! -z "${PGDATA_ARCHIVE}" ]; then
-	ARCHIVE_DIR=${PGDATA_ARCHIVE}
-fi
+
 if [ ! -z "$POSTGRES_DB" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi

@@ -10,10 +10,7 @@ if [ ! -d ${DATADIR} ]; then
 	mkdir -p ${DATADIR}
 fi
 
-if [ ! -d ${ARCHIVE_DIR} ]; then
-	echo "Creating Postgres archive directory for wal segments"
-	mkdir -p ${ARCHIVE_DIR}
-fi
+
 # Set proper permissions
 # needs to be done as root:
 chown -R postgres:postgres ${DATADIR}
@@ -31,6 +28,9 @@ fi
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
+echo "Use modified postgresql.conf for greater speed (spatial and replication)"
+
+cat /tmp/postgresql.conf > ${CONF}
 
 su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
 
