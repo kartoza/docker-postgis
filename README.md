@@ -22,6 +22,10 @@ environment (though probably not for heavy load databases).
 **Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
 you should configure the host for it in the provided 71-apt-cacher-ng file.
 
+There is a nice 'from scratch' tutorial on using this docker image on Alex Urquhart's
+blog [here](https://alexurquhart.com/post/set-up-postgis-with-docker/) - if you are
+just getting started with docker, PostGIS and QGIS, we really recommend that you use it.
+
 ## Tagged versions
 
 The following convention is used for tagging the images we build:
@@ -30,7 +34,7 @@ kartoza/postgis:[postgres_version]-[postgis-version]
 
 So for example:
 
-``kartoza/postgis:9.5-2.2`` Provides PostgreSQL 9.5, PostGIS 2.2
+``kartoza/postgis:9.6-2.4`` Provides PostgreSQL 9.6, PostGIS 2.4
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -101,29 +105,23 @@ the container will allow connections only from the docker private subnet.
 * -e ALLOW_IP_RANGE=<0.0.0.0/0>
 
 
-## Convenience run script
+## Convenience docker-compose.yml
 
-For convenience we have provided a bash script for running this container
-that lets you specify a volume mount point and a username / password 
-for the new instance superuser. It takes these options:
+For convenience we have provided a ``docker-compose.yml`` that will run a
+copy of the database image and also our related database backup image (see 
+[https://github.com/kartoza/docker-pg-backup](https://github.com/kartoza/docker-pg-backup)).
 
-```
-OPTIONS:
-   -h      Show this message
-   -n      Container name
-   -v      Volume to mount the Postgres cluster into
-   -l      local port (defaults to 25432)
-   -u      Postgres user name (defaults to 'docker')
-   -p      Postgres password  (defaults to 'docker')
-   -d      database name (defaults to 'gis')
-```
+The docker compose recipe will expose PostgreSQL on port 25432 (to prevent
+potential conflicts with any local database instance you may have).
 
 Example usage:
 
 ```
-./run-postgis-docker.sh -p 6789 -v /tmp/foo/ -n postgis -u foo -p bar
-
+docker-compose up -d
 ```
+
+**Note:** The docker-compose recipe above will not persist your data on your local
+disk, only in a docker volume.
 
 ## Connect via psql
 

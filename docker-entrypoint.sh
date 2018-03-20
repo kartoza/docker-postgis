@@ -40,6 +40,7 @@ done
 if [ $# -eq 0 ];
 then
 	echo "Postgres initialisation process completed .... restarting in foreground"
+	cat /tmp/postgresql.conf > ${CONF}
 	su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
 fi
 
