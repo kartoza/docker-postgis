@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# Please update the docker-postgis-diagrams graffle file you
+# change the the call sequence of these scripts.
 # This script will run as the postgres user due to the Dockerfile USER directive
 set -e
 
