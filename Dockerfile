@@ -15,7 +15,7 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-k
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-RUN apt-get install -y postgresql-client-10 postgresql-common postgresql-10 postgresql-10-postgis-2.4 postgresql-10-pgrouting netcat
+RUN apt-get update; apt-get install -y postgresql-client-10 postgresql-common postgresql-10 postgresql-10-postgis-2.4 postgresql-10-pgrouting netcat
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
