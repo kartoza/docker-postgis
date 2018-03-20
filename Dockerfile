@@ -6,12 +6,9 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update
-RUN apt-get -y install gnupg2 wget ca-certificates rpl pwgen
+RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
-RUN apt-get -y update
-#RUN apt-get -y upgrade
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
@@ -25,12 +22,24 @@ EXPOSE 5432
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
+ADD env-data.sh /env-data.sh
 ADD setup.sh /setup.sh
-RUN chmod 0755 /setup.sh
+RUN chmod +x /setup.sh
 RUN /setup.sh
 
 # We will run any commands in this when the container starts
-ADD start-postgis.sh /start-postgis.sh
-RUN chmod 0755 /start-postgis.sh
+ADD docker-entrypoint.sh /docker-entrypoint.sh
+ADD setup-conf.sh /
+ADD setup-database.sh /
+ADD setup-pg_hba.sh /
+ADD setup-replication.sh /
+ADD setup-ssl.sh /
+ADD setup-user.sh /
+ADD postgresql.conf /tmp/postgresql.conf
+RUN chmod +x /docker-entrypoint.sh
 
-CMD /start-postgis.sh
+# Optimise postgresql
+RUN echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
+RUN echo "kernel.shmall=2097152" >> /etc/sysctl.conf
+
+ENTRYPOINT /docker-entrypoint.sh
