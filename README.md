@@ -14,13 +14,17 @@ differentiates itself by:
 * template_postgis database template is created for you
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
+* supports single master replication
 
 We will work to add more security features to this container in the future with 
 the aim of making a PostGIS image that is ready to be used in a production 
 environment (though probably not for heavy load databases).
 
-**Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
-you should configure the host for it in the provided 71-apt-cacher-ng file.
+## Tutorial
+
+There is a nice 'from scratch' tutorial on using this docker image on Alex Urquhart's
+blog [here](https://alexurquhart.com/post/set-up-postgis-with-docker/) - if you are
+just getting started with docker, PostGIS and QGIS, we really recommend that you use it.
 
 ## Tagged versions
 
@@ -30,7 +34,7 @@ kartoza/postgis:[postgres_version]-[postgis-version]
 
 So for example:
 
-``kartoza/postgis:9.5-2.2`` Provides PostgreSQL 9.5, PostGIS 2.2
+``kartoza/postgis:9.6-2.4`` Provides PostgreSQL 9.6, PostGIS 2.4
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -101,29 +105,23 @@ the container will allow connections only from the docker private subnet.
 * -e ALLOW_IP_RANGE=<0.0.0.0/0>
 
 
-## Convenience run script
+## Convenience docker-compose.yml
 
-For convenience we have provided a bash script for running this container
-that lets you specify a volume mount point and a username / password 
-for the new instance superuser. It takes these options:
+For convenience we have provided a ``docker-compose.yml`` that will run a
+copy of the database image and also our related database backup image (see 
+[https://github.com/kartoza/docker-pg-backup](https://github.com/kartoza/docker-pg-backup)).
 
-```
-OPTIONS:
-   -h      Show this message
-   -n      Container name
-   -v      Volume to mount the Postgres cluster into
-   -l      local port (defaults to 25432)
-   -u      Postgres user name (defaults to 'docker')
-   -p      Postgres password  (defaults to 'docker')
-   -d      database name (defaults to 'gis')
-```
+The docker compose recipe will expose PostgreSQL on port 25432 (to prevent
+potential conflicts with any local database instance you may have).
 
 Example usage:
 
 ```
-./run-postgis-docker.sh -p 6789 -v /tmp/foo/ -n postgis -u foo -p bar
-
+docker-compose up -d
 ```
+
+**Note:** The docker-compose recipe above will not persist your data on your local
+disk, only in a docker volume.
 
 ## Connect via psql
 
@@ -159,7 +157,118 @@ docker run -d -v $HOME/postgres_data:/var/lib/postgresql kartoza/postgis`
 You need to ensure the ``postgres_data`` directory has sufficient permissions
 for the docker process to read / write it.
 
+## Postgres Replication Setup
 
+This image were provided with replication abilities. In some sense, we can 
+categorize an instance of the container as `master` or `slave`. A `master` 
+instance means that a particular container have a role as a single point of 
+database write. A `slave` instance means that a particular container will 
+mirror database content from a designated master. This replication scheme allows 
+us to sync database. However a `slave` is only of read-only transaction, thus 
+we can't write new data on it.
+
+To experiment with the replication abilities, you can see a (docker-compose.yml)[sample/replication/docker-compose.yml] 
+sample provided. There are several environment variables that you can set, such as:
+
+Master settings:
+- ALLOW_IP_RANGE: A pg_hba.conf domain format which will allow certain host 
+  to connect into the container. This is needed to allow `slave` to connect 
+  into `master`, so specifically this settings should allow `slave` address.
+- Both POSTGRES_USER and POSTGRES_PASS will be used as credentials for slave to
+  connect, so make sure you changed this into something secure.
+  
+Slave settings:
+- REPLICATE_FROM: This should be the domain name, or ip address of `master` 
+  instance. It can be anything from docker resolved name like written in the sample, 
+  or the IP address of the actual machine where you expose `master`. This is 
+  useful to create cross machine replication, or cross stack/server.
+- REPLICATE_PORT: This should be the port number of `master` postgres instance. 
+  Will default to 5432 (default postgres port), if not specified.
+- DESTROY_DATABASE_ON_RESTART: Default is `True`. Set to otherwise to prevent 
+  this behaviour. A slave will always destroy its current database on 
+  restart, because it will try to sync again from `master` and avoid inconsistencies.
+- PROMOTE_MASTER: Default none. If set to any value, then the current slave 
+  will be promoted to master. 
+  In some cases when `master` container has failed, we might want to use our `slave` 
+  as `master` for a while. However promoted slave will break consistencies and 
+  is not able to revert to slave anymore, unless the were destroyed and resynced 
+  with the new master.
+
+To run sample replication, do the following instructions:
+
+Do manual image build by executing `build.sh` script
+
+```
+./build.sh
+```
+
+Go into `sample/replication` directory and experiment with the following Make 
+command to run both master and slave services.
+
+```
+make up
+```
+
+To shutdown services, execute:
+
+```
+make down
+```
+
+To view logs for master and slave respectively, use the following command:
+
+```
+make master-log
+make slave-log
+```
+
+You can try experiment with several scenarios to see how replication works
+
+### Sync changes from master to slave
+
+You can use any postgres database tools to create new tables in master, by 
+connecting using POSTGRES_USER and POSTGRES_PASS credentials using exposed port.
+In the sample, master database were exposed in port 7777.
+Or you can do it via command line, by entering the shell:
+
+```
+make master-shell
+```
+
+Then made any database changes using psql.
+
+After that, you can see that slave follows the changes by inspecting 
+slave database. You can, again, uses database management tools using connection 
+credentials, hostname, and ports for slave. Or you can do it via command line, 
+by entering the shell:
+
+```
+make slave-shell
+```
+
+Then view your changes using psql.
+
+### Promoting slave to master
+
+You will notice that you cannot make changes in slave, because it was read-only.
+If somehow you want to promote it to master, you can specify `PROMOTE_MASTER: 'True'` 
+into slave environment and set `DESTROY_DATABASE_ON_RESTART: 'False'`. 
+
+After this, you can make changes to your slave, but master and slave will not 
+be in sync anymore. This is useful if slave needs to take over a failover master. 
+However it was recommended to take additional action, such as creating backup from 
+slave, so a dedicated master can be created again.
+
+### Preventing slave database destroy on restart
+
+You can optionally set `DESTROY_DATABASE_ON_RESTART: 'False'` after successful sync 
+to prevent the database from destroyed on restart. With this settings, you can 
+shutdown your slave and restart it later and it will continue to sync using existing 
+database (as long as there is no consistencies conflicts).
+
+However, you should note that this option doesn't mean anything if you didn't 
+persist your database volumes. Because if it is not persisted, then it will be lost 
+on restart because docker will recreate the container.
 
 ## Credits
 
