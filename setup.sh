@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 # Add any additional setup tasks here
 chmod 600 /etc/ssl/private/ssl-cert-snakeoil.key
 
