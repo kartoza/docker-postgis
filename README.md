@@ -20,9 +20,6 @@ We will work to add more security features to this container in the future with
 the aim of making a PostGIS image that is ready to be used in a production 
 environment (though probably not for heavy load databases).
 
-**Note:** We recommend using ``apt-cacher-ng`` to speed up package fetching -
-you should configure the host for it in the provided 71-apt-cacher-ng file.
-
 There is a nice 'from scratch' tutorial on using this docker image on Alex Urquhart's
 blog [here](https://alexurquhart.com/post/set-up-postgis-with-docker/) - if you are
 just getting started with docker, PostGIS and QGIS, we really recommend that you use it.
