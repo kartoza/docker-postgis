@@ -14,6 +14,7 @@ differentiates itself by:
 * template_postgis database template is created for you
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
+* replication support included
 
 We will work to add more security features to this container in the future with 
 the aim of making a PostGIS image that is ready to be used in a production 
