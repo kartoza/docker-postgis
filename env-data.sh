@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR="/var/lib/postgresql/9.6/main"
+DATADIR="/pg_data"
 ROOT_CONF="/etc/postgresql/9.6/main"
 CONF="$ROOT_CONF/postgresql.conf"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"

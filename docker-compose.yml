@@ -1,5 +1,5 @@
 # docker-compose build
-# docker-compose up -d web
+# docker-compose up -d
 version: '2'
 volumes:
   dbbackups:
@@ -10,13 +10,14 @@ services:
   db:
     image: kartoza/postgis:9.6-2.4
     volumes:
-      - 'postgis-data:/var/lib/postgresql'
-      - 'dbbackups:/backups'
+      - postgis-data:/var/lib/postgresql
+      - dbbackups:/backups
     environment:
       - POSTGRES_DB=gis
       - POSTGRES_USER=docker
       - POSTGRES_PASS=docker
       - ALLOW_IP_RANGE=0.0.0.0/0
+      - DESTROY_DATABASE_ON_RESTART=True
     ports:
       - 25432:5432 
     restart: unless-stopped

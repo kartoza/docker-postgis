@@ -4,11 +4,15 @@ source /env-data.sh
 
 # This script will setup pg_hba.conf
 
-# Reconfigure pg_hba if environment settings changed
-cat $ROOT_CONF/pg_hba.conf.template > $ROOT_CONF/pg_hba.conf
-
 # Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
 # Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16'
+
+# moved from setup.sh. Delete if unnecessary
+# Restrict subnet to docker private network
+#echo "host    all             all             172.0.0.0/8               md5" >> $ROOT_CONF/pg_hba.conf
+# And allow access from DockerToolbox / Boottodocker on OSX or any other host in this range
+#echo "host    all             all             192.168.0.0/16               md5" >> $ROOT_CONF/pg_hba.conf
+
 if [ "$ALLOW_IP_RANGE" ]
 then
 	echo "Add rule to pg_hba: $ALLOW_IP_RANGE"

@@ -40,13 +40,13 @@ services:
       # connect to this slave
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
-      # REPLICATE_FROM options accepts domain-name or IP adress
+      # REPLICATE_FROM options accepts domain-name or IP address
       # with this in mind, you can also put docker service name, because it
       # will be resolved as host name.
       REPLICATE_FROM: 'pg-master'
 
       # REPLICATE_PORT will default to 5432 if not specified.
-      REPLICATE_PORT: '5432'
+      # REPLICATE_PORT: '5432'
       # In the case where you need to replicate from outside service,
       # you can put the server address and port here, as long as the target
       # where configured as master, and replicable.
