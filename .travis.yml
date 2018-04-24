@@ -1,0 +1,27 @@
+sudo: required
+
+language: python
+
+services:
+  - docker
+
+virtualenv:
+  system_site_packages: true
+
+python:
+  - '2.7'
+
+script:
+  - ./build.sh
+  - pushd sample/replication
+  - make up
+  - make status
+  # Check for database status
+  - until make check-master-running; do echo "Retrying"; sleep 5; done
+  - until make check-slave-running; do echo "Retrying"; sleep 5; done
+
+  # Check replications
+  - until make check-master-replication; do echo "Retrying"; make master-log-tail; sleep 5; done
+  - sleep 60  # Wait replication finished
+  - until make check-slave-replication; do echo "Retrying"; make slave-log-tail; sleep 5; done
+  - popd

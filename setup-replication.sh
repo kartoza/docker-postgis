@@ -25,6 +25,7 @@ done
 if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	echo "Get initial database from master"
 
+	chown -R postgres:postgres $(getent passwd postgres  | cut -d: -f6)
 	su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${POSTGRES_USER}:${POSTGRES_PASS}\" > ~/.pgpass"
 	su - postgres -c "chmod 0600 ~/.pgpass"
 
@@ -32,6 +33,10 @@ if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	do
 		echo "Waiting for master to connect..."
 		sleep 1s
+		if [ "$(ls -A $DATADIR)" ]; then
+			echo "Need empty folder. Cleaning directory..."
+			rm -rf $DATADIR/*
+		fi
 	done
 fi
 
