@@ -9,6 +9,7 @@ services:
     # observe how the slave will behave after restarts.
     volumes:
       - './pg-master:/var/lib/postgresql'
+      - './tests:/tests'
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
@@ -31,6 +32,7 @@ services:
     # runtime
     volumes:
       - './pg-slave:/var/lib/postgresql'
+      - './tests:/tests'
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
