@@ -9,7 +9,7 @@ source /env-data.sh
 
 # moved from setup.sh. Delete if unnecessary
 # Restrict subnet to docker private network
-#echo "host    all             all             172.0.0.0/8               md5" >> $ROOT_CONF/pg_hba.conf
+echo "host    all             all             172.0.0.0/8               md5" >> $ROOT_CONF/pg_hba.conf
 # And allow access from DockerToolbox / Boottodocker on OSX or any other host in this range
 #echo "host    all             all             192.168.0.0/16               md5" >> $ROOT_CONF/pg_hba.conf
 
