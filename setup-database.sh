@@ -10,10 +10,15 @@ if [ ! -d ${DATADIR} ]; then
 	mkdir -p ${DATADIR}
 fi
 
+if [ ! -d ${WAL_ARCHIVE} ]; then
+        echo "Creating Wal archive directory at ${WAL_ARCHIVE}"
+        mkdir -p ${WAL_ARCHIVE}
+fi
+
 
 # Set proper permissions
 # needs to be done as root:
-chown -R postgres:postgres ${DATADIR}
+chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
 
 
 # test if DATADIR has content

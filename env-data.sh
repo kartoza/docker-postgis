@@ -3,6 +3,7 @@
 DATADIR="/var/lib/postgresql/9.6/main"
 ROOT_CONF="/etc/postgresql/9.6/main"
 CONF="$ROOT_CONF/postgresql.conf"
+WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/9.6/bin/postgres"
 INITDB="/usr/lib/postgresql/9.6/bin/initdb"
