@@ -5,7 +5,7 @@ source /env-data.sh
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 
 cat >> $CONF <<EOF
-wal_level = archive
+wal_level = replica
 max_wal_senders = $PG_MAX_WAL_SENDERS
 wal_keep_segments = $PG_WAL_KEEP_SEGMENTS
 hot_standby = on
