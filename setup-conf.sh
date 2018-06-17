@@ -5,7 +5,7 @@ source /env-data.sh
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 
 cat >> $CONF <<EOF
-wal_level = replica
+wal_level = hot_standby
 max_wal_senders = $PG_MAX_WAL_SENDERS
 wal_keep_segments = $PG_WAL_KEEP_SEGMENTS
 hot_standby = on
@@ -18,8 +18,8 @@ wal_buffers = 1MB
 # checkpoint_segments = 6
 random_page_cost = 2.0
 xmloption = 'document'
-archive_mode=on
-archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
+#archive_mode=on
+#archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
 EOF
 
 # Optimise PostgreSQL shared memory for PostGIS
