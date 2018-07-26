@@ -45,5 +45,7 @@ RUN echo "kernel.shmall=2097152" >> /etc/sysctl.conf
 ADD locale.gen /etc/locale.gen
 RUN /usr/sbin/locale-gen
 ENV LANG en_US.UTF-8
+ENV LANGUAGE=en_US:en
+RUN update-locale tr_TR.UTF8
 
 ENTRYPOINT /docker-entrypoint.sh
