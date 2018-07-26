@@ -13,6 +13,8 @@ PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/10-main.pid"
+DEFAULT_ENCODING="UTF8"
+DEFAULT_COLLATION="tr_TR.UTF-8"
 
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then

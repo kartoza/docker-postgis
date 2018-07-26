@@ -42,4 +42,8 @@ RUN chmod +x /docker-entrypoint.sh
 RUN echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
 RUN echo "kernel.shmall=2097152" >> /etc/sysctl.conf
 
+ADD locale.gen /etc/locale.gen
+RUN /usr/sbin/locale-gen
+ENV LANG en_US.UTF-8
+
 ENTRYPOINT /docker-entrypoint.sh
