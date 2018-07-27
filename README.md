@@ -1,4 +1,9 @@
-# docker-postgis
+# docker-postgis - with Turkish locale
+
+
+*Changed the PostgreSQL collation, ctype and charsets to 
+tr_TR.UTF-8. You can further customize it by changing the 
+`locale.gen`, `env-data.sh` and last lines of `Dockerfile`.* 
 
 
 
