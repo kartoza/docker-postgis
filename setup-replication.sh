@@ -49,10 +49,10 @@ if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 		fi
 	done
 else
-    echo "Pg Base Backup already exist"
+    echo "Destroy database has been set to false: Check Backup directory if it already exists"
     configure_replication_permissions
     if [ "$(ls -A $DATADIR)" ]; then
-			echo "Base directory Exist"
+			echo "Base directory exist - Please startup the database"
 	else
 
 	    su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${POSTGRES_USER} -vP -w"
