@@ -100,7 +100,14 @@ user is set to 'docker' with password 'docker'.
 You can open up the PG port by using the following environment variable. By default 
 the container will allow connections only from the docker private subnet.
 
-* -e ALLOW_IP_RANGE=<0.0.0.0/0>
+* -e ALLOW_IP_RANGE=<0.0.0.0/0> By default 
+t
+
+Postgres conf is setup to listen to all connections and if a user needs to restrict which IP address
+PostgreSQL listens to you can define it with the following environment variable. The default is set to listen to 
+all connections.
+* -e IP_LIST=<*>
+
 
 
 ## Convenience docker-compose.yml

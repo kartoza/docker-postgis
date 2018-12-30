@@ -50,6 +50,9 @@ if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
 	PG_WAL_KEEP_SEGMENTS=100
 fi
 
+if [ -z "${IP_LIST}" ]; then
+	IP_LIST='*'
+fi
 
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
