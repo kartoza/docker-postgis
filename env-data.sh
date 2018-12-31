@@ -12,7 +12,7 @@ SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
-PGSTAT_TMP="/var/run/postgresql/10-main.pg_stat_tmp"
+PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/10-main.pid"
 
 # Make sure we have a user set up
