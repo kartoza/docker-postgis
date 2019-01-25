@@ -35,7 +35,6 @@ ADD setup-pg_hba.sh /
 ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
-ADD postgresql.conf /tmp/postgresql.conf
 RUN chmod +x /docker-entrypoint.sh
 
 
