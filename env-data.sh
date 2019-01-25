@@ -3,6 +3,7 @@
 DATADIR="/var/lib/postgresql/10/main"
 ROOT_CONF="/etc/postgresql/10/main"
 CONF="$ROOT_CONF/postgresql.conf"
+WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/10/bin/postgres"
 INITDB="/usr/lib/postgresql/10/bin/initdb"
@@ -49,6 +50,9 @@ if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
 	PG_WAL_KEEP_SEGMENTS=100
 fi
 
+if [ -z "${IP_LIST}" ]; then
+	IP_LIST='*'
+fi
 
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
