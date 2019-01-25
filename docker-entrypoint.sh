@@ -40,13 +40,13 @@ done
 if [ $# -eq 0 ];
 then
 	echo "Postgres initialisation process completed .... restarting in foreground"
-	cat /tmp/postgresql.conf > ${CONF}
+
 	su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
 fi
 
 # If arguments passed, run postgres with these arguments
 # This will make sure entrypoint will always be executed
-if [ "${1:0:1}" = '-' ]; then
+if [[ "${1:0:1}" = '-' ]]; then
 	# append postgres into the arguments
 	set -- postgres "$@"
 fi
