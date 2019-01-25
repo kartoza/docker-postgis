@@ -30,7 +30,7 @@ fi
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 echo "Use modified postgresql.conf for greater speed (spatial and replication)"
 
-cat /tmp/postgresql.conf > ${CONF}
+
 
 su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
 

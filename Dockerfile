@@ -35,11 +35,7 @@ ADD setup-pg_hba.sh /
 ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
-ADD postgresql.conf /tmp/postgresql.conf
 RUN chmod +x /docker-entrypoint.sh
 
-# Optimise postgresql
-RUN echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
-RUN echo "kernel.shmall=2097152" >> /etc/sysctl.conf
 
 ENTRYPOINT /docker-entrypoint.sh
