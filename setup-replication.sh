@@ -8,14 +8,10 @@ source /env-data.sh
 # To set up replication
 
 
-if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
-	echo "Destroy initial database, if any."
-	rm -rf $DATADIR
-fi
 
-mkdir -p $DATADIR
-chown -R postgres:postgres $DATADIR
-chmod -R 700 $DATADIR
+mkdir -p ${DATADIR}
+chown -R postgres:postgres ${DATADIR}
+chmod -R 700 ${DATADIR}
 
 # No content yet - but this is a slave database
 until ping -c 1 -W 1 ${REPLICATE_FROM}
@@ -33,29 +29,33 @@ function configure_replication_permissions {
         su - postgres -c "chmod 0600 ~/.pgpass"
 }
 
+function streaming_replication {
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${POSTGRES_USER} -vP -w"
+	do
+		echo "Waiting for master to connect..."
+		sleep 1s
+		if [[ "$(ls -A ${DATADIR})" ]]; then
+			echo "Need empty folder. Cleaning directory..."
+			rm -rf ${DATADIR}/*
+		fi
+	done
 
+}
 if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	echo "Get initial database from master"
 
 	configure_replication_permissions
 
-	until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${POSTGRES_USER} -vP -w"
-	do
-		echo "Waiting for master to connect..."
-		sleep 1s
-		if [ "$(ls -A $DATADIR)" ]; then
-			echo "Need empty folder. Cleaning directory..."
-			rm -rf $DATADIR/*
-		fi
-	done
+	streaming_replication
 else
     echo "Destroy database has been set to false: Check Backup directory if it already exists"
     configure_replication_permissions
-    if [ "$(ls -A $DATADIR)" ]; then
+    # We need a clever way to identify if base backup exists
+    if [[ "$(ls -A ${DATADIR}/pg_xlog/000000010000000000000004)" ]]; then
 			echo "Base directory exist - Please startup the database"
 	else
 
-	    su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${POSTGRES_USER} -vP -w"
+	   streaming_replication
 	fi
 
 
@@ -74,6 +74,6 @@ chown postgres ${DATADIR}/recovery.conf
 chmod 600 ${DATADIR}/recovery.conf
 
 # Promote to master if desired
-if [ ! -z "$PROMOTE_MASTER" ]; then
-	touch $PROMOTE_FILE
+if [[ ! -z "${PROMOTE_MASTER}" ]]; then
+	touch ${PROMOTE_FILE}
 fi
