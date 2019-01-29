@@ -3,7 +3,7 @@ version: '2.1'
 
 volumes:
   pg-master-data-dir:
-  pg-replicant-data-dir:
+  pg-slave-data-dir:
 
 
 services:
@@ -30,7 +30,7 @@ services:
     healthcheck:
       test: "exit 0"
 
-  pg-replicant:
+  pg-slave:
     image: 'kartoza/postgis:manual-build'
     restart: 'always'
     # You can optionally mount to volume, but we're not able to scale it
@@ -38,7 +38,7 @@ services:
     # The slave will always destroy its database and copy from master at
     # runtime
     volumes:
-      - pg-replicant-data-dir:/var/lib/postgresql
+      - pg-slave-data-dir:/var/lib/postgresql
       - ./tests:/tests
 
     environment:
