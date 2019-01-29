@@ -18,6 +18,9 @@ wal_buffers = 1MB
 # checkpoint_segments = 6
 random_page_cost = 2.0
 xmloption = 'document'
+#archive_mode=on
+#archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
+#user-settings
 EOF
 
 # Optimise PostgreSQL shared memory for PostGIS

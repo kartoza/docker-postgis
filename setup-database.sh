@@ -5,19 +5,24 @@ source /env-data.sh
 # This script will setup the necessary folder for database
 
 # test if DATADIR is existent
-if [ ! -d ${DATADIR} ]; then
+if [[ ! -d ${DATADIR} ]]; then
 	echo "Creating Postgres data at ${DATADIR}"
 	mkdir -p ${DATADIR}
+fi
+
+if [[ ! -d ${WAL_ARCHIVE} ]]; then
+        echo "Creating Wal archive directory at ${WAL_ARCHIVE}"
+        mkdir -p ${WAL_ARCHIVE}
 fi
 
 
 # Set proper permissions
 # needs to be done as root:
-chown -R postgres:postgres ${DATADIR}
+chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
 
 
 # test if DATADIR has content
-if [ ! "$(ls -A ${DATADIR})" ]; then
+if [[ ! "$(ls -A ${DATADIR})" ]]; then
 	# No content yet - first time pg is being run!
 	# No Replicate From settings. Assume that this is a master database.
 	# Initialise db
@@ -99,10 +104,10 @@ fi
 su - postgres -c "psql -l"
 
 # Kill postgres
-PID=`cat $PG_PID`
+PID=`cat ${PG_PID}`
 kill -TERM ${PID}
 
 # Wait for background postgres main process to exit
-while [ "$(ls -A ${PG_PID} 2>/dev/null)" ]; do
+while [[ "$(ls -A ${PG_PID} 2>/dev/null)" ]]; do
   sleep 1
 done

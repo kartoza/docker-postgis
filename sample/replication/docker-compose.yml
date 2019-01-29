@@ -1,5 +1,10 @@
 
-version: '2'
+version: '2.1'
+
+volumes:
+  pg-master-data-dir:
+  pg-slave-data-dir:
+
 
 services:
   pg-master:
@@ -8,8 +13,8 @@ services:
     # You can optionally mount to volume, to play with the persistence and
     # observe how the slave will behave after restarts.
     volumes:
-      - './pg-master:/var/lib/postgresql'
-      - './tests:/tests'
+      - pg-master-data-dir:/var/lib/postgresql
+      - ./tests:/tests
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
@@ -17,11 +22,13 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
       # We can specify optional credentials
-      POSTGRES_USER: 'superadmin'
-      POSTGRES_PASS: 'superstrongpassword'
+      POSTGRES_USER: 'docker'
+      POSTGRES_PASS: 'docker'
     # You can expose the port to observe it in your local machine
     ports:
       - "7777:5432"
+    healthcheck:
+      test: "exit 0"
 
   pg-slave:
     image: 'kartoza/postgis:manual-build'
@@ -31,8 +38,9 @@ services:
     # The slave will always destroy its database and copy from master at
     # runtime
     volumes:
-      - './pg-slave:/var/lib/postgresql'
-      - './tests:/tests'
+      - pg-slave-data-dir:/var/lib/postgresql
+      - ./tests:/tests
+
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
@@ -58,7 +66,7 @@ services:
       # DESTROY_DATABASE_ON_RESTART will default to True if not specified.
       # If specified other than True, it will prevent slave from destroying
       # database on restart
-#      DESTROY_DATABASE_ON_RESTART: 'False'
+      DESTROY_DATABASE_ON_RESTART: 'False'
 
       # PROMOTE_MASTER Default empty.
       # If specified with any value, then it will convert current slave into
@@ -69,10 +77,11 @@ services:
       # For now we don't support different credentials for replication
       # so we use the same credentials as master's superuser, or anything that
       # have replication role.
-      POSTGRES_USER: 'superadmin'
-      POSTGRES_PASS: 'superstrongpassword'
-    links:
-      - 'pg-master'
+      POSTGRES_USER: 'docker'
+      POSTGRES_PASS: 'docker'
+    depends_on:
+        pg-master:
+          condition: service_healthy
     # You can expose the port to observe it in your local machine
     # For this sample, it was disabled by default to allow scaling test
     ports:
