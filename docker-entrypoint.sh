@@ -4,15 +4,36 @@
 set -e
 
 # Setup postgres CONF file
-source /setup-conf.sh
+if grep -rlq "#user-settings" /etc/postgresql/9.6/main/postgresql.conf
+then
+    echo "postgres conf already configured"
+else
+    source /setup-conf.sh
+fi
+
 
 # Setup ssl
-source /setup-ssl.sh
+
+# Setup ssl
+if grep -rlq "ssl-cert-snakeoil.pem" /etc/postgresql/9.6/main/postgresql.conf
+then
+    echo "ssl already configured"
+else
+    echo "SSL not configures so proceed to setup"
+    source /setup-ssl.sh
+
+fi
 
 # Setup pg_hba.conf
-source /setup-pg_hba.sh
+if grep -rlq "172.0.0.0/8" /etc/postgresql/9.6/main/pg_hba.conf
+then
+    echo "pg_hba  already configured"
+else
+    echo "we will setup pg_hba conf"
+    source /setup-pg_hba.sh
+fi
 
-if [ -z "$REPLICATE_FROM" ]; then
+if [[ -z "$REPLICATE_FROM" ]]; then
 	# This means this is a master instance. We check that database exists
 	echo "Setup master database"
 	source /setup-database.sh
@@ -37,7 +58,7 @@ for f in /docker-entrypoint-initdb.d/*; do
 done
 
 # If no arguments passed to entrypoint, then run postgres by default
-if [ $# -eq 0 ];
+if [[ $# -eq 0 ]];
 then
 	echo "Postgres initialisation process completed .... restarting in foreground"
 
