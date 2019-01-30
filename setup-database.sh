@@ -5,7 +5,7 @@ source /env-data.sh
 # This script will setup the necessary folder for database
 
 # test if DATADIR is existent
-if [ ! -d ${DATADIR} ]; then
+if [[ ! -d ${DATADIR} ]]; then
 	echo "Creating Postgres data at ${DATADIR}"
 	mkdir -p ${DATADIR}
 fi
@@ -17,7 +17,7 @@ chown -R postgres:postgres ${DATADIR}
 
 
 # test if DATADIR has content
-if [ ! "$(ls -A ${DATADIR})" ]; then
+if [[ ! "$(ls -A ${DATADIR})" ]]; then
 	# No content yet - first time pg is being run!
 	# No Replicate From settings. Assume that this is a master database.
 	# Initialise db
@@ -28,7 +28,6 @@ fi
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
-echo "Use modified postgresql.conf for greater speed (spatial and replication)"
 
 
 
@@ -102,10 +101,10 @@ fi
 su - postgres -c "psql -l"
 
 # Kill postgres
-PID=`cat $PG_PID`
+PID=`cat ${PG_PID}`
 kill -TERM ${PID}
 
 # Wait for background postgres main process to exit
-while [ "$(ls -A ${PG_PID} 2>/dev/null)" ]; do
+while [[ "$(ls -A ${PG_PID} 2>/dev/null)" ]]; do
   sleep 1
 done
