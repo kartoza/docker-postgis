@@ -14,7 +14,8 @@ fi
 
 # Setup ssl
 
-if [[ -e /etc/ssl/openssl.cnf ]]
+# Setup ssl
+if grep -rlq "ssl-cert-snakeoil.pem" /etc/postgresql/9.6/main/postgresql.conf
 then
     echo "ssl already configured"
 else
@@ -22,7 +23,6 @@ else
     source /setup-ssl.sh
 
 fi
-
 
 # Setup pg_hba.conf
 if grep -rlq "172.0.0.0/8" /etc/postgresql/9.6/main/pg_hba.conf
