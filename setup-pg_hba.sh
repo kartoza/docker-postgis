@@ -2,6 +2,11 @@
 
 source /env-data.sh
 
+SETUP_LOCKFILE="${ROOT_CONF}/.pg_hba.conf.lock"
+if [ -f "${SETUP_LOCKFILE}" ]; then
+	return 0
+fi
+
 # This script will setup pg_hba.conf
 
 # Reconfigure pg_hba if environment settings changed
@@ -46,3 +51,6 @@ if [[ -z "$REPLICATE_FROM" ]]; then
 	echo "Add rule to pg_hba: replication user"
 	echo "host replication all 0.0.0.0/0 $authMethod" >> ${ROOT_CONF}/pg_hba.conf
 fi
+
+# Put lock file to make sure conf was not reinitialized
+touch ${SETUP_LOCKFILE}
