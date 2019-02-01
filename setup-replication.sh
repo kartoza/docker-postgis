@@ -50,30 +50,24 @@ if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	configure_replication_permissions
 
 	streaming_replication
-else
-
-    echo "Destroy database has been set to false: Check Backup directory if it already exists"
-
-    #TODO We need a clever way to identify if base backup exists
-
-
-    '''
-    configure_replication_permissions
-    var=`du -sh /var/lib/postgresql/11/main/pg_wal | awk '{print $1}'`
-    var_size=${var:0:2}
-
-    if [[ "${var_size} -gt  33 " ]]; then
-            echo ${var_size}
-			echo "Base directory exist - Please startup the database"
-	else
-        echo "Base directory does not exists- Create a new one"
-	   streaming_replication
-	fi
-	'''
-
-
 
 fi
+
+#TODO We need a clever way to identify if base backup exists - Incoperate it as an else statement in destroy logic
+
+'''
+configure_replication_permissions
+var=`du -sh /var/lib/postgresql/11/main/pg_wal | awk '{print $1}'`
+var_size=${var:0:2}
+
+if [[ "${var_size} -gt  33 " ]]; then
+        echo ${var_size}
+        echo "Base directory exist - Please startup the database"
+else
+    echo "Base directory does not exists- Create a new one"
+   streaming_replication
+fi
+'''
 
 # Setup recovery.conf, a configuration file for slave
 cat > ${DATADIR}/recovery.conf <<EOF
