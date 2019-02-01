@@ -1,0 +1,38 @@
+# docker-compose build
+# docker-compose up -d web
+version: '2'
+volumes:
+  dbbackups:
+  postgis-data:
+
+services:
+
+  db:
+    image: kartoza/postgis:10.0-2.4
+    volumes:
+      - 'postgis-data:/var/lib/postgresql'
+      - 'dbbackups:/backups'
+    environment:
+      - POSTGRES_DB=gis
+      - POSTGRES_USER=docker
+      - POSTGRES_PASS=docker
+      - ALLOW_IP_RANGE=0.0.0.0/0
+    ports:
+      - 25432:5432
+    restart: unless-stopped
+
+  dbbackups:
+    image: kartoza/pg-backup:10.0
+    hostname: pg-backups
+    volumes:
+      - dbbackups:/backups
+    links:
+      - db:db
+    environment:
+      - DUMPPREFIX=demo
+      - PGUSER=docker
+      - PGPASSWORD=docker
+      - PGDATABASE=gis
+      - PGPORT=5432
+      - PGHOST=db
+    restart: unless-stopped
