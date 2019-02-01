@@ -3,35 +3,17 @@
 # This script will run as the postgres user due to the Dockerfile USER directive
 set -e
 
+#TODO Prepare lock files that prevent running the setup-conf,setup-pg_hba,setup-ssl.sh on each restart
 # Setup postgres CONF file
-if grep -rlq "#user-settings" /etc/postgresql/9.6/main/postgresql.conf
-then
-    echo "postgres conf already configured"
-else
-    source /setup-conf.sh
-fi
 
+source /setup-conf.sh
 
 # Setup ssl
-
-# Setup ssl
-if grep -rlq "ssl-cert-snakeoil.pem" /etc/postgresql/9.6/main/postgresql.conf
-then
-    echo "ssl already configured"
-else
-    echo "SSL not configures so proceed to setup"
-    source /setup-ssl.sh
-
-fi
+source /setup-ssl.sh
 
 # Setup pg_hba.conf
-if grep -rlq "172.0.0.0/8" /etc/postgresql/9.6/main/pg_hba.conf
-then
-    echo "pg_hba  already configured"
-else
-    echo "we will setup pg_hba conf"
-    source /setup-pg_hba.sh
-fi
+
+source /setup-pg_hba.sh
 
 if [[ -z "$REPLICATE_FROM" ]]; then
 	# This means this is a master instance. We check that database exists
