@@ -2,6 +2,11 @@
 
 source /env-data.sh
 
+SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
+if [ -f "${SETUP_LOCKFILE}" ]; then
+	return 0
+fi
+
 # This script will setup necessary configuration to enable replications
 
 # Refresh configuration in case environment settings changed.
@@ -32,3 +37,5 @@ EOF
 echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
 echo "kernel.shmall=2097152" >> /etc/sysctl.conf
 
+# Put lock file to make sure conf was not reinitialized
+touch ${SETUP_LOCKFILE}

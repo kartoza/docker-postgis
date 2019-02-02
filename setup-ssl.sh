@@ -2,6 +2,11 @@
 
 source /env-data.sh
 
+SETUP_LOCKFILE="${ROOT_CONF}/.ssl.conf.lock"
+if [ -f "${SETUP_LOCKFILE}" ]; then
+	return 0
+fi
+
 # This script will setup default SSL config
 
 # /etc/ssl/private can't be accessed from within container for some reason
@@ -24,3 +29,6 @@ echo "ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'" >> $CONF
 echo "ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'" >> $CONF
 #echo "ssl_ca_file = ''                       # (change requires restart)" >> $CONF
 #echo "ssl_crl_file = ''" >> $CONF
+
+# Put lock file to make sure conf was not reinitialized
+touch ${SETUP_LOCKFILE}
