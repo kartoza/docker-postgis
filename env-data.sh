@@ -16,56 +16,56 @@ PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/11-main.pid"
 
 # Make sure we have a user set up
-if [[ -z "${POSTGRES_USER}" ]]; then
+if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
 fi
-if [[ -z "${POSTGRES_PASS}" ]]; then
+if [ -z "${POSTGRES_PASS}" ]; then
 	POSTGRES_PASS=docker
 fi
-if [[ -z "${POSTGRES_DBNAME}" ]]; then
+if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
 # SSL mode
-if [[ -z "${PGSSLMODE}" ]]; then
+if [ -z "${PGSSLMODE}" ]; then
 	PGSSLMODE=require
 fi
 # Enable hstore and topology by default
-if [[ -z "${HSTORE}" ]]; then
+if [ -z "${HSTORE}" ]; then
 	HSTORE=true
 fi
-if [[ -z "${TOPOLOGY}" ]]; then
+if [ -z "${TOPOLOGY}" ]; then
 	TOPOLOGY=true
 fi
 # Replication settings
-if [[ -z "${REPLICATE_PORT}" ]]; then
+if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
 fi
-if [[ -z "${DESTROY_DATABASE_ON_RESTART}" ]]; then
+if [ -z "${DESTROY_DATABASE_ON_RESTART}" ]; then
 	DESTROY_DATABASE_ON_RESTART=true
 fi
-if [[ -z "${PG_MAX_WAL_SENDERS}" ]]; then
+if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 	PG_MAX_WAL_SENDERS=10
 fi
-if [[ -z "${PG_WAL_KEEP_SEGMENTS}" ]]; then
+if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
 	PG_WAL_KEEP_SEGMENTS=250
 fi
 
-if [[ -z "${IP_LIST}" ]]; then
+if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
-if [[ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]]; then
+if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
   POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
 fi
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
-if [[ ! -z "${POSTGRES_PASSWORD}" ]]; then
+if [ ! -z "${POSTGRES_PASSWORD}" ]; then
 	POSTGRES_PASS=${POSTGRES_PASSWORD}
 fi
-if [[ ! -z "${PGDATA}" ]]; then
+if [ ! -z "${PGDATA}" ]; then
 	DATADIR=${PGDATA}
 fi
 
-if [[ ! -z "$POSTGRES_DB" ]]; then
+if [ ! -z "$POSTGRES_DB" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi
