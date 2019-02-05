@@ -11,10 +11,11 @@ differentiates itself by:
 
 * provides ssl support out of the box
 * connections are restricted to the docker subnet
-* template_postgis database template is created for you
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
 * replication support included
+* Ability to create multiple database when you spin the database.
+* Enable multiple extensions in the database when setting it up
 
 We will work to add more security features to this container in the future with 
 the aim of making a PostGIS image that is ready to be used in a production 
@@ -87,11 +88,12 @@ sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ## Environment variables
 
 You can also use the following environment variables to pass a 
-user name, password and/or default database name.
+user name, password and/or default database name(or multiple databases coma separated).
 
 * -e POSTGRES_USER=<PGUSER> 
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
+* -e POSTGRES_MULTIPLE_EXTENSIONS=<postgis> # You can pass as many variables as you need.
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
