@@ -75,7 +75,7 @@ standby_mode = on
 primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASS} sslmode=${PGSSLMODE}'
 trigger_file = '${PROMOTE_FILE}'
 recovery_target_timeline='latest'
-recovery_target = 'immediate'
+recovery_target_action='promote'
 #restore_command = 'cp /opt/archive/%f "%p"' Use if you are syncing the wal segments from master
 EOF
 # Setup permissions. Postgres won't start without this.
