@@ -10,10 +10,10 @@ services:
   db:
     image: kartoza/postgis:11.0-2.5
     volumes:
-      - 'postgis-data:/var/lib/postgresql'
-      - 'dbbackups:/backups'
+      - postgis-data:/var/lib/postgresql
+      - dbbackups:/backups
     environment:
-      # If you need to create multiple database you can add coma separated databases eg gis,test
+      # If you need to create multiple database you can add coma separated databases eg gis,data
       - POSTGRES_DB=gis
       - POSTGRES_USER=docker
       - POSTGRES_PASS=docker

@@ -45,24 +45,24 @@ source /setup-user.sh
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
-# Since we now pass a coma separated list in database creation we need to search for only a single one as a test
-SINGLE_DB=$(echo  ${POSTGRES_DBNAME} | awk -F, '{print $1}')
-RESULT=`su - postgres -c "psql -l | grep -w ${SINGLE_DB} | wc -l"`
-echo "Check default db ${POSTGRES_DBNAME} exists"
-if [[ ! ${RESULT} == '1' ]]; then
-  echo "Create default db ${POSTGRES_DBNAME}"
-   for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-        echo "creating ${db} database"
-        su - postgres -c "createdb  -O ${POSTGRES_USER}  ${db}"
-    for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-        echo "Enabling ${ext} in the database ${db}"
-        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
-    done
-done
+# Since we now pass a comma separated list in database creation we need to search for all databases as a test
 
-else
-  echo "${POSTGRES_DBNAME} db already exists"
-fi
+for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+        RESULT=`su - postgres -c "psql -l | grep -w ${db} | wc -l"`
+        if [[ ! ${RESULT} == '1' ]]; then
+            echo "Create db ${db}"
+            su - postgres -c "createdb  -O ${POSTGRES_USER}  ${db}"
+            for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
+                echo "Enabling ${ext} in the database ${db}"
+                su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
+            done
+            echo "Loading legacy sql"
+            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
+            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
+        else
+         echo "${db} db already exists"
+        fi
+done
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"

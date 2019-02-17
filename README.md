@@ -93,7 +93,7 @@ user name, password and/or default database name(or multiple databases coma sepa
 * -e POSTGRES_USER=<PGUSER> 
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
-* -e POSTGRES_MULTIPLE_EXTENSIONS=<postgis> # You can pass as many variables as you need.
+* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology # You can pass as many extensions as you need.
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
