@@ -44,16 +44,19 @@ if [ -z "${DESTROY_DATABASE_ON_RESTART}" ]; then
 	DESTROY_DATABASE_ON_RESTART=true
 fi
 if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
-	PG_MAX_WAL_SENDERS=8
+	PG_MAX_WAL_SENDERS=10
 fi
 if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
-	PG_WAL_KEEP_SEGMENTS=100
+	PG_WAL_KEEP_SEGMENTS=250
 fi
 
 if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
+if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
+  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
+fi
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ ! -z "${POSTGRES_PASSWORD}" ]; then
