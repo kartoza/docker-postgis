@@ -24,6 +24,9 @@ services:
       # We can specify optional credentials
       POSTGRES_USER: 'docker'
       POSTGRES_PASS: 'docker'
+      # Setup master replication variables
+      #PG_MAX_WAL_SENDERS: 8
+      #PG_WAL_KEEP_SEGMENTS: 100
     # You can expose the port to observe it in your local machine
     ports:
       - "7777:5432"
