@@ -61,9 +61,9 @@ else
 				*)        echo "$0: ignoring $f" ;;
 			esac
 			echo
-			# Put lock file to make sure entrypoint scripts were run
-            touch ${SETUP_LOCKFILE}
     done
+    # Put lock file to make sure entry point scripts were run
+    touch ${SETUP_LOCKFILE}
 fi
 
 }
