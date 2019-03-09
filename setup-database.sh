@@ -67,11 +67,4 @@ done
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
 
-# Kill postgres
-PID=`cat ${PG_PID}`
-kill -TERM ${PID}
 
-# Wait for background postgres main process to exit
-while [[ "$(ls -A ${PG_PID} 2>/dev/null)" ]]; do
-  sleep 1
-done
