@@ -38,8 +38,12 @@ done
 
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
-
-for f in /docker-entrypoint-initdb.d/*; do
+function entry_point_scripts {
+SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
+if [[ -f "${SETUP_LOCKFILE}" ]]; then
+	return 0
+else
+    for f in /docker-entrypoint-initdb.d/*; do
 			case "$f" in
 				*.sh)
 					# https://github.com/docker-library/postgres/issues/450#issuecomment-393167936
@@ -57,7 +61,13 @@ for f in /docker-entrypoint-initdb.d/*; do
 				*)        echo "$0: ignoring $f" ;;
 			esac
 			echo
-done
+			# Put lock file to make sure entrypoint scripts were run
+            touch ${SETUP_LOCKFILE}
+    done
+fi
+
+}
+entry_point_scripts
 kill_postgres
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]];
