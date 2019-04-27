@@ -43,20 +43,25 @@ SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
 if [[ -f "${SETUP_LOCKFILE}" ]]; then
 	return 0
 else
-    for f in /docker-entrypoint-initdb.d/*; do
-    export PGPASSWORD=${POSTGRES_PASS}
-    list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
-    arr=(${list})
-    SINGLE_DB=${arr[0]}
-    case "$f" in
-		*.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
-		*.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
-		*)        echo "$0: ignoring $f" ;;
-	esac
-	echo
-    done
-    # Put lock file to make sure entry point scripts were run
-    touch ${SETUP_LOCKFILE}
+    if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+        for f in /docker-entrypoint-initdb.d/*; do
+        export PGPASSWORD=${POSTGRES_PASS}
+        list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
+        arr=(${list})
+        SINGLE_DB=${arr[0]}
+        case "$f" in
+            *.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
+            *.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
+            *)        echo "$0: ignoring $f" ;;
+        esac
+        echo
+        done
+        # Put lock file to make sure entry point scripts were run
+        touch ${SETUP_LOCKFILE}
+    else
+        return 0
+    fi
+
 fi
 
 }
