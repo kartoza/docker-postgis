@@ -38,36 +38,29 @@ done
 
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
-function entry_point_scripts {
+function entry_point_script {
 SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
 if [[ -f "${SETUP_LOCKFILE}" ]]; then
 	return 0
 else
     for f in /docker-entrypoint-initdb.d/*; do
-			case "$f" in
-				*.sh)
-					# https://github.com/docker-library/postgres/issues/450#issuecomment-393167936
-					# https://github.com/docker-library/postgres/pull/452
-					if [ -x "$f" ]; then
-						echo "$0: running $f"
-						"$f"
-					else
-						echo "$0: sourcing $f"
-						. "$f"
-					fi
-					;;
-				*.sql)    echo "$0: running $f"; "${psql[@]}" < "$f"; echo ;;
-				*.sql.gz) echo "$0: running $f"; gunzip -c "$f" | "${psql[@]}"; echo ;;
-				*)        echo "$0: ignoring $f" ;;
-			esac
-			echo
+    export PGPASSWORD=${POSTGRES_PASS}
+    list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
+    arr=(${list})
+    SINGLE_DB=${arr[0]}
+    case "$f" in
+		*.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
+		*.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
+		*)        echo "$0: ignoring $f" ;;
+	esac
+	echo
     done
     # Put lock file to make sure entry point scripts were run
     touch ${SETUP_LOCKFILE}
 fi
 
 }
-entry_point_scripts
+entry_point_script
 kill_postgres
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]];
