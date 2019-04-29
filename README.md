@@ -150,6 +150,23 @@ Under ubuntu 16.04 the postgresql client can be installed like this:
 sudo apt-get install postgresql-client-9.6
 ```
 
+## Running SQL scripts on container startup.
+
+
+In some instances users want to run some SQL scripts to populate the 
+database. Since the environment variable POSTGRES_DB allows
+us to specify multiple database that can be created on startup.
+When running scripts they will only be executed against the 
+first database ie POSTGRES_DB=gis,data,sample
+The SQL script will be executed against the gis database.
+
+Currently you can pass `.sql` and `.sql.gz` files as mounted volumes.
+
+```
+
+docker run -d -v ./setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql kartoza/postgis`
+```
+
 
 ## Storing data on the host rather than the container.
 
