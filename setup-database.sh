@@ -48,8 +48,8 @@ source /setup-user.sh
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
 
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-        RESULT=`su - postgres -c "psql -l | grep -w ${db} | wc -l"`
-        if [[  ${RESULT} == '0' ]]; then
+        RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
+        if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
             su - postgres -c "createdb  -O ${POSTGRES_USER}  ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
