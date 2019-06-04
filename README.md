@@ -96,6 +96,7 @@ user name, password and/or default database name(or multiple databases coma sepa
 * -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology # You can pass as many extensions as you need.
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
 * -e SSL_KEY_FILE=/your/own/ssl_key_file.key
+* -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
