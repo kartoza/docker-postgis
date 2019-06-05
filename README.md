@@ -306,6 +306,41 @@ However, you should note that this option doesn't mean anything if you didn't
 persist your database volume. Because if it is not persisted, then it will be lost 
 on restart because docker will recreate the container.
 
+## Postgres SSL setup
+
+By default the image is delivered with an unsigned SSL certificate. This helps to have an
+encrypted connection to clients and avoid eavesdropping but does not help to mitigate
+man in the middle (MITM) attacks.
+
+You need to provide your own, signed private key to avoid this kind of attacks (and make
+sure clients connect with verify-ca or verify-full sslmode).
+
+The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
+
+```
+FROM kartoza/postgis:11.0-2.5
+
+ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
+ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
+
+RUN chmod 400 /etc/ssl/private/ssl_key.pem
+```
+
+And a docker-compose.yml to initialize with this configuration:
+
+```
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      context: ssl_secured_docker
+    environment:
+      - ALLOW_IP_RANGE="172.18.0.0/16"
+      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
+      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
+```
+
+
 ## Credits
 
 Tim Sutton (tim@kartoza.com)
