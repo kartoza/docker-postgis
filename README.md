@@ -335,7 +335,6 @@ services:
       dockerfile: Dockerfile
       context: ssl_secured_docker
     environment:
-      - ALLOW_IP_RANGE="172.18.0.0/16"
       - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
       - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
 ```
