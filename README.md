@@ -339,6 +339,8 @@ services:
       - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
 ```
 
+See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
+
 
 ## Credits
 
