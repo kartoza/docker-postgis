@@ -88,7 +88,7 @@ sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ## Environment variables
 
 You can also use the following environment variables to pass a 
-user name, password and/or default database name(or multiple databases coma separated).
+user name, password and/or default database name(or multiple databases comma separated).
 
 * -e POSTGRES_USER=<PGUSER> 
 * -e POSTGRES_PASS=<PGPASSWORD>
