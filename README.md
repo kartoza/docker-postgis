@@ -326,19 +326,7 @@ db:
     volumes:
       - ./ssl_cert.pem:/configs/ssl_cert.pem
       - ./ssl_key.pem:/configs/ssl_key.pem
-    environment:
-      # If you need to create multiple database you can add coma separated databases eg gis,data
-      - POSTGRES_DB=gis
-      - POSTGRES_USER=docker
-      - POSTGRES_PASS=docker
 ```
-
-The following environment are available:
-
- SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
- SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
-
-
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
 
 
