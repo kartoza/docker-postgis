@@ -54,6 +54,14 @@ if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
+if [ -z "${SSL_CERT_FILE}" ]; then
+	SSL_CERT_FILE='/etc/ssl/certs/ssl-cert-snakeoil.pem'
+fi
+
+if [ -z "${SSL_KEY_FILE}" ]; then
+	SSL_KEY_FILE='/etc/ssl/private/ssl-cert-snakeoil.key'
+fi
+
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
   POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
 fi

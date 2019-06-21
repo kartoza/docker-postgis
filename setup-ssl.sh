@@ -25,9 +25,11 @@ chmod 0777 ${PGSTAT_TMP}
 echo "ssl = true" >> $CONF
 #echo "ssl_ciphers = 'DEFAULT:!LOW:!EXP:!MD5:@STRENGTH' " >> $CONF
 #echo "ssl_renegotiation_limit = 512MB "  >> $CONF
-echo "ssl_cert_file = '/etc/ssl/certs/ssl-cert-snakeoil.pem'" >> $CONF
-echo "ssl_key_file = '/etc/ssl/private/ssl-cert-snakeoil.key'" >> $CONF
-#echo "ssl_ca_file = ''                       # (change requires restart)" >> $CONF
+echo "ssl_cert_file = '${SSL_CERT_FILE}'" >> $CONF
+echo "ssl_key_file = '${SSL_KEY_FILE}'" >> $CONF
+if [ ! -z "${SSL_CA_FILE}" ]; then
+	echo "ssl_ca_file = '${SSL_CA_FILE}'                       # (change requires restart)" >> $CONF
+fi
 #echo "ssl_crl_file = ''" >> $CONF
 
 # Put lock file to make sure conf was not reinitialized
