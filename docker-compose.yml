@@ -40,10 +40,6 @@ services:
       - PGDATABASE=gis
       - PGPORT=5432
       - PGHOST=db
-      # For restore script
-      - TARGET_DB=gis
-      - WITH_POSTGIS=1
-      - TARGET_ARCHIVE=/backups/latest.dmp
     restart: on-failure
     depends_on:
       db:
