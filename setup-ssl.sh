@@ -11,28 +11,13 @@ fi
 
 # /etc/ssl/private can't be accessed from within container for some reason
 # (@andrewgodwin says it's something AUFS related)  - taken from https://github.com/orchardup/docker-postgresql/blob/master/Dockerfile
+cp -r /etc/ssl /tmp/ssl-copy/
+chmod -R 0700 /etc/ssl
+chown -R postgres /tmp/ssl-copy
+rm -r /etc/ssl
+mv /tmp/ssl-copy /etc/ssl
 
-
-
-if [[ ! -d /configs ]]; then
-  echo "Creating SSL config directory at /configs"
-  mkdir -p /configs
-fi
-if [ ! -f /configs/self-signed-ssl.key -o ! -f /configs/self-signed-ssl.pem ] ; then
-    cp -r /etc/ssl /tmp/ssl-copy/
-    chmod -R 0700 /etc/ssl
-    chown -R postgres /tmp/ssl-copy
-    rm -r /etc/ssl
-    mv /tmp/ssl-copy /etc/ssl
-else
-    cp /configs/self-signed-ssl.pem /etc/ssl/certs/ssl-cert-snakeoil.pem
-    cp /configs/self-signed-ssl.key /etc/ssl/private/ssl-cert-snakeoil.key
-    chown -R postgres /etc/ssl/
-    chmod -R 0700 /etc/ssl
-fi
-
-
-# Needed under debian, wasn't needed under ubuntu
+# Needed under debian, wasnt needed under ubuntu
 mkdir -p ${PGSTAT_TMP}
 chmod 0777 ${PGSTAT_TMP}
 

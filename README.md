@@ -315,18 +315,30 @@ man in the middle (MITM) attacks.
 You need to provide your own, signed private key to avoid this kind of attacks (and make
 sure clients connect with verify-ca or verify-full sslmode).
 
-The following is an example docker-compose.yml that sets up a container with custom ssl private key and certificate:
-If you need to use your own ssl certificates you should mount them into 
-
-**/configs/ssl_cert.pem** 
+The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
 
 ```
-db:
-    image: kartoza/postgis:11.0-2.5
-    volumes:
-      - ./ssl_cert.pem:/configs/ssl_cert.pem
-      - ./ssl_key.pem:/configs/ssl_key.pem
+FROM kartoza/postgis:11.0-2.5
+
+ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
+ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
+
+RUN chmod 400 /etc/ssl/private/ssl_key.pem
 ```
+
+And a docker-compose.yml to initialize with this configuration:
+
+```
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      context: ssl_secured_docker
+    environment:
+      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
+      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
+```
+
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
 
 
