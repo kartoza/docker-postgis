@@ -1,14 +1,17 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM debian:stable
+ARG IMAGE_VERSION=buster
+FROM debian:$IMAGE_VERSION
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
+# Reset ARG for version
+ARG IMAGE_VERSION
 RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
 RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen
 
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
 
 #-------------Application Specific Stuff ----------------------------------------------------
