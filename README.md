@@ -11,10 +11,11 @@ differentiates itself by:
 
 * provides ssl support out of the box
 * connections are restricted to the docker subnet
-* template_postgis database template is created for you
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
 * replication support included
+* Ability to create multiple database when you spin the database.
+* Enable multiple extensions in the database when setting it up
 
 We will work to add more security features to this container in the future with 
 the aim of making a PostGIS image that is ready to be used in a production 
@@ -87,11 +88,15 @@ sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ## Environment variables
 
 You can also use the following environment variables to pass a 
-user name, password and/or default database name.
+user name, password and/or default database name(or multiple databases comma separated).
 
 * -e POSTGRES_USER=<PGUSER> 
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
+* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology # You can pass as many extensions as you need.
+* -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
+* -e SSL_KEY_FILE=/your/own/ssl_key_file.key
+* -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
@@ -146,6 +151,23 @@ Under ubuntu 16.04 the postgresql client can be installed like this:
 
 ```
 sudo apt-get install postgresql-client-9.6
+```
+
+## Running SQL scripts on container startup.
+
+
+In some instances users want to run some SQL scripts to populate the 
+database. Since the environment variable POSTGRES_DB allows
+us to specify multiple database that can be created on startup.
+When running scripts they will only be executed against the 
+first database ie POSTGRES_DB=gis,data,sample
+The SQL script will be executed against the gis database.
+
+Currently you can pass `.sql` and `.sql.gz` files as mounted volumes.
+
+```
+
+docker run -d -v ./setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql kartoza/postgis`
 ```
 
 
@@ -283,6 +305,42 @@ database (as long as there are no consistencies conflicts).
 However, you should note that this option doesn't mean anything if you didn't 
 persist your database volume. Because if it is not persisted, then it will be lost 
 on restart because docker will recreate the container.
+
+## Postgres SSL setup
+
+By default the image is delivered with an unsigned SSL certificate. This helps to have an
+encrypted connection to clients and avoid eavesdropping but does not help to mitigate
+man in the middle (MITM) attacks.
+
+You need to provide your own, signed private key to avoid this kind of attacks (and make
+sure clients connect with verify-ca or verify-full sslmode).
+
+The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
+
+```
+FROM kartoza/postgis:11.0-2.5
+
+ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
+ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
+
+RUN chmod 400 /etc/ssl/private/ssl_key.pem
+```
+
+And a docker-compose.yml to initialize with this configuration:
+
+```
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      context: ssl_secured_docker
+    environment:
+      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
+      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
+```
+
+See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
+
 
 ## Credits
 
