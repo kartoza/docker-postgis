@@ -23,8 +23,9 @@ if [[ ! "$(ls -A ${DATADIR})" ]]; then
   # Initialise db
   echo "Initializing Postgres Database at ${DATADIR}"
   #chown -R postgres $DATADIR
-  su - postgres -c "$INITDB ${DATADIR}"
+  su - postgres -c "$INITDB --wal-segsize=1024 ${DATADIR}"
 fi
+
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM

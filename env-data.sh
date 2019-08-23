@@ -54,6 +54,27 @@ if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
+if [ -z "${MAINTAINANCE_WORKERS}" ]; then
+	MAINTAINANCE_WORKERS=2
+fi
+
+if [ -z "${WAL_SIZE}" ]; then
+	WAL_SIZE=2GB
+fi
+
+if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
+	CHECK_POINT_TIMEOUT=30min
+fi
+
+if [ -z "${MAX_WORKERS}" ]; then
+	MAX_WORKERS=4
+fi
+
+if [ -z "${WORK_MEM}" ]; then
+	WORK_MEM=128MB
+fi
+
+
 if [ -z "${SSL_CERT_FILE}" ]; then
 	SSL_CERT_FILE='/etc/ssl/certs/ssl-cert-snakeoil.pem'
 fi
