@@ -77,7 +77,7 @@ if [[ $# -eq 0 ]];
 then
 	echo "Postgres initialisation process completed .... restarting in foreground"
 
-	su - postgres -c "$SETVARS $POSTGRES --wal-segsize=size 1024 -D $DATADIR -c config_file=$CONF"
+	su - postgres -c "$SETVARS $POSTGRES  -D $DATADIR  -c config_file=$CONF"
 fi
 
 # If arguments passed, run postgres with these arguments
