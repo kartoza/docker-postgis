@@ -23,7 +23,7 @@ if [[ ! "$(ls -A ${DATADIR})" ]]; then
   # Initialise db
   echo "Initializing Postgres Database at ${DATADIR}"
   #chown -R postgres $DATADIR
-  su - postgres -c "$INITDB --wal-segsize=1024 ${DATADIR}"
+  su - postgres -c "$INITDB -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=1024 ${DATADIR}"
 fi
 
 

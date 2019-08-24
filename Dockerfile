@@ -41,5 +41,10 @@ ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
 
+ADD locale.gen /etc/locale.gen
+RUN /usr/sbin/locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US
+RUN update-locale en_US.UTF8
 
 ENTRYPOINT /docker-entrypoint.sh
