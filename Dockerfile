@@ -44,7 +44,8 @@ RUN chmod +x /docker-entrypoint.sh
 ADD locale.gen /etc/locale.gen
 RUN /usr/sbin/locale-gen
 ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US
-RUN update-locale en_US.UTF8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+RUN update-locale ${LANG}
 
 ENTRYPOINT /docker-entrypoint.sh

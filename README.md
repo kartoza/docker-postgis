@@ -97,6 +97,9 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
 * -e SSL_KEY_FILE=/your/own/ssl_key_file.key
 * -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
+* -e DEFAULT_ENCODING="UTF8"
+* -e DEFAULT_COLLATION="en_US.UTF-8"
+* -e DEFAULT_CTYPE="en_US.UTF-8"
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
@@ -340,6 +343,24 @@ services:
 ```
 
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
+
+## Postgres Encoding
+
+The database cluster is initialised with the following encoding settings
+
+`
+-E "UTF8" --lc-collate="en_US.UTF-8" --lc-ctype="en_US.UTF-8"
+`
+
+If you need to setup a database cluster with other encoding parameters you need 
+to pass the environment variables
+
+* -e DEFAULT_ENCODING="UTF8"
+* -e DEFAULT_COLLATION="en_US.UTF-8"
+* -e DEFAULT_CTYPE="en_US.UTF-8"
+
+
+See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 
 ## Credits

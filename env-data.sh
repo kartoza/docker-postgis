@@ -14,9 +14,7 @@ PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/11-main.pid"
-DEFAULT_ENCODING="UTF8"
-DEFAULT_COLLATION="en_US.UTF-8"
-DEFAULT_CTYPE="en_US.UTF-8"
+
 
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
@@ -89,6 +87,18 @@ fi
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
   POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
 fi
+
+
+if [ -z "${DEFAULT_ENCODING}" ]; then
+  DEFAULT_ENCODING="UTF8"
+fi
+if [ -z "${DEFAULT_COLLATION}" ]; then
+  DEFAULT_COLLATION="en_US.UTF-8"
+fi
+if [ -z "${DEFAULT_CTYPE}" ]; then
+  DEFAULT_CTYPE="en_US.UTF-8"
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ ! -z "${POSTGRES_PASSWORD}" ]; then
