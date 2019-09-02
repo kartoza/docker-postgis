@@ -60,8 +60,17 @@ if [ -z "${MAINTAINANCE_WORKERS}" ]; then
 fi
 
 if [ -z "${WAL_SIZE}" ]; then
-	WAL_SIZE=2GB
+	WAL_SIZE=4GB
 fi
+
+if [ -z "${MIN_WAL_SIZE}" ]; then
+	MIN_WAL_SIZE=2048MB
+fi
+
+if [ -z "${WAL_SEGSIZE}" ]; then
+	WAL_SEGSIZE=1024
+fi
+
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
 	CHECK_POINT_TIMEOUT=30min
@@ -71,8 +80,8 @@ if [ -z "${MAX_WORKERS}" ]; then
 	MAX_WORKERS=4
 fi
 
-if [ -z "${WORK_MEM}" ]; then
-	WORK_MEM=128MB
+if [ -z "${MAINTAINANCE_WORK_MEM}" ]; then
+	MAINTAINANCE_WORK_MEM=128MB
 fi
 
 
