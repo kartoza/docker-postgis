@@ -100,6 +100,17 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e DEFAULT_ENCODING="UTF8"
 * -e DEFAULT_COLLATION="en_US.UTF-8"
 * -e DEFAULT_CTYPE="en_US.UTF-8"
+Maximum size to let the WAL grow to between automatic WAL checkpoints.
+* -e WAL_SIZE=4GB
+
+* -e MIN_WAL_SIZE=2048MB
+
+Specifes the size of WAL segment files when creating a new data base cluster. Maximum
+permitted value is 1024 (equivalent to 1GB)
+* -e WAL_SEGSIZE=1024
+
+Specifies the maximum amount of memory to be used by maintenance operations, such as VACUUM, CREATE INDEX, and ALTER TABLE ADD FOREIGN KEY
+* -e MAINTAINANCE_WORK_MEM=128MB
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
