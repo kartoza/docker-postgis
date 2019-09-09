@@ -15,6 +15,7 @@ PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/11-main.pid"
 
+
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
@@ -54,6 +55,36 @@ if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
+if [ -z "${MAINTAINANCE_WORKERS}" ]; then
+	MAINTAINANCE_WORKERS=2
+fi
+
+if [ -z "${WAL_SIZE}" ]; then
+	WAL_SIZE=4GB
+fi
+
+if [ -z "${MIN_WAL_SIZE}" ]; then
+	MIN_WAL_SIZE=2048MB
+fi
+
+if [ -z "${WAL_SEGSIZE}" ]; then
+	WAL_SEGSIZE=1024
+fi
+
+
+if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
+	CHECK_POINT_TIMEOUT=30min
+fi
+
+if [ -z "${MAX_WORKERS}" ]; then
+	MAX_WORKERS=4
+fi
+
+if [ -z "${MAINTAINANCE_WORK_MEM}" ]; then
+	MAINTAINANCE_WORK_MEM=128MB
+fi
+
+
 if [ -z "${SSL_CERT_FILE}" ]; then
 	SSL_CERT_FILE='/etc/ssl/certs/ssl-cert-snakeoil.pem'
 fi
@@ -65,6 +96,18 @@ fi
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
   POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
 fi
+
+
+if [ -z "${DEFAULT_ENCODING}" ]; then
+  DEFAULT_ENCODING="UTF8"
+fi
+if [ -z "${DEFAULT_COLLATION}" ]; then
+  DEFAULT_COLLATION="en_US.UTF-8"
+fi
+if [ -z "${DEFAULT_CTYPE}" ]; then
+  DEFAULT_CTYPE="en_US.UTF-8"
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ ! -z "${POSTGRES_PASSWORD}" ]; then
