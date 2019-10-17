@@ -2,6 +2,7 @@
 
 DATADIR="/var/lib/postgresql/11/main"
 ROOT_CONF="/etc/postgresql/11/main"
+PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
@@ -64,6 +65,18 @@ fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
   POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
+fi
+
+if [ -z "${ALLOW_IP_RANGE}" ]; then
+  ALLOW_IP_RANGE='0.0.0.0/0'
+fi
+
+if [ -z "${REPLICATION_USER}" ]; then
+  REPLICATION_USER=replicator
+fi
+
+if [ -z "${REPLICATION_PASS}" ]; then
+  REPLICATION_PASS=replicator
 fi
 # Compatibility with official postgres variable
 # Official postgres variable gets priority

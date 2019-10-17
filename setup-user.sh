@@ -25,3 +25,10 @@ if [ -z "$RESULT" ]; then
 	COMMAND="CREATE"
 fi
 su - postgres -c "psql postgres -c \"$COMMAND USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
+
+RESULT_REPLICATION=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$REPLICATION_USER'\""`
+COMMANDS="ALTER"
+if [ -z "$RESULT_REPLICATION" ]; then
+  COMMANDS="CREATE"
+fi
+su - postgres -c "psql postgres -c \"$COMMANDS USER $REPLICATION_USER WITH REPLICATION ENCRYPTED PASSWORD '$REPLICATION_PASS';\""

@@ -22,8 +22,8 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
       # We can specify optional credentials
-      POSTGRES_USER: 'docker'
-      POSTGRES_PASS: 'docker'
+      POSTGRES_USER: 'replicator'
+      POSTGRES_PASS: 'replicator'
       # Setup master replication variables
       #PG_MAX_WAL_SENDERS: 8
       #PG_WAL_KEEP_SEGMENTS: 100
@@ -80,8 +80,8 @@ services:
       # For now we don't support different credentials for replication
       # so we use the same credentials as master's superuser, or anything that
       # have replication role.
-      POSTGRES_USER: 'docker'
-      POSTGRES_PASS: 'docker'
+      POSTGRES_USER: 'replicator'
+      POSTGRES_PASS: 'replicator'
     depends_on:
         pg-master:
           condition: service_healthy
