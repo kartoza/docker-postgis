@@ -25,12 +25,12 @@ function configure_replication_permissions {
     echo "Setup data permissions"
     echo "----------------------"
     chown -R postgres:postgres $(getent passwd postgres  | cut -d: -f6)
-        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${POSTGRES_USER}:${POSTGRES_PASS}\" > ~/.pgpass"
+        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
         su - postgres -c "chmod 0600 ~/.pgpass"
 }
 
 function streaming_replication {
-until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${POSTGRES_USER} -vP -w"
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -vP -w"
 	do
 		echo "Waiting for master to connect..."
 		sleep 1s
@@ -72,7 +72,7 @@ fi
 # Setup recovery.conf, a configuration file for slave
 cat > ${DATADIR}/recovery.conf <<EOF
 standby_mode = on
-primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASS} sslmode=${PGSSLMODE}'
+primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} sslmode=${PGSSLMODE}'
 trigger_file = '${PROMOTE_FILE}'
 recovery_target_timeline='latest'
 recovery_target_action='promote'
