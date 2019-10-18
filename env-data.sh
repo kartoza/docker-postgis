@@ -101,6 +101,15 @@ fi
 if [ -z "${ALLOW_IP_RANGE}" ]; then
   ALLOW_IP_RANGE='0.0.0.0/0'
 fi
+if [ -z "${DEFAULT_ENCODING}" ]; then
+  DEFAULT_ENCODING="UTF8"
+fi
+if [ -z "${DEFAULT_COLLATION}" ]; then
+  DEFAULT_COLLATION="en_US.UTF-8"
+fi
+if [ -z "${DEFAULT_CTYPE}" ]; then
+  DEFAULT_CTYPE="en_US.UTF-8"
+fi
 
 if [ -z "${REPLICATION_USER}" ]; then
   REPLICATION_USER=replicator
