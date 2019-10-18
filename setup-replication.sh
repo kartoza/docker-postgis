@@ -48,7 +48,6 @@ if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	echo "Get initial database from master"
 
 	configure_replication_permissions
-
 	streaming_replication
 
 fi

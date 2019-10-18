@@ -48,7 +48,7 @@ fi
 if [[ -z "$REPLICATE_FROM" ]]; then
 	# if env not set, then assume this is master instance
 	# add rules to pg_hba.conf to allow replication from all
-	echo "Add rule to pg_hba: replication user"
+	echo "Add rule to pg_hba: replication ${REPLICATION_USER} "
 	echo "host    replication            ${REPLICATION_USER}             ${ALLOW_IP_RANGE}          $authMethod" >> ${ROOT_CONF}/pg_hba.conf
 fi
 

@@ -205,6 +205,14 @@ mirror database content from a designated master. This replication scheme allows
 us to sync databases. However a `replicant` is only for read-only transaction, thus 
 we can't write new data to it. The whole database cluster will be replicated.
 
+### Database permissions
+Since we are using a role ${REPLICATION_USER}, we need to ensure that he has access to all 
+the tables in a particular schema. So if a user adds another schema called `data`
+to the database `gis` he also has to update the permission for the user
+with the following SQL assuming the ${REPLICATION_USER} is called replicator
+
+     ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
+
 To experiment with the replication abilities, you can see a (docker-compose.yml)[sample/replication/docker-compose.yml] 
 sample. There are several environment variables that you can set, such as:
 
