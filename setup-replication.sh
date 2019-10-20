@@ -30,7 +30,7 @@ function configure_replication_permissions {
 }
 
 function streaming_replication {
-until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -vP -w"
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -vP -w --label=gis_pg_custer"
 	do
 		echo "Waiting for master to connect..."
 		sleep 1s
@@ -46,26 +46,13 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 
 if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
 	echo "Get initial database from master"
-
 	configure_replication_permissions
-	streaming_replication
-
+  if [ -f "${DATADIR}/backup_label.old" ]; then
+    echo "PG Basebackup already exists so proceed to start the DB"
+	else
+	  streaming_replication
+  fi
 fi
-
-#TODO We need a clever way to identify if base backup exists - Incoperate it as an else statement in destroy logic
-
-
-#configure_replication_permissions
-#var=`du -sh /var/lib/postgresql/11/main/pg_wal | awk '{print $1}'`
-#var_size=${var:0:2}
-
-#if [[ "${var_size} -gt  33 " ]]; then
-        #echo ${var_size}
-        #echo "Base directory exist - Please startup the database"
-#else
-    #echo "Base directory does not exists- Create a new one"
-   #streaming_replication
-#fi
 
 
 # Setup recovery.conf, a configuration file for slave

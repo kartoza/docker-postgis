@@ -31,6 +31,13 @@ ADD setup.sh /setup.sh
 RUN chmod +x /setup.sh
 RUN /setup.sh
 
+ADD locale.gen /etc/locale.gen
+RUN /usr/sbin/locale-gen
+ENV LANG en_US.UTF-8
+ENV LANGUAGE en_US:en
+ENV LC_ALL en_US.UTF-8
+RUN update-locale ${LANG}
+
 # We will run any commands in this when the container starts
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 ADD setup-conf.sh /
@@ -40,12 +47,5 @@ ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
-
-ADD locale.gen /etc/locale.gen
-RUN /usr/sbin/locale-gen
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-RUN update-locale ${LANG}
 
 ENTRYPOINT /docker-entrypoint.sh
