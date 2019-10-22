@@ -57,6 +57,7 @@ fi
 
 
 
+
 # Promote to master if desired
 if [[ ! -z "${PROMOTE_MASTER}" ]]; then
 	touch ${PROMOTE_FILE}

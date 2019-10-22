@@ -123,7 +123,6 @@ You can open up the PG port by using the following environment variable. By defa
 the container will allow connections only from the docker private subnet.
 
 * -e ALLOW_IP_RANGE=<0.0.0.0/0> By default 
-t
 
 Postgres conf is setup to listen to all connections and if a user needs to restrict which IP address
 PostgreSQL listens to you can define it with the following environment variable. The default is set to listen to 
@@ -221,7 +220,7 @@ us to sync databases. However a `replicant` is only for read-only transaction, t
 we can't write new data to it. The whole database cluster will be replicated.
 
 ### Database permissions
-Since we are using a role ${REPLICATION_USER}, we need to ensure that he has access to all 
+Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all 
 the tables in a particular schema. So if a user adds another schema called `data`
 to the database `gis` he also has to update the permission for the user
 with the following SQL assuming the ${REPLICATION_USER} is called replicator
@@ -235,7 +234,7 @@ Master settings:
 - **ALLOW_IP_RANGE**: A pg_hba.conf domain format which will allow specified host(s) 
   to connect into the container. This is needed to allow the `slave` to connect 
   into `master`, so specifically this settings should allow `slave` address. It is also needed to allow clients on other hosts to connect to either the slave or the master. 
-- **REPLICATION_USER** Username to initiate streaming replication
+- **REPLICATION_USER** User to initiate streaming replication
 - **REPLICATION_PASS**  Password for a user with streaming replication role
   
 Slave settings:
@@ -254,7 +253,7 @@ Slave settings:
   as `master` for a while. However, the promoted replicant will break consistencies and 
   is not able to revert to replicant anymore, unless it is destroyed and resynced 
   with the new master.
-- **REPLICATION_USER** Username to initiate streaming replication
+- **REPLICATION_USER** User to initiate streaming replication
 - **REPLICATION_PASS**  Password for a user with streaming replication role
 
 To run the sample replication, follow these instructions:

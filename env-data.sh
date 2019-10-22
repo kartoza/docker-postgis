@@ -8,7 +8,7 @@ WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/12/bin/postgres"
 INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-2.5/"
+SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
@@ -109,6 +109,14 @@ if [ -z "${DEFAULT_COLLATION}" ]; then
 fi
 if [ -z "${DEFAULT_CTYPE}" ]; then
   DEFAULT_CTYPE="en_US.UTF-8"
+fi
+
+if [ -z "${TARGET_TIMELINE}" ]; then
+	TARGET_TIMELINE='latest'
+fi
+
+if [ -z "${TARGET_ACTION}" ]; then
+	TARGET_ACTION='promote'
 fi
 
 if [ -z "${REPLICATION_USER}" ]; then
