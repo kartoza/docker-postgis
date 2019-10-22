@@ -19,9 +19,19 @@ echo "postgresql user: $POSTGRES_USER" > /tmp/PGPASSWORD.txt
 echo "postgresql password: $POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
 
 # Check user already exists
+echo "Creating superuser $POSTGRES_USER"
 RESULT=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$POSTGRES_USER'\""`
 COMMAND="ALTER"
 if [ -z "$RESULT" ]; then
 	COMMAND="CREATE"
 fi
 su - postgres -c "psql postgres -c \"$COMMAND USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
+
+echo "Creating replication user $REPLICATION_USER"
+RESULT_REPLICATION=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$REPLICATION_USER'\""`
+COMMANDS="ALTER"
+if [ -z "$RESULT_REPLICATION" ]; then
+  COMMANDS="CREATE"
+fi
+su - postgres -c "psql postgres -c \"$COMMANDS USER $REPLICATION_USER WITH REPLICATION ENCRYPTED PASSWORD '$REPLICATION_PASS';\""
+

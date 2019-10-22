@@ -16,6 +16,8 @@ differentiates itself by:
 * replication support included
 * Ability to create multiple database when you spin the database.
 * Enable multiple extensions in the database when setting it up
+* Gdal drivers automatically registered for pg raster
+* Support for out-of-db rasters
 
 We will work to add more security features to this container in the future with 
 the aim of making a PostGIS image that is ready to be used in a production 
@@ -218,6 +220,14 @@ mirror database content from a designated master. This replication scheme allows
 us to sync databases. However a `replicant` is only for read-only transaction, thus 
 we can't write new data to it. The whole database cluster will be replicated.
 
+### Database permissions
+Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all 
+the tables in a particular schema. So if a user adds another schema called `data`
+to the database `gis` he also has to update the permission for the user
+with the following SQL assuming the ${REPLICATION_USER} is called replicator
+
+     ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
+
 To experiment with the replication abilities, you can see a (docker-compose.yml)[sample/replication/docker-compose.yml] 
 sample. There are several environment variables that you can set, such as:
 
@@ -225,8 +235,8 @@ Master settings:
 - **ALLOW_IP_RANGE**: A pg_hba.conf domain format which will allow specified host(s) 
   to connect into the container. This is needed to allow the `slave` to connect 
   into `master`, so specifically this settings should allow `slave` address. It is also needed to allow clients on other hosts to connect to either the slave or the master. 
-- Both POSTGRES_USER and POSTGRES_PASS will be used as credentials for the slave to
-  connect, so make sure you change this into something secure.
+- **REPLICATION_USER** Username to initiate streaming replication
+- **REPLICATION_PASS**  Password for a user with streaming replication role
   
 Slave settings:
 - **REPLICATE_FROM**: This should be the domain name or IP address of the `master` 
@@ -244,6 +254,8 @@ Slave settings:
   as `master` for a while. However, the promoted replicant will break consistencies and 
   is not able to revert to replicant anymore, unless it is destroyed and resynced 
   with the new master.
+- **REPLICATION_USER** Username to initiate streaming replication
+- **REPLICATION_PASS**  Password for a user with streaming replication role
 
 To run the sample replication, follow these instructions:
 
