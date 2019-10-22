@@ -34,6 +34,10 @@ max_parallel_workers = ${MAX_WORKERS}
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
 #archive_mode=on
 #archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
+primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} sslmode=${PGSSLMODE}'
+recovery_target_timeline=${TARGET_TIMELINE}
+recovery_target_action=${TARGET_ACTION}
+promote_trigger_file = '${PROMOTE_FILE}'
 EOF
 
 echo "POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL" >> ${PG_ENV}
