@@ -36,11 +36,6 @@ checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
 #archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
 EOF
 
-echo "POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL" >> ${PG_ENV}
-echo "POSTGIS_ENABLE_OUTDB_RASTERS=1" >> ${PG_ENV}
-echo "export POSTGIS_GDAL_ENABLED_DRIVERS" >> ${PG_ENV}
-echo "export POSTGIS_ENABLE_OUTDB_RASTERS" >> ${PG_ENV}
-
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
 echo "kernel.shmmax=543252480" >> /etc/sysctl.conf

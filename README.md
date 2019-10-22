@@ -221,7 +221,7 @@ us to sync databases. However a `replicant` is only for read-only transaction, t
 we can't write new data to it. The whole database cluster will be replicated.
 
 ### Database permissions
-Since we are using a role ${REPLICATION_USER}, we need to ensure that he has access to all 
+Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all 
 the tables in a particular schema. So if a user adds another schema called `data`
 to the database `gis` he also has to update the permission for the user
 with the following SQL assuming the ${REPLICATION_USER} is called replicator
