@@ -25,7 +25,7 @@ COMMAND="ALTER"
 if [ -z "$RESULT" ]; then
 	COMMAND="CREATE"
 fi
-su - postgres -c "psql postgres -c \"$COMMAND ROLE $POSTGRES_USER WITH LOGIN SUPERUSER CREATEDB CREATEROLE INHERIT REPLICATION  ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
+su - postgres -c "psql postgres -c \"$COMMAND USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
 
 echo "Creating replication user $REPLICATION_USER"
 RESULT_REPLICATION=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$REPLICATION_USER'\""`

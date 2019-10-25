@@ -18,24 +18,25 @@ wal_level = hot_standby
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
 superuser_reserved_connections= 10
-max_wal_size= 2GB
+min_wal_size =${MIN_WAL_SIZE}
+max_wal_size= ${WAL_SIZE}
 wal_keep_segments= 64
 hot_standby = on
 listen_addresses = '${IP_LIST}'
 shared_buffers = 500MB
 work_mem = 16MB
-maintenance_work_mem = 128MB
+maintenance_work_mem = ${MAINTAINANCE_WORK_MEM}
 wal_buffers = 1MB
 random_page_cost = 2.0
 xmloption = 'document'
+max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
+max_parallel_workers = ${MAX_WORKERS}
+checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
 #archive_mode=on
 #archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
 EOF
 
-echo "POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL" >> ${PG_ENV}
-echo "POSTGIS_ENABLE_OUTDB_RASTERS=1" >> ${PG_ENV}
-echo "export POSTGIS_GDAL_ENABLED_DRIVERS" >> ${PG_ENV}
-echo "export POSTGIS_ENABLE_OUTDB_RASTERS" >> ${PG_ENV}
+echo -e $EXTRA_CONF >> $CONF
 
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB

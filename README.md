@@ -99,6 +99,21 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
 * -e SSL_KEY_FILE=/your/own/ssl_key_file.key
 * -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
+* -e DEFAULT_ENCODING="UTF8"
+* -e DEFAULT_COLLATION="en_US.UTF-8"
+* -e DEFAULT_CTYPE="en_US.UTF-8"
+
+Maximum size to let the WAL grow to between automatic WAL checkpoints.
+* -e WAL_SIZE=4GB
+
+* -e MIN_WAL_SIZE=2048MB
+
+Specifes the size of WAL segment files when creating a new data base cluster. Maximum
+permitted value is 1024 (equivalent to 1GB)
+* -e WAL_SEGSIZE=1024
+
+Specifies the maximum amount of memory to be used by maintenance operations, such as VACUUM, CREATE INDEX, and ALTER TABLE ADD FOREIGN KEY
+* -e MAINTAINANCE_WORK_MEM=128MB
 
 These will be used to create a new superuser with
 your preferred credentials. If these are not specified then the postgresql 
@@ -115,6 +130,9 @@ PostgreSQL listens to you can define it with the following environment variable.
 all connections.
 * -e IP_LIST=<*>
 
+You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
+
+* -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
 
 
 ## Convenience docker-compose.yml
@@ -206,7 +224,7 @@ us to sync databases. However a `replicant` is only for read-only transaction, t
 we can't write new data to it. The whole database cluster will be replicated.
 
 ### Database permissions
-Since we are using a role ${REPLICATION_USER}, we need to ensure that he has access to all 
+Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all 
 the tables in a particular schema. So if a user adds another schema called `data`
 to the database `gis` he also has to update the permission for the user
 with the following SQL assuming the ${REPLICATION_USER} is called replicator
@@ -352,6 +370,24 @@ services:
 ```
 
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
+
+## Postgres Encoding
+
+The database cluster is initialised with the following encoding settings
+
+`
+-E "UTF8" --lc-collate="en_US.UTF-8" --lc-ctype="en_US.UTF-8"
+`
+
+If you need to setup a database cluster with other encoding parameters you need 
+to pass the environment variables
+
+* -e DEFAULT_ENCODING="UTF8"
+* -e DEFAULT_COLLATION="en_US.UTF-8"
+* -e DEFAULT_CTYPE="en_US.UTF-8"
+
+
+See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 
 ## Credits
