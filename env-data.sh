@@ -118,6 +118,11 @@ fi
 if [ -z "${REPLICATION_PASS}" ]; then
   REPLICATION_PASS=replicator
 fi
+
+if [ -z "$EXTRA_CONF" ]; then
+    EXTRA_CONF=""
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ ! -z "${POSTGRES_PASSWORD}" ]; then
