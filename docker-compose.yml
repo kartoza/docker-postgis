@@ -8,7 +8,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:11.0-2.5
+    image: kartoza/postgis:12.0
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -27,19 +27,19 @@ services:
       test: "exit 0"
 
   dbbackups:
-    image: kartoza/pg-backup:11.0
+    image: kartoza/pg-backup:12.0
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
     links:
       - db:db
     environment:
-      - DUMPPREFIX=demo
-      - PGUSER=docker
-      - PGPASSWORD=docker
-      - PGDATABASE=gis
-      - PGPORT=5432
-      - PGHOST=db
+      - DUMPPREFIX=PG_db
+      - POSTGRES_USER=docker
+      - POSTGRES_PASS=docker
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=db
+      - POSTGRES_DBNAME=gis
     restart: on-failure
     depends_on:
       db:

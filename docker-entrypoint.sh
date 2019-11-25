@@ -14,6 +14,8 @@ source /setup-ssl.sh
 
 source /setup-pg_hba.sh
 
+
+
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
 function entry_point_script {
