@@ -126,13 +126,7 @@ fi
 if [ -z "${REPLICATION_PASS}" ]; then
   REPLICATION_PASS=replicator
 fi
-if [ -z "${REPLICATION_USER}" ]; then
-  REPLICATION_USER=replicator
-fi
 
-if [ -z "${REPLICATION_PASS}" ]; then
-  REPLICATION_PASS=replicator
-fi
 
 if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
