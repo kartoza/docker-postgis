@@ -42,6 +42,8 @@ EOF
 
 
 
+echo -e $EXTRA_CONF >> $CONF
+
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
 echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
