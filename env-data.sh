@@ -95,7 +95,7 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster'
+  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pointcloud,pointcloud_postgis'
 fi
 
 if [ -z "${ALLOW_IP_RANGE}" ]; then
