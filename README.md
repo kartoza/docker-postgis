@@ -35,7 +35,7 @@ kartoza/postgis:[postgres_version]-[postgis-version]
 
 So for example:
 
-``kartoza/postgis:9.6-2.4`` Provides PostgreSQL 9.6, PostGIS 2.4
+``kartoza/postgis:12.0`` Provides PostgreSQL 12.0, PostGIS 3.0
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -76,6 +76,15 @@ Now edit ``71-apt-cacher-ng`` then do:
 
 ```
 docker build -t kartoza/postgis .
+```
+
+## Build with custom extensions
+The plugin currently install PostGIS official extensions but in some cases users
+need to build custom extension. Add your build instructions to pg_extensions.sh
+and then run 
+
+```
+docker build --build-args PG_EXTENSION=true -t kartoza/postgis:12.0 .
 ```
 
 ## Run
@@ -169,7 +178,7 @@ You can then go on to use any normal postgresql commands against the container.
 Under ubuntu 16.04 the postgresql client can be installed like this:
 
 ```
-sudo apt-get install postgresql-client-9.6
+sudo apt-get install postgresql-client-12
 ```
 
 ## Running SQL scripts on container startup.
