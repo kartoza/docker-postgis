@@ -19,11 +19,19 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | a
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common postgresql-12 postgresql-12-postgis-3  netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts
+RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common postgresql-12 postgresql-12-postgis-3 \
+ netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts postgresql-12-cron postgresql-plpython3-12
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
+ARG PG_EXTENSION=true
+ADD pg_extensions.sh /
+RUN chmod +x /pg_extensions.sh
 
+RUN if [ "$PG_EXTENSION" = true ]; then \
+    apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-12 libxml2-dev zlib1g-dev && /pg_extensions.sh ;\
+    apt-get purge -y postgresql-server-dev-12 build-essential autoconf libxml2-dev zlib1g-dev; \
+    fi;
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 ADD env-data.sh /env-data.sh
@@ -39,6 +47,7 @@ ENV LC_ALL en_US.UTF-8
 RUN update-locale ${LANG}
 
 # We will run any commands in this when the container starts
+
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 ADD setup-conf.sh /
 ADD setup-database.sh /
@@ -47,17 +56,8 @@ ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*  \
+    && dpkg --remove --force-depends  unzip
 
 ENTRYPOINT /docker-entrypoint.sh
 
-# Compile and install PointCloud.
-# NOTE: release 1.2.0 would not build against PostgreSQL-12:
-# https://github.com/pgpointcloud/pointcloud/issues/248
-RUN apt-get -y update; apt-get -y install build-essential autoconf \
-    postgresql-server-dev-12 libxml2-dev zlib1g-dev
-RUN wget -O- \
-  https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz \
-  | tar xz && \
-  cd pointcloud-master && \
-  ./autogen.sh && ./configure && make && make install && \
-  cd .. && rm -Rf pointcloud-master
