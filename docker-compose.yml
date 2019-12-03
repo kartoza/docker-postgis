@@ -1,5 +1,4 @@
 # docker-compose build
-# docker-compose up -d web
 version: '2.1'
 volumes:
   dbbackups:
