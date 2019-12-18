@@ -9,7 +9,7 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen gdal-bin
+RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen gdal-bin python-gdal
 
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main" > /etc/apt/sources.list.d/postgresql.list'
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add -
