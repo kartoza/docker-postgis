@@ -24,7 +24,7 @@ RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common po
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
-ARG PG_EXTENSION=true
+ARG PG_EXTENSION=false
 ADD pg_extensions.sh /
 RUN chmod +x /pg_extensions.sh
 
