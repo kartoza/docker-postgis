@@ -9,9 +9,9 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen gdal-bin
+RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen software-properties-common gdal-bin
 
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main" > /etc/apt/sources.list.d/postgresql.list'
+RUN sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -c -s)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list"
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add -
 
 #-------------Application Specific Stuff ----------------------------------------------------
@@ -48,5 +48,8 @@ ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*  \
+    && dpkg --remove --force-depends  unzip
 
 ENTRYPOINT /docker-entrypoint.sh
+

@@ -30,6 +30,7 @@ else
         case "$f" in
             *.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
             *.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
+            *.sh)     echo "$0: running $f"; . $f || true;;
             *)        echo "$0: ignoring $f" ;;
         esac
         echo
