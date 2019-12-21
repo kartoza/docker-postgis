@@ -20,7 +20,7 @@ services:
       # Add extensions you need to be enabled by default in the DB. Default are the three specified below
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology
     ports:
-      - 5434:5432
+      - 25432:5432
     restart: on-failure
     healthcheck:
       test: "exit 0"
