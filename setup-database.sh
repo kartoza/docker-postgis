@@ -44,7 +44,6 @@ echo "postgres ready"
 source /setup-user.sh
 
 # enable extensions in template1 if env variable set to true
-echo $POSTGRES_TEMPLATE_EXTENSIONS
 if [ "$POSTGRES_TEMPLATE_EXTENSIONS" = true ] ; then
     for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
         echo "Enabling ${ext} in the database template1"
