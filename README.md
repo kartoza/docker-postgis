@@ -114,6 +114,9 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e DEFAULT_ENCODING="UTF8"
 * -e DEFAULT_COLLATION="en_US.UTF-8"
 * -e DEFAULT_CTYPE="en_US.UTF-8"
+  
+Specifies whether extensions will also be installed in template1 database.
+* -e POSTGRES_TEMPLATE_EXTENSIONS=true
 
 Maximum size to let the WAL grow to between automatic WAL checkpoints.
 * -e WAL_SIZE=4GB
