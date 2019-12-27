@@ -43,6 +43,13 @@ echo "postgres ready"
 # Setup user
 source /setup-user.sh
 
+# enable extensions in template1 if env variable set to true
+if [ "$POSTGRES_TEMPLATE_EXTENSIONS" = true ] ; then
+    for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
+        echo "Enabling ${ext} in the database template1"
+        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' template1"
+    done
+fi
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
