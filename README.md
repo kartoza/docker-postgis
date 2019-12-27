@@ -31,7 +31,7 @@ just getting started with docker, PostGIS and QGIS, we really recommend that you
 
 The following convention is used for tagging the images we build:
 
-kartoza/postgis:[postgres_version]-[postgis-version]
+kartoza/postgis:[postgres_major_version]-[postgis-point-releases]
 
 So for example:
 
@@ -87,8 +87,8 @@ and then run
 docker build --build-args PG_EXTENSION=true -t kartoza/postgis:12.0 .
 ```
 
-The image is currently built to accommodate the following extensions `ogr_fdw`,`pointcloud`,`pointcloud_postgis` which you can use by with the environment variable
-`POSTGRES_MULTIPLE_EXTENSIONS`.
+If you build the custom extensions you will be able to activate the following `pointcloud`,`pointcloud_postgis` 
+extensions with the environment variable `POSTGRES_MULTIPLE_EXTENSIONS`.
 
 ## Run
 
@@ -96,7 +96,7 @@ The image is currently built to accommodate the following extensions `ogr_fdw`,`
 To create a running container do:
 
 ```
-sudo docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
+docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
 ## Environment variables
@@ -107,7 +107,9 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e POSTGRES_USER=<PGUSER>
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
-* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,pointcloud,pointcloud_postgis # You can pass as many extensions as you need.
+* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology 
+
+You can pass as many extensions as you need.
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
 * -e SSL_KEY_FILE=/your/own/ssl_key_file.key
 * -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
@@ -122,17 +124,8 @@ Maximum size to let the WAL grow to between automatic WAL checkpoints.
 * -e WAL_SIZE=4GB
 
 * -e MIN_WAL_SIZE=2048MB
-
-Specifes the size of WAL segment files when creating a new data base cluster. Maximum
-permitted value is 1024 (equivalent to 1GB)
 * -e WAL_SEGSIZE=1024
-
-Specifies the maximum amount of memory to be used by maintenance operations, such as VACUUM, CREATE INDEX, and ALTER TABLE ADD FOREIGN KEY
 * -e MAINTAINANCE_WORK_MEM=128MB
-
-These will be used to create a new superuser with
-your preferred credentials. If these are not specified then the postgresql
-user is set to 'docker' with password 'docker'.
 
 You can open up the PG port by using the following environment variable. By default
 the container will allow connections only from the docker private subnet.
@@ -147,6 +140,7 @@ all connections.
 You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
 
 * -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
+
 
 
 ## Convenience docker-compose.yml
@@ -197,7 +191,7 @@ When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
 The SQL script will be executed against the gis database.
 
-Currently you can pass `.sql` and `.sql.gz` files as mounted volumes.
+Currently you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
 
 ```
 
