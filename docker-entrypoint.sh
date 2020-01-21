@@ -70,11 +70,6 @@ else
 fi
 
 
-
-
-
-
-
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]];
 then
