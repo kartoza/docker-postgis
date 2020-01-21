@@ -144,3 +144,25 @@ fi
 if [ ! -z "$POSTGRES_DB" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi
+
+
+# usable function definitions
+function restart_postgres {
+PID=`cat ${PG_PID}`
+kill -TERM ${PID}
+
+# Wait for background postgres main process to exit
+while [[ "$(ls -A ${PG_PID} 2>/dev/null)" ]]; do
+  sleep 1
+done
+
+# Brought postgres back up again
+source /env-data.sh
+su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
+
+# wait for postgres to come up
+until su - postgres -c "psql -l"; do
+  sleep 1
+done
+echo "postgres ready"
+}
