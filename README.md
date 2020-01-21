@@ -78,18 +78,6 @@ Now edit ``71-apt-cacher-ng`` then do:
 docker build -t kartoza/postgis .
 ```
 
-## Build with custom extensions
-The plugin currently install PostGIS official extensions but in some cases users
-need to build custom extension. Add your build instructions to pg_extensions.sh
-and then run
-
-```
-docker build --build-args PG_EXTENSION=true -t kartoza/postgis:12.0 .
-```
-
-If you build the custom extensions you will be able to activate the following `pointcloud`,`pointcloud_postgis` 
-extensions with the environment variable `POSTGRES_MULTIPLE_EXTENSIONS`.
-
 ## Run
 
 
