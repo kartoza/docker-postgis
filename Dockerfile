@@ -24,14 +24,7 @@ RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common po
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
-ARG PG_EXTENSION=false
-ADD pg_extensions.sh /
-RUN chmod +x /pg_extensions.sh
 
-RUN if [ "$PG_EXTENSION" = true ]; then \
-    apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-12 libxml2-dev zlib1g-dev && /pg_extensions.sh ;\
-    apt-get purge -y postgresql-server-dev-12 build-essential autoconf libxml2-dev zlib1g-dev; \
-    fi;
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 ADD env-data.sh /env-data.sh
