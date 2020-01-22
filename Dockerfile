@@ -20,7 +20,8 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | a
 # on docker hub e.g.
 # The following packages have unmet dependencies:
 RUN apt-get update; apt-get install -y postgresql-client-11 postgresql-common postgresql-11 postgresql-11-postgis-2.5 \
-postgresql-11-pgrouting netcat postgresql-11-ogr-fdw postgresql-plpython3-11 postgresql-11-cron
+postgresql-11-pgrouting netcat postgresql-11-ogr-fdw postgresql-plpython3-11 postgresql-11-cron python3-pip libpq-dev
+RUN pip3 install psycopg2
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
