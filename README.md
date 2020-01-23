@@ -130,6 +130,18 @@ You can also define any other configuration to add to `postgres.conf`, separated
 * -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
 
 
+## Docker secrets
+
+To avoid passing sensitive information in environment variables, `_FILE` can be appended to
+some of the variables to read from files present in the container. This is particularly useful
+in conjunction with Docker secrets, as passwords can be loaded from `/run/secrets/<secret_name>` e.g.:
+
+* -e POSTGRES_PASS_FILE=/run/secrets/<pg_pass_secret>
+
+For more information see [https://docs.docker.com/engine/swarm/secrets/](https://docs.docker.com/engine/swarm/secrets/).
+
+Currently, `POSTGRES_PASS`, `POSTGRES_USER` and `POSTGRES_DB` are supported.
+
 
 ## Convenience docker-compose.yml
 
