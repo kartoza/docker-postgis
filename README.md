@@ -95,7 +95,7 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e POSTGRES_USER=<PGUSER>
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
-* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology 
+* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology
 
 You can pass as many extensions as you need.
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
@@ -247,7 +247,7 @@ Master settings:
   to connect into the container. This is needed to allow the `slave` to connect
   into `master`, so specifically this settings should allow `slave` address. It is also needed to allow clients on other hosts to connect to either the slave or the master.
 - **REPLICATION_USER** User to initiate streaming replication
-- **REPLICATION_PASS**  Password for a user with streaming replication role
+- **REPLICATION_PASS** Password for a user with streaming replication role
 
 Slave settings:
 - **REPLICATE_FROM**: This should be the domain name or IP address of the `master`
@@ -266,7 +266,7 @@ Slave settings:
   is not able to revert to replicant anymore, unless it is destroyed and resynced
   with the new master.
 - **REPLICATION_USER** User to initiate streaming replication
-- **REPLICATION_PASS**  Password for a user with streaming replication role
+- **REPLICATION_PASS** Password for a user with streaming replication role
 
 To run the sample replication, follow these instructions:
 

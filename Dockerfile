@@ -49,8 +49,8 @@ ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
-RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*  \
-    && dpkg --remove --force-depends  unzip
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && dpkg --remove --force-depends unzip
 
 ENTRYPOINT /docker-entrypoint.sh
 
