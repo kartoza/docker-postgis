@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kartoza/docker-postgis.svg?branch=develop)](https://travis-ci.org/kartoza/docker-postgis)
+
 # docker-postgis
 
 
