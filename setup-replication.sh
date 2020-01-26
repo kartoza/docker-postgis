@@ -24,7 +24,7 @@ function configure_replication_permissions {
 
     echo "Setup data permissions"
     echo "----------------------"
-    chown -R postgres:postgres $(getent passwd postgres  | cut -d: -f6)
+    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
         su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
         su - postgres -c "chmod 0600 ~/.pgpass"
 }

@@ -5,11 +5,11 @@ language: python
 services:
   - docker
 
-virtualenv:
-  system_site_packages: true
-
 python:
   - '2.7'
+  - '3.5'
+  - '3.6.7'
+  - '3.7.1'
 
 script:
   - ./build.sh
