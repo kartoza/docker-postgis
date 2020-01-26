@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/kartoza/docker-postgis.svg?branch=develop)](https://travis-ci.org/kartoza/docker-postgis)
+
 # docker-postgis
 
 
@@ -95,7 +97,7 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e POSTGRES_USER=<PGUSER>
 * -e POSTGRES_PASS=<PGPASSWORD>
 * -e POSTGRES_DBNAME=<PGDBNAME>
-* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology 
+* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology
 
 You can pass as many extensions as you need.
 * -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
@@ -129,6 +131,18 @@ You can also define any other configuration to add to `postgres.conf`, separated
 
 * -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
 
+
+## Docker secrets
+
+To avoid passing sensitive information in environment variables, `_FILE` can be appended to
+some of the variables to read from files present in the container. This is particularly useful
+in conjunction with Docker secrets, as passwords can be loaded from `/run/secrets/<secret_name>` e.g.:
+
+* -e POSTGRES_PASS_FILE=/run/secrets/<pg_pass_secret>
+
+For more information see [https://docs.docker.com/engine/swarm/secrets/](https://docs.docker.com/engine/swarm/secrets/).
+
+Currently, `POSTGRES_PASS`, `POSTGRES_USER` and `POSTGRES_DB` are supported.
 
 
 ## Convenience docker-compose.yml
@@ -235,7 +249,7 @@ Master settings:
   to connect into the container. This is needed to allow the `slave` to connect
   into `master`, so specifically this settings should allow `slave` address. It is also needed to allow clients on other hosts to connect to either the slave or the master.
 - **REPLICATION_USER** User to initiate streaming replication
-- **REPLICATION_PASS**  Password for a user with streaming replication role
+- **REPLICATION_PASS** Password for a user with streaming replication role
 
 Slave settings:
 - **REPLICATE_FROM**: This should be the domain name or IP address of the `master`
@@ -254,7 +268,7 @@ Slave settings:
   is not able to revert to replicant anymore, unless it is destroyed and resynced
   with the new master.
 - **REPLICATION_USER** User to initiate streaming replication
-- **REPLICATION_PASS**  Password for a user with streaming replication role
+- **REPLICATION_PASS** Password for a user with streaming replication role
 
 To run the sample replication, follow these instructions:
 
