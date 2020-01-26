@@ -9,9 +9,9 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen gdal-bin
+RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen software-properties-common gdal-bin
 
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+RUN sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -c -s)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list"
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add -
 
 #-------------Application Specific Stuff ----------------------------------------------------
@@ -19,7 +19,8 @@ RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | a
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common postgresql-12 postgresql-12-postgis-3 postgresql-12-pgrouting netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts
+RUN apt-get update; apt-get install -y postgresql-client-12 postgresql-common postgresql-12 postgresql-12-postgis-3 \
+ netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts postgresql-12-cron postgresql-plpython3-12
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
@@ -39,6 +40,7 @@ ENV LC_ALL en_US.UTF-8
 RUN update-locale ${LANG}
 
 # We will run any commands in this when the container starts
+
 ADD docker-entrypoint.sh /docker-entrypoint.sh
 ADD setup-conf.sh /
 ADD setup-database.sh /
@@ -47,5 +49,8 @@ ADD setup-replication.sh /
 ADD setup-ssl.sh /
 ADD setup-user.sh /
 RUN chmod +x /docker-entrypoint.sh
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* \
+    && dpkg --remove --force-depends unzip
 
 ENTRYPOINT /docker-entrypoint.sh
+
