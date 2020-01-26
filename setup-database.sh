@@ -62,7 +62,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
-            su - postgres -c "createdb  -O ${POSTGRES_USER}  ${db}"
+            su - postgres -c "createdb -O ${POSTGRES_USER}  ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling ${ext} in the database ${db}"
                 su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
@@ -79,5 +79,3 @@ done
 rm custom.sql
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
-
-
