@@ -123,8 +123,9 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pg_cron'
+  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster'
 fi
+
 
 if [ -z "${ALLOW_IP_RANGE}" ]; then
   ALLOW_IP_RANGE='0.0.0.0/0'
@@ -173,7 +174,9 @@ if [ ! -z "$POSTGRES_DB" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi
 
-
+list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
+arr=(${list})
+SINGLE_DB=${arr[0]}
 # usable function definitions
 function restart_postgres {
 PID=`cat ${PG_PID}`
