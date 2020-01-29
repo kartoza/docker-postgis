@@ -65,17 +65,28 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             su - postgres -c "createdb -O ${POSTGRES_USER}  ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling ${ext} in the database ${db}"
-                su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
+                if [[ ${ext} = 'pg_cron' ]]; then
+                  echo " pg_cron doesn't need to be installed"
+                else
+                  su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
+                fi
             done
             echo "Loading legacy sql"
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
             export PGPASSWORD=${POSTGRES_PASS}
             psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f custom.sql
+
         else
          echo "${db} db already exists"
         fi
 done
+CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
+if [ ! -f "${CRON_LOCKFILE}" ]; then
+	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
+	touch ${CRON_LOCKFILE}
+fi
+
 rm custom.sql
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
