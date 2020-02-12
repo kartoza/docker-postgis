@@ -88,6 +88,31 @@ if [ -z "${MAINTAINANCE_WORKERS}" ]; then
 	MAINTAINANCE_WORKERS=2
 fi
 
+if [ -z "${ARCHIVE_MODE}" ]; then
+  # https://www.postgresql.org/docs/12/runtime-config-wal.html
+  ARCHIVE_MODE=off
+fi
+
+if [ -z "${ARCHIVE_COMMAND}" ]; then
+  # https://www.postgresql.org/docs/12/continuous-archiving.html#BACKUP-ARCHIVING-WAL
+  ARCHIVE_COMMAND="test ! -f ${WAL_ARCHIVE}/%f && cp %p ${WAL_ARCHIVE}/%f"
+fi
+
+if [ -z "${RESTORE_COMMAND}" ]; then
+  # https://www.postgresql.org/docs/12/runtime-config-wal.html
+  RESTORE_COMMAND="cp ${WAL_ARCHIVE}/%f \"%p\""
+fi
+
+if [ -z "${ARCHIVE_CLEANUP_COMMAND}" ]; then
+  # https://www.postgresql.org/docs/12/runtime-config-wal.html
+  ARCHIVE_CLEANUP_COMMAND="pg_archivecleanup ${WAL_ARCHIVE} %r"
+fi
+
+if [ -z "${WAL_LEVEL}" ]; then
+  # https://www.postgresql.org/docs/12/runtime-config-wal.html
+	WAL_LEVEL=replica
+fi
+
 if [ -z "${WAL_SIZE}" ]; then
 	WAL_SIZE=4GB
 fi
@@ -99,7 +124,6 @@ fi
 if [ -z "${WAL_SEGSIZE}" ]; then
 	WAL_SEGSIZE=1024
 fi
-
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
 	CHECK_POINT_TIMEOUT=30min
