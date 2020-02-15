@@ -157,6 +157,11 @@ fi
 if [ -z "${DEFAULT_ENCODING}" ]; then
   DEFAULT_ENCODING="UTF8"
 fi
+
+if [ -z "${PGCLIENTENCODING}" ]; then
+  PGCLIENTENCODING="UTF8"
+fi
+
 if [ -z "${DEFAULT_COLLATION}" ]; then
   DEFAULT_COLLATION="en_US.UTF-8"
 fi

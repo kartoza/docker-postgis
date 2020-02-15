@@ -2,30 +2,26 @@
 
 source /env-data.sh
 
+
+SETUP_LOCKFILE="${DATADIR}/.postgresql.init.lock"
+
 # This script will setup the necessary folder for database
 
-# test if DATADIR is existent
-if [[ ! -d ${DATADIR} ]]; then
-  echo "Creating Postgres data at ${DATADIR}"
-  mkdir -p ${DATADIR}
-fi
-
-
-# Set proper permissions
-# needs to be done as root:
-chown -R postgres:postgres ${DATADIR}
-
-
 # test if DATADIR has content
-if [[ ! "$(ls -A ${DATADIR})" ]]; then
+if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
   # No content yet - first time pg is being run!
   # No Replicate From settings. Assume that this is a master database.
   # Initialise db
   echo "Initializing Postgres Database at ${DATADIR}"
+  rm -rf ${DATADIR}
   #chown -R postgres $DATADIR
   su - postgres -c "$INITDB -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} ${DATADIR}"
+  touch ${SETUP_LOCKFILE}
 fi
 
+# Set proper permissions
+# needs to be done as root:
+chown -R postgres:postgres ${DATADIR}
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
