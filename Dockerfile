@@ -71,4 +71,3 @@ RUN set -eux \
 VOLUME /var/lib/postgresql
 
 ENTRYPOINT /docker-entrypoint.sh
-
