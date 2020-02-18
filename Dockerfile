@@ -68,6 +68,7 @@ RUN set -eux \
     && /setup.sh \
     && chmod +x /docker-entrypoint.sh
 
+VOLUME /var/lib/postgresql
 
 ENTRYPOINT /docker-entrypoint.sh
 
