@@ -10,10 +10,20 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install gnupg2 wget ca-certificates rpl pwgen software-properties-common gdal-bin
+RUN apt-get -y update; apt-get -y install locales gnupg2 wget ca-certificates rpl pwgen software-properties-common gdal-bin
 
 RUN sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -c -s)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list"
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add -
+# Generating locales takes a long time. Utilize caching by runnig it by itself
+# early in the build process.
+COPY locale.gen /etc/locale.gen
+RUN set -eux \
+    && /usr/sbin/locale-gen
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+RUN update-locale ${LANG}
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
@@ -32,13 +42,6 @@ ADD env-data.sh /env-data.sh
 ADD setup.sh /setup.sh
 RUN chmod +x /setup.sh
 RUN /setup.sh
-
-ADD locale.gen /etc/locale.gen
-RUN /usr/sbin/locale-gen
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-RUN update-locale ${LANG}
 
 # We will run any commands in this when the container starts
 
