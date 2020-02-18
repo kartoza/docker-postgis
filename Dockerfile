@@ -49,23 +49,25 @@ RUN set -eux \
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
 
+# Copy scripts
+COPY docker-entrypoint.sh \
+     env-data.sh \
+     setup.sh \
+     setup-conf.sh \
+     setup-database.sh \
+     setup-pg_hba.sh \
+     setup-replication.sh \
+     setup-ssl.sh \
+     setup-user.sh \
+     /
+
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
-ADD env-data.sh /env-data.sh
-ADD setup.sh /setup.sh
-RUN chmod +x /setup.sh
-RUN /setup.sh
+RUN set -eux \
+    && chmod +x /setup.sh \
+    && /setup.sh \
+    && chmod +x /docker-entrypoint.sh
 
-# We will run any commands in this when the container starts
-
-ADD docker-entrypoint.sh /docker-entrypoint.sh
-ADD setup-conf.sh /
-ADD setup-database.sh /
-ADD setup-pg_hba.sh /
-ADD setup-replication.sh /
-ADD setup-ssl.sh /
-ADD setup-user.sh /
-RUN chmod +x /docker-entrypoint.sh
 
 ENTRYPOINT /docker-entrypoint.sh
 
