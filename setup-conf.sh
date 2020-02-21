@@ -17,12 +17,16 @@ cat $CONF.template > $CONF
 
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 cat >> $CONF <<EOF
-wal_level = hot_standby
+archive_mode = ${ARCHIVE_MODE}
+archive_command = '${ARCHIVE_COMMAND}'
+restore_command = '${RESTORE_COMMAND}'
+archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
+wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
 superuser_reserved_connections= 10
-min_wal_size =${MIN_WAL_SIZE}
-max_wal_size= ${WAL_SIZE}
+min_wal_size = ${MIN_WAL_SIZE}
+max_wal_size = ${WAL_SIZE}
 wal_keep_segments= 64
 hot_standby = on
 listen_addresses = '${IP_LIST}'
