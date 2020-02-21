@@ -26,9 +26,6 @@ else
     if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
         for f in /docker-entrypoint-initdb.d/*; do
         export PGPASSWORD=${POSTGRES_PASS}
-        list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
-        arr=(${list})
-        SINGLE_DB=${arr[0]}
         case "$f" in
             *.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
             *.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
