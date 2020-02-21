@@ -91,45 +91,66 @@ docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 
 ## Environment variables
 
-You can also use the following environment variables to pass a
+#### Basic configuration
+
+You can use the following environment variables to pass a
 user name, password and/or default database name(or multiple databases comma separated).
 
-* -e POSTGRES_USER=<PGUSER>
-* -e POSTGRES_PASS=<PGPASSWORD>
-* -e POSTGRES_DBNAME=<PGDBNAME>
-* -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology
+* `-e POSTGRES_USER=<PGUSER>`
+* `-e POSTGRES_PASS=<PGPASSWORD>`
+* `-e POSTGRES_DBNAME=<PGDBNAME>`
+* `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology`
 
 You can pass as many extensions as you need.
-* -e SSL_CERT_FILE=/your/own/ssl_cert_file.pem
-* -e SSL_KEY_FILE=/your/own/ssl_key_file.key
-* -e SSL_CA_FILE=/your/own/ssl_ca_file.pem
-* -e DEFAULT_ENCODING="UTF8"
-* -e DEFAULT_COLLATION="en_US.UTF-8"
-* -e DEFAULT_CTYPE="en_US.UTF-8"
+* `-e SSL_CERT_FILE=/your/own/ssl_cert_file.pem`
+* `-e SSL_KEY_FILE=/your/own/ssl_key_file.key`
+* `-e SSL_CA_FILE=/your/own/ssl_ca_file.pem`
+* `-e DEFAULT_ENCODING="UTF8"`
+* `-e DEFAULT_COLLATION="en_US.UTF-8"`
+* `-e DEFAULT_CTYPE="en_US.UTF-8"`
   
-Specifies whether extensions will also be installed in template1 database.
-* -e POSTGRES_TEMPLATE_EXTENSIONS=true
+#### Specifies whether extensions will also be installed in template1 database.
+* `-e POSTGRES_TEMPLATE_EXTENSIONS=true`
+
+#### Configures archive mode
+
+This image uses the initial PostgreSQL values which disables the archiving option by default.
+When `ARCHIVE_MODE` is changed to `on`, the archiving command will copy WAL files to `/opt/archivedir`
+
+[More info: 19.5. Write Ahead Log](https://www.postgresql.org/docs/12/runtime-config-wal.html)
+
+* `-e ARCHIVE_MODE off`
+* `-e ARCHIVE_COMMAND "test ! -f /opt/archivedir/%f && cp %p /opt/archivedir/%f"`
+[More info](https://www.postgresql.org/docs/12/continuous-archiving.html#BACKUP-ARCHIVING-WAL)
+* `-e ARCHIVE_CLEANUP_COMMAND 'cp /opt/archivedir/%f "%p"'`
+* `-e RESTORE_COMMAND 'pg_archivecleanup /opt/archivedir %r'`
+
+#### Configure WAL level
+* `-e WAL_LEVEL=replica`
+[More info](https://www.postgresql.org/docs/12/runtime-config-wal.html)
 
 Maximum size to let the WAL grow to between automatic WAL checkpoints.
-* -e WAL_SIZE=4GB
+* `-e WAL_SIZE=4GB`
+* `-e MIN_WAL_SIZE=2048MB`
+* `-e WAL_SEGSIZE=1024`
+* `-e MAINTAINANCE_WORK_MEM=128MB`
 
-* -e MIN_WAL_SIZE=2048MB
-* -e WAL_SEGSIZE=1024
-* -e MAINTAINANCE_WORK_MEM=128MB
-
+#### Configure networking
 You can open up the PG port by using the following environment variable. By default
 the container will allow connections only from the docker private subnet.
 
-* -e ALLOW_IP_RANGE=<0.0.0.0/0> By default
+* `-e ALLOW_IP_RANGE=<0.0.0.0/0> By default`
 
 Postgres conf is setup to listen to all connections and if a user needs to restrict which IP address
 PostgreSQL listens to you can define it with the following environment variable. The default is set to listen to
 all connections.
-* -e IP_LIST=<*>
+* `-e IP_LIST=<*>`
+
+#### Additional configuration
 
 You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
 
-* -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
+* `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
 
 
 ## Docker secrets
