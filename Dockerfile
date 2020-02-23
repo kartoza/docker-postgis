@@ -1,17 +1,23 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM debian:stable
-MAINTAINER Tim Sutton<tim@kartoza.com>
+FROM ubuntu:18.04
+MAINTAINER Artur Mustafin<artur.mustafin@gmail.com>
 
-RUN apt -y update; apt -y install gnupg2 wget ca-certificates rpl pwgen
-RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ stretch-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
-RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+ARG DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get -y update && \
+    apt-get -y install lsb-release wget software-properties-common gnupg2 && \
+    sh -c 'echo OS: `lsb_release -cs`'  
+RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list' && \
+    wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+RUN apt-get -y update && apt-get -y upgrade && apt-get -y install postgresql-9.6
+RUN apt-get -y install postgresql-client-9.6 postgresql-common postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-RUN apt -y update; apt install -y postgresql-client-9.6 postgresql-common postgresql-9.6 postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
+# RUN apt -y update; apt install -y postgresql-9.6 postgresql-client-9.6 postgresql-common postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
