@@ -1,6 +1,6 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
-FROM ubuntu:18.04
-MAINTAINER Artur Mustafin<artur.mustafin@gmail.com>
+FROM debian:stable
+MAINTAINER Tim Sutton<tim@kartoza.com>
 
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -13,11 +13,6 @@ RUN apt-get -y update && apt-get -y upgrade && apt-get -y install postgresql-9.6
 RUN apt-get -y install postgresql-client-9.6 postgresql-common postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
 
 #-------------Application Specific Stuff ----------------------------------------------------
-
-# We add postgis as well to prevent build errors (that we dont see on local builds)
-# on docker hub e.g.
-# The following packages have unmet dependencies:
-# RUN apt -y update; apt install -y postgresql-9.6 postgresql-client-9.6 postgresql-common postgresql-9.6-postgis-2.4 postgresql-9.6-pgrouting netcat
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
