@@ -28,3 +28,4 @@ EOF
 echo "kernel.shmmax=543252480" >> /etc/sysctl.conf
 echo "kernel.shmall=2097152" >> /etc/sysctl.conf
 
+echo -e $EXTRA_CONF >> $CONF

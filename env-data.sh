@@ -66,3 +66,7 @@ fi
 if [ ! -z "$POSTGRES_DB" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi
+
+if [ -z "$EXTRA_CONF" ]; then
+    EXTRA_CONF=""
+fi
