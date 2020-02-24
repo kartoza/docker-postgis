@@ -6,7 +6,9 @@ SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
-
+list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
+arr=(${list})
+SINGLE_DB=${arr[0]}
 # This script will setup necessary configuration to enable replications
 
 # Refresh configuration in case environment settings changed.
@@ -32,9 +34,11 @@ xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
 max_parallel_workers = ${MAX_WORKERS}
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
-#archive_mode=on
-#archive_command = 'test ! -f ${WAL_ARCHIVE}/%f && cp -r %p ${WAL_ARCHIVE}/%f'
+shared_preload_libraries = 'pg_cron'
+cron.database_name = '${SINGLE_DB}'
 EOF
+
+
 
 echo -e $EXTRA_CONF >> $CONF
 
