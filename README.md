@@ -103,6 +103,7 @@ user name, password and/or default database name(or multiple databases comma sep
 * -e DEFAULT_COLLATION="en_US.UTF-8"
 * -e DEFAULT_CTYPE="en_US.UTF-8"
 
+
 Maximum size to let the WAL grow to between automatic WAL checkpoints.
 * -e WAL_SIZE=4GB
 
@@ -133,6 +134,10 @@ all connections.
 You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
 
 * -e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"
+
+If you plan on migrating the image and continue using the data directory you need to pass
+
+* EXISTING_DATA_DIR=true
 
 
 ## Convenience docker-compose.yml
