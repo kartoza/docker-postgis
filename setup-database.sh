@@ -14,9 +14,9 @@ if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
         # No Replicate From settings. Assume that this is a master database.
         # Initialise db
         echo "Initializing Postgres Database at ${DATADIR}"
-        rm -rf ${DATADIR}
-        #chown -R postgres $DATADIR
-        su - postgres -c "$INITDB -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} ${DATADIR}"
+        rm -rf ${DATADIR}/*
+        chown -R postgres $DATADIR
+        su - postgres -c "$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR}"
         touch ${SETUP_LOCKFILE}
     fi
 
