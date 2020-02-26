@@ -45,7 +45,9 @@ RUN set -eux \
     && apt-get -y --purge autoremove  \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
-
+RUN apt-get remove -y postgresql-11-postgis-3 postgresql-11-postgis-3-scripts || true; \
+    dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5 | grep -xq 'install ok installed' && \
+    dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5-scripts | grep -xq 'install ok installed'
 RUN pip3 install psycopg2
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
