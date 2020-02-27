@@ -157,10 +157,6 @@ If you plan on migrating the image and continue using the data directory you nee
 * EXISTING_DATA_DIR=true
 
 
-If you plan on migrating the image and continue using the data directory you need to pass
-
-* EXISTING_DATA_DIR=true
-
 ## Docker secrets
 
 To avoid passing sensitive information in environment variables, `_FILE` can be appended to
