@@ -6,8 +6,7 @@ source /env-data.sh
 SETUP_LOCKFILE="${DATADIR}/.postgresql.init.lock"
 
 # This script will setup the necessary folder for database
-chown -R postgres $DATADIR
-
+chown -R postgres /var/lib/postgresql
 # test if DATADIR has content
 if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
     if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
@@ -16,7 +15,7 @@ if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
         # Initialise db
         echo "Initializing Postgres Database at ${DATADIR}"
         rm -rf ${DATADIR}/*
-        chown -R postgres $DATADIR
+        chown -R postgres /var/lib/postgresql
         su - postgres -c "$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR}"
         touch ${SETUP_LOCKFILE}
     fi
