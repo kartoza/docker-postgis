@@ -6,6 +6,7 @@ source /env-data.sh
 SETUP_LOCKFILE="${DATADIR}/.postgresql.init.lock"
 
 # This script will setup the necessary folder for database
+chown -R postgres $DATADIR
 
 # test if DATADIR has content
 if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
