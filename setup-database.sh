@@ -8,7 +8,7 @@ source /env-data.sh
 SETUP_LOCKFILE="${DATADIR}/.postgresql.init.lock"
 
 # This script will setup the necessary folder for database
-
+chown -R postgres /var/lib/postgresql
 # test if DATADIR has content
 
 if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
@@ -17,8 +17,8 @@ if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
         # No Replicate From settings. Assume that this is a master database.
         # Initialise db
         echo "Initializing Postgres Database at ${DATADIR}"
-        rm -rf ${DATADIR}
-        #chown -R postgres $DATADIR
+        rm -rf ${DATADIR}/*
+        chown -R postgres /var/lib/postgresql
         su - postgres -c "$INITDB -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} ${DATADIR}"
         touch ${SETUP_LOCKFILE}
     fi
