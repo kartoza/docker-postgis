@@ -152,6 +152,10 @@ You can also define any other configuration to add to `postgres.conf`, separated
 
 * `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
 
+If you plan on migrating the image and continue using the data directory you need to pass
+
+*   EXISTING_DATA_DIR=true
+
 
 If you plan on migrating the image and continue using the data directory you need to pass
 
