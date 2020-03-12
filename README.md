@@ -154,8 +154,21 @@ You can also define any other configuration to add to `postgres.conf`, separated
 
 If you plan on migrating the image and continue using the data directory you need to pass
 
-* EXISTING_DATA_DIR=true
+1. `EXISTING_DATA_DIR`=true. This is the default value.
+2. The service will check if initialization lock file exists, and hang until you resolve it.
+3. If you want to use existing directory, put .postgresql.init.lock file in your data directory. 
+   Instructions described in the service log.
+4. Restart the service.
 
+If you want to reinitialize the data directory from scratch, you need to do:
+
+1. Do backup, move data, etc. Any preparations before deleting your data directory.
+2. Delete initializations lockfile named .postgresql.init.lock in your data directory.
+3. Set `EXISTING_DATA_DIR`=false. Restart the service
+4. Service will hang to ask you to resolve the situation by creating the init lock or deleting your data directory.
+   Instructions are described in the service log.
+5. You can delete your data directory safely. Then restart the service.
+6. The service will start reinitializing your data directory from scratch. 
 
 ## Docker secrets
 
@@ -429,6 +442,6 @@ See [the postgres documentation about encoding](https://www.postgresql.org/docs/
 
 Tim Sutton (tim@kartoza.com)
 Gavin Fleming (gavin@kartoza.com)
-Risky Maulana (rizky@kartoza.com)
+Rizky Maulana (rizky@kartoza.com)
 Admire Nyakudya (admire@kartoza.com)
 December 2018
