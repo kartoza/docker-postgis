@@ -66,13 +66,13 @@ fi
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
-# EXISTING_DATA_DIR flag default value
-# Always assume that data dir exists if variable not explicitly defined
+# RECREATE_DATADIR flag default value
+# Always assume that we don't want to recreate datadir if not explicitly defined
 # For issue: https://github.com/kartoza/docker-postgis/issues/226
-if [ -z "${EXISTING_DATA_DIR}" ]; then
-  EXISTING_DATA_DIR=TRUE
+if [ -z "${RECREATE_DATADIR}" ]; then
+  RECREATE_DATADIR=FALSE
 else
-  EXISTING_DATA_DIR=$(boolean ${EXISTING_DATA_DIR})
+  RECREATE_DATADIR=$(boolean ${RECREATE_DATADIR})
 fi
 # SSL mode
 if [ -z "${PGSSLMODE}" ]; then
@@ -250,7 +250,7 @@ function restart_postgres {
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up
-  until su - postgres -c "psql -l > /dev/null"; do
+  until su - postgres -c "pg_isready"; do
     sleep 1
   done
   echo "postgres ready"

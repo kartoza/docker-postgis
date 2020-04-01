@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# This script will run as the postgres user due to the Dockerfile USER directive
 set -e
+
+source /env-data.sh
 
 # Setup postgres CONF file
 
@@ -13,7 +14,6 @@ source /setup-ssl.sh
 # Setup pg_hba.conf
 
 source /setup-pg_hba.sh
-
 
 if [[ -z "$REPLICATE_FROM" ]]; then
     # This means this is a master instance. We check that database exists
