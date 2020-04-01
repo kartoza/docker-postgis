@@ -6,22 +6,31 @@ services:
   - docker
 
 python:
-  - '2.7'
-  - '3.5'
-  - '3.6.7'
-  - '3.7.1'
+  - '3.7'
 
-script:
-  - ./build.sh
-  - pushd sample/replication
-  - make up
-  - make status
-  # Check for database status
-  - until make check-master-running; do echo "Retrying"; sleep 5; done
-  - until make check-slave-running; do echo "Retrying"; sleep 5; done
-
-  # Check replications
-  - until make check-master-replication; do echo "Retrying"; make master-log-tail; sleep 5; done
-  - sleep 60  # Wait replication finished
-  - until make check-slave-replication; do echo "Retrying"; make slave-log-tail; sleep 5; done
-  - popd
+jobs:
+  include:
+    - stage: build
+      name: "Build image"
+      script:
+        - ./build.sh
+        - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
+        - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}
+        - echo $IMAGE_TAG
+        - docker tag kartoza/postgis:manual-build ${IMAGE_TAG}
+        - docker login -u "${DOCKER_HUB_USER}" -p "${DOCKER_HUB_PASSWORD}"
+        - docker push ${IMAGE_TAG}
+    - stage: test
+      name: "Run test scenario"
+      env:
+        - SCENARIO=replications
+      script:
+        - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
+        - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}
+        - echo $IMAGE_TAG
+        - docker pull $IMAGE_TAG
+        - docker tag $IMAGE_TAG kartoza/postgis:pr-${TRAVIS_PULL_REQUEST}
+        - export TAG=pr-${TRAVIS_PULL_REQUEST}
+        - pushd scenario_tests/${SCENARIO}
+        - ./test.sh
+        - popd
