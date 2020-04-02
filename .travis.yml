@@ -13,7 +13,7 @@ jobs:
     - stage: build
       name: "Build image"
       script:
-        - ./build.sh
+        - ./build-test.sh
         - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
         - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}
         - echo $IMAGE_TAG
@@ -24,6 +24,7 @@ jobs:
       name: "Run test scenario"
       env:
         - SCENARIO=replications
+        - SCENARIO=collations
       script:
         - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
         - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}

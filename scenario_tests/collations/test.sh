@@ -10,12 +10,11 @@ docker-compose up -d
 
 sleep 5
 
-until docker-compose exec pg-master pg_isready; do
+until docker-compose exec pg pg_isready; do
   sleep 1
 done;
 
 # Execute tests
-docker-compose exec pg-master /bin/bash /tests/test_master.sh
-docker-compose exec pg-node /bin/bash /tests/test_node.sh
+docker-compose exec pg /bin/bash /tests/test.sh
 
 docker-compose down
