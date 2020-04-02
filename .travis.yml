@@ -10,28 +10,13 @@ python:
 
 jobs:
   include:
-    - stage: build
-      name: "Build image"
-      script:
-        - ./build-test.sh
-        - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
-        - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}
-        - echo $IMAGE_TAG
-        - docker tag kartoza/postgis:manual-build ${IMAGE_TAG}
-        - docker login -u "${DOCKER_HUB_USER}" -p "${DOCKER_HUB_PASSWORD}"
-        - docker push ${IMAGE_TAG}
-    - stage: test
-      name: "Run test scenario"
+    - stage: Build and Test
       env:
         - SCENARIO=replications
         - SCENARIO=collations
       script:
-        - export OWNER=$(python -c "print('${TRAVIS_REPO_SLUG}'.split('/')[0])")
-        - export IMAGE_TAG=${OWNER}/postgis:pr-${TRAVIS_PULL_REQUEST}
-        - echo $IMAGE_TAG
-        - docker pull $IMAGE_TAG
-        - docker tag $IMAGE_TAG kartoza/postgis:pr-${TRAVIS_PULL_REQUEST}
-        - export TAG=pr-${TRAVIS_PULL_REQUEST}
+        - ./build-test.sh
         - pushd scenario_tests/${SCENARIO}
         - ./test.sh
         - popd
+
