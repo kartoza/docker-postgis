@@ -56,7 +56,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
-            su - postgres -c "createdb -O ${POSTGRES_USER} -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} -T template0 ${db}"
+            su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling ${ext} in the database ${db}"
                 if [[ ${ext} = 'pg_cron' ]]; then

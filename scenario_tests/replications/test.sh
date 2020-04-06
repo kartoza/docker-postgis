@@ -18,4 +18,4 @@ done;
 docker-compose exec pg-master /bin/bash /tests/test_master.sh
 docker-compose exec pg-node /bin/bash /tests/test_node.sh
 
-docker-compose down
+docker-compose down -v

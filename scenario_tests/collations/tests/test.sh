@@ -17,4 +17,4 @@ EOF
 PGHOST=localhost \
 PGDATABASE=gis \
 PYTHONPATH=/lib \
-  python3 -m unittest -v
+  python3 -m unittest -v ${TEST_CLASS}

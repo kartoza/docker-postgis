@@ -10,11 +10,14 @@ docker-compose up -d
 
 sleep 5
 
-until docker-compose exec pg pg_isready; do
-  sleep 1
-done;
+services=("pg" "pg-new")
 
-# Execute tests
-docker-compose exec pg /bin/bash /tests/test.sh
+for service in $services; do
 
-docker-compose down
+  # Execute tests
+  until docker-compose exec $service pg_isready; do
+    sleep 1
+  done;
+  docker-compose exec $service /bin/bash /tests/test.sh
+
+done
