@@ -66,6 +66,10 @@ fi
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
+# If datadir is defined use this
+if [ -n "${DATADIR}" ]; then
+  DATADIR=${DATADIR}
+fi
 # RECREATE_DATADIR flag default value
 # Always assume that we don't want to recreate datadir if not explicitly defined
 # For issue: https://github.com/kartoza/docker-postgis/issues/226
@@ -211,15 +215,19 @@ fi
 
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
-if [ ! -z "${POSTGRES_PASSWORD}" ]; then
+if [ -n "${POSTGRES_PASSWORD}" ]; then
 	POSTGRES_PASS=${POSTGRES_PASSWORD}
 fi
-if [ ! -z "${PGDATA}" ]; then
+if [ -n "${PGDATA}" ]; then
 	DATADIR=${PGDATA}
 fi
 
-if [ ! -z "$POSTGRES_DB" ]; then
+if [ -n "${POSTGRES_DB}" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
+fi
+
+if [ -n "${POSTGRES_INITDB_ARGS}" ]; then
+  INITDB_EXTRA_ARGS=${POSTGRES_INITDB_ARGS}
 fi
 
 list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)

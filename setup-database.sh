@@ -3,7 +3,8 @@
 source /env-data.sh
 
 # test if DATADIR has content
-if [[ "${RECREATE_DATADIR}" == 'TRUE' ]]; then
+# Do initialization if DATADIR is empty, or RECREATE_DATADIR is true
+if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]]; then
     # Only attempt reinitializations if ${RECREATE_DATADIR} is true
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
@@ -12,7 +13,7 @@ if [[ "${RECREATE_DATADIR}" == 'TRUE' ]]; then
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres ${DATADIR}
     echo "Initializing with command:"
-    command="$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR}"
+    command="$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
     su - postgres -c "$command"
 fi;
 

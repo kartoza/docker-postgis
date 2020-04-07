@@ -10,7 +10,7 @@ docker-compose up -d
 
 sleep 5
 
-services=("pg" "pg-new")
+services=("pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
