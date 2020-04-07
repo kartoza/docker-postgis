@@ -7,7 +7,6 @@ class TestReplicationMaster(unittest.TestCase):
     def setUp(self):
         self.db = DBConnection()
 
-
     def test_create_new_data(self):
         # create new table
         self.db.conn.autocommit = True
@@ -44,7 +43,6 @@ class TestReplicationNode(unittest.TestCase):
 
     def setUp(self):
         self.db = DBConnection()
-
 
     def test_read_data(self):
         # create new table
