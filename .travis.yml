@@ -8,15 +8,16 @@ services:
 python:
   - '3.7'
 
-jobs:
-  include:
-    - stage: Build and Test
-      env:
-        - SCENARIO=replications
-        - SCENARIO=collations
-      script:
-        - ./build-test.sh
-        - pushd scenario_tests/${SCENARIO}
-        - ./test.sh
-        - popd
+env:
+  - SCENARIO=datadir_init
+  - SCENARIO=replications
+  - SCENARIO=collations
+
+before_script:
+  - ./build-test.sh
+
+script:
+  - pushd scenario_tests/${SCENARIO}
+  - ./test.sh
+  - popd
 
