@@ -6,22 +6,18 @@ services:
   - docker
 
 python:
-  - '2.7'
-  - '3.5'
-  - '3.6.7'
-  - '3.7.1'
+  - '3.7'
+
+env:
+  - SCENARIO=datadir_init
+  - SCENARIO=replications
+  - SCENARIO=collations
+
+before_script:
+  - ./build-test.sh
 
 script:
-  - ./build.sh
-  - pushd sample/replication
-  - make up
-  - make status
-  # Check for database status
-  - until make check-master-running; do echo "Retrying"; sleep 5; done
-  - until make check-slave-running; do echo "Retrying"; sleep 5; done
-
-  # Check replications
-  - until make check-master-replication; do echo "Retrying"; make master-log-tail; sleep 5; done
-  - sleep 60  # Wait replication finished
-  - until make check-slave-replication; do echo "Retrying"; make slave-log-tail; sleep 5; done
+  - pushd scenario_tests/${SCENARIO}
+  - ./test.sh
   - popd
+

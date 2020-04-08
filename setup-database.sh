@@ -2,38 +2,35 @@
 
 source /env-data.sh
 
-
-SETUP_LOCKFILE="${DATADIR}/.postgresql.init.lock"
-
-# This script will setup the necessary folder for database
-chown -R postgres /var/lib/postgresql
 # test if DATADIR has content
-if [[ -z "${EXISTING_DATA_DIR}" ]]; then \
-    if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
-        # No content yet - first time pg is being run!
-        # No Replicate From settings. Assume that this is a master database.
-        # Initialise db
-        echo "Initializing Postgres Database at ${DATADIR}"
-        rm -rf ${DATADIR}/*
-        chown -R postgres /var/lib/postgresql
-        su - postgres -c "$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR}"
-        touch ${SETUP_LOCKFILE}
-    fi
-
+# Do initialization if DATADIR is empty, or RECREATE_DATADIR is true
+if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]]; then
+    # Only attempt reinitializations if ${RECREATE_DATADIR} is true
+    # No Replicate From settings. Assume that this is a master database.
+    # Initialise db
+    echo "Initializing Postgres Database at ${DATADIR}"
+    mkdir -p ${DATADIR}
+    rm -rf ${DATADIR}/*
+    chown -R postgres:postgres ${DATADIR}
+    echo "Initializing with command:"
+    command="$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
+    su - postgres -c "$command"
 fi;
+
 # Set proper permissions
 # needs to be done as root:
 chown -R postgres:postgres ${DATADIR}
+chmod -R 750 ${DATADIR}
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 
 
-
+# Run as local only for config setup phase to avoid outside access
 su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
 
 # wait for postgres to come up
-until su - postgres -c "psql -l"; do
+until su - postgres -c "pg_isready"; do
   sleep 1
 done
 echo "postgres ready"
@@ -42,7 +39,7 @@ echo "postgres ready"
 source /setup-user.sh
 
 # enable extensions in template1 if env variable set to true
-if [ "$POSTGRES_TEMPLATE_EXTENSIONS" = true ] ; then
+if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" == TRUE ]] ; then
     for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
         echo "Enabling ${ext} in the database template1"
         su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' template1"
@@ -60,7 +57,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
-            su - postgres -c "createdb -O ${POSTGRES_USER}  ${db}"
+            su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling ${ext} in the database ${db}"
                 if [[ ${ext} = 'pg_cron' ]]; then
@@ -72,8 +69,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             echo "Loading legacy sql"
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
-            export PGPASSWORD=${POSTGRES_PASS}
-            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f custom.sql
+            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f custom.sql
 
         else
          echo "${db} db already exists"
@@ -87,4 +83,4 @@ fi
 
 rm custom.sql
 # This should show up in docker logs afterwards
-su - postgres -c "psql -l"
+su - postgres -c "psql -l 2>&1"
