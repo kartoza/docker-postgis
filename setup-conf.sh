@@ -15,6 +15,11 @@ SINGLE_DB=${arr[0]}
 # Refresh configuration in case environment settings changed.
 cat $CONF.template > $CONF
 
+# Reflect DATADIR loaction
+# Delete any data_dir declarations
+sed -i '/data_directory/d' $CONF
+echo "data_directory = '${DATADIR}'" >> $CONF
+
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 cat >> $CONF <<EOF
 archive_mode = ${ARCHIVE_MODE}
@@ -27,7 +32,6 @@ wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
 superuser_reserved_connections= 10
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
-wal_keep_segments= 64
 hot_standby = on
 listen_addresses = '${IP_LIST}'
 shared_buffers = 500MB

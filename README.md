@@ -91,6 +91,50 @@ docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 
 ## Environment variables
 
+#### Cluster Initializations
+
+With minimum setup, our image will use initial cluster located in the
+`DATADIR` environment variable. If you want to use persistence, mount these 
+location into your volume/host. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
+You can instead mount the parent location like this:
+
+* `-v data-volume:/var/lib/postgresql`
+
+This default cluster will be initialized with default locale settings `C.UTF-8`.
+If, for instance, you want to create a new cluster with your own settings (not using the default cluster).
+You need to specify different empty directory, like this
+
+```shell script
+-v data-volume:/opt/postgres/data \
+-e DATADIR:/opt/postgres/data \
+-e DEFAULT_ENCODING="UTF8" \
+-e DEFAULT_COLLATION="id_ID.utf8" \
+-e DEFAULT_CTYPE="id_ID.utf8" \
+-e INITDB_EXTRA_ARGS="<some more initdb command args>"
+```
+
+The containers will use above parameters to initialize a new db cluster in the 
+specified directory. If the directory is not empty, then initialization parameter will be ignored.
+
+These are some initialization parameter that will only be used to initialize new cluster.
+If the container uses existing cluster, it will be ignored (for example, when the container restarts).
+
+* `DEFAULT_ENCODING`: cluster encoding
+* `DEFAULT_COLLATION`: cluster collation
+* `DEFAULT_CTYPE`: cluster ctype
+* `WAL_SEGSIZE`: WAL segsize option
+* `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
+
+In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
+If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create 
+new db cluster.
+
+* `RECREATE_DATADIR`: Force database reinitializations in the location `DATADIR`
+
+If you used `RECREATE_DATADIR` and successfully created new cluster. Remember 
+that you should remove this parameter afterwards. Because, if it was not omitted, 
+it will always recreate new db cluster after every container restarts.
+
 #### Basic configuration
 
 You can use the following environment variables to pass a
@@ -152,10 +196,11 @@ You can also define any other configuration to add to `postgres.conf`, separated
 
 * `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
 
-If you plan on migrating the image and continue using the data directory you need to pass
+If you want to reinitialize the data directory from scratch, you need to do:
 
-*   EXISTING_DATA_DIR=true
-
+1. Do backup, move data, etc. Any preparations before deleting your data directory.
+2. Set environment variables `RECREATE_DATADIR=TRUE`. Restart the service
+3. The service will delete your `DATADIR` directory and start reinitializing your data directory from scratch. 
 
 ## Docker secrets
 
@@ -414,13 +459,25 @@ The database cluster is initialised with the following encoding settings
 -E "UTF8" --lc-collate="en_US.UTF-8" --lc-ctype="en_US.UTF-8"
 `
 
+or
+
+`
+-E "UTF8" --lc-collate="C.UTF-8" --lc-ctype="C.UTF-8"
+`
+
+If you use default `DATADIR` location.
+
 If you need to setup a database cluster with other encoding parameters you need
-to pass the environment variables
+to pass the environment variables when you initialize the cluster.
 
 * -e DEFAULT_ENCODING="UTF8"
 * -e DEFAULT_COLLATION="en_US.UTF-8"
 * -e DEFAULT_CTYPE="en_US.UTF-8"
 
+Initializing a new cluster can be done by using different `DATADIR` location and 
+mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully 
+delete the current cluster and create a new one. Make sure to remove parameter 
+`RECREATE_DATADIR` after creating the cluster.
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
@@ -429,6 +486,6 @@ See [the postgres documentation about encoding](https://www.postgresql.org/docs/
 
 Tim Sutton (tim@kartoza.com)
 Gavin Fleming (gavin@kartoza.com)
-Risky Maulana (rizky@kartoza.com)
+Rizky Maulana (rizky@kartoza.com)
 Admire Nyakudya (admire@kartoza.com)
 December 2018
