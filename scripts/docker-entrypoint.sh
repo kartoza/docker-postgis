@@ -2,29 +2,29 @@
 
 set -e
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 # Setup postgres CONF file
 
-source /setup-conf.sh
+source /scripts/setup-conf.sh
 
 # Setup ssl
-source /setup-ssl.sh
+source /scripts/setup-ssl.sh
 
 # Setup pg_hba.conf
 
-source /setup-pg_hba.sh
+source /scripts/setup-pg_hba.sh
 
 if [[ -z "$REPLICATE_FROM" ]]; then
     # This means this is a master instance. We check that database exists
     echo "Setup master database"
-    source /setup-database.sh
+    source /scripts/setup-database.sh
     entry_point_script
     kill_postgres
 else
     # This means this is a slave/replication instance.
     echo "Setup slave database"
-    source /setup-replication.sh
+    source /scripts/setup-replication.sh
 fi
 
 

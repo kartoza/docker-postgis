@@ -21,7 +21,7 @@ RUN set -eux \
 
 # Generating locales takes a long time. Utilize caching by runnig it by itself
 # early in the build process.
-COPY locale.gen /etc/locale.gen
+COPY scripts/locale.gen /etc/locale.gen
 RUN set -eux \
     && /usr/sbin/locale-gen
 
@@ -50,24 +50,15 @@ RUN set -eux \
 EXPOSE 5432
 
 # Copy scripts
-COPY docker-entrypoint.sh \
-     env-data.sh \
-     setup.sh \
-     setup-conf.sh \
-     setup-database.sh \
-     setup-pg_hba.sh \
-     setup-replication.sh \
-     setup-ssl.sh \
-     setup-user.sh \
-     /
+ADD scripts /scripts
+WORKDIR /scripts
+RUN chmod +x *.sh
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 RUN set -eux \
-    && chmod +x /setup.sh \
-    && /setup.sh \
-    && chmod +x /docker-entrypoint.sh
+    && /scripts/setup.sh
 
 VOLUME /var/lib/postgresql
 
-ENTRYPOINT /docker-entrypoint.sh
+ENTRYPOINT /scripts/docker-entrypoint.sh

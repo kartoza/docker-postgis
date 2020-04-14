@@ -146,6 +146,10 @@ user name, password and/or default database name(or multiple databases comma sep
 * `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology`
 
 You can pass as many extensions as you need.
+* `-e SHARED_PRELOAD_LIBRARIES='pg_cron'`
+Some extensions need to be registered in the postgresql.conf 
+as shared_preload_libraries. pg_cron should always be added because
+the extension is installed with the image.
 * `-e SSL_CERT_FILE=/your/own/ssl_cert_file.pem`
 * `-e SSL_KEY_FILE=/your/own/ssl_key_file.key`
 * `-e SSL_CA_FILE=/your/own/ssl_ca_file.pem`

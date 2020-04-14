@@ -213,6 +213,10 @@ if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
 
+if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
+    SHARED_PRELOAD_LIBRARIES='pg_cron'
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then

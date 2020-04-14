@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
@@ -47,7 +47,7 @@ primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICA
 recovery_target_timeline=${TARGET_TIMELINE}
 recovery_target_action=${TARGET_ACTION}
 promote_trigger_file = '${PROMOTE_FILE}'
-shared_preload_libraries = 'pg_cron'
+shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
 cron.database_name = '${SINGLE_DB}'
 EOF
 
