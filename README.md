@@ -80,6 +80,17 @@ Now edit ``71-apt-cacher-ng`` then do:
 docker build -t kartoza/postgis .
 ```
 
+### Building with alternative base distributions
+
+There are build args for `DISTRO` (=debian), `IMAGE_VERSION` (=buster)
+and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
+(but it still needs to be Debian based and have PostgreSQL official apt repo).
+
+For example making Ubuntu 20.04 based build (for better arm64 support)
+```
+docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
+```
+
 ## Run
 
 
