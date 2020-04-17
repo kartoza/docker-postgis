@@ -53,7 +53,7 @@ There are various ways to get the image onto your system:
 The preferred way (but using most bandwidth for the initial image) is to
 get our docker trusted build like this:
 
-
+f
 ```
 docker pull kartoza/postgis
 ```
@@ -167,11 +167,11 @@ When `ARCHIVE_MODE` is changed to `on`, the archiving command will copy WAL file
 
 [More info: 19.5. Write Ahead Log](https://www.postgresql.org/docs/12/runtime-config-wal.html)
 
-* `-e ARCHIVE_MODE off`
-* `-e ARCHIVE_COMMAND "test ! -f /opt/archivedir/%f && cp %p /opt/archivedir/%f"`
+* `-e ARCHIVE_MODE=off`
+* `-e ARCHIVE_COMMAND="test ! -f /opt/archivedir/%f && cp %p /opt/archivedir/%f"`
 [More info](https://www.postgresql.org/docs/12/continuous-archiving.html#BACKUP-ARCHIVING-WAL)
-* `-e ARCHIVE_CLEANUP_COMMAND 'cp /opt/archivedir/%f "%p"'`
-* `-e RESTORE_COMMAND 'pg_archivecleanup /opt/archivedir %r'`
+* `-e ARCHIVE_CLEANUP_COMMAND="pg_archivecleanup /opt/archivedir %r"`
+* `-e RESTORE_COMMAND='cp /opt/archivedir/%f "%p"'`
 
 #### Configure WAL level
 * `-e WAL_LEVEL=replica`
