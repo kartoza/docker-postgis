@@ -23,10 +23,12 @@ cd collations
 
 ## Testing architecture
 
-We make two stage of testing in travis.
+~~We make two stage of testing in travis.
 First build stage, we build the image, push it into docker hub. 
 Then the testing stage will 
-use this image to run each scenario tests (run in parallel).
+use this image to run each scenario tests (run in parallel).~~
+
+The above architecture is possible for the branch but will require PR commiters to provide their own docker login. So we scrap that ideas. We have now parallel builds and each of them build their own image and test it in one pipeline.
 
 Any testing framework can be used, but we use python `unittest` module for simplicity and readability.
 
@@ -61,15 +63,14 @@ will start python unittest script with necessary variables.
 
 Add your scenario to travis config:
 
-In `jobs.include[]` list there will be `stage: test` entry.
-Add your environment variable needed to run your test in `stage.env` list.
+In `env[]` list there will be a `SCENARIO` variable to set.
+Add your environment variable needed to run your test in `env[]` list.
 For example, if you have new scenario folder `my_test`, then the env key 
 will look like this:
 
 ```
-- stage: test
-  env:
-    - SCENARIO=replications
-    - SCENARIO=collations
-    - SCENARIO=my_test EXTRA_SETTING_1=value1 EXTRA_SETTING_2=value2 EXTRA_SETTING_3=value3 
+env:
+  - SCENARIO=replications
+  - SCENARIO=collations
+  - SCENARIO=my_test EXTRA_SETTING_1=value1 EXTRA_SETTING_2=value2 EXTRA_SETTING_3=value3 
 ```

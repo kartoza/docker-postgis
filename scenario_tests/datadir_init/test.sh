@@ -8,7 +8,7 @@ source ../test-env.sh
 # Run service
 docker-compose up -d
 
-sleep 5
+sleep 30
 
 services=("pg-default" "pg-new" "pg-recreate")
 
