@@ -12,6 +12,7 @@ env:
   - SCENARIO=datadir_init
   - SCENARIO=replications
   - SCENARIO=collations
+  - SCENARIO=extensions
 
 before_script:
   - ./build-test.sh
@@ -20,4 +21,3 @@ script:
   - pushd scenario_tests/${SCENARIO}
   - ./test.sh
   - popd
-

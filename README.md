@@ -104,7 +104,7 @@ docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 #### Cluster Initializations
 
 With minimum setup, our image will use initial cluster located in the
-`DATADIR` environment variable. If you want to use persistence, mount these 
+`DATADIR` environment variable. If you want to use persistence, mount these
 location into your volume/host. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
 You can instead mount the parent location like this:
 
@@ -123,7 +123,7 @@ You need to specify different empty directory, like this
 -e INITDB_EXTRA_ARGS="<some more initdb command args>"
 ```
 
-The containers will use above parameters to initialize a new db cluster in the 
+The containers will use above parameters to initialize a new db cluster in the
 specified directory. If the directory is not empty, then initialization parameter will be ignored.
 
 These are some initialization parameter that will only be used to initialize new cluster.
@@ -136,13 +136,13 @@ If the container uses existing cluster, it will be ignored (for example, when th
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
-If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create 
+If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create
 new db cluster.
 
 * `RECREATE_DATADIR`: Force database reinitializations in the location `DATADIR`
 
-If you used `RECREATE_DATADIR` and successfully created new cluster. Remember 
-that you should remove this parameter afterwards. Because, if it was not omitted, 
+If you used `RECREATE_DATADIR` and successfully created new cluster. Remember
+that you should remove this parameter afterwards. Because, if it was not omitted,
 it will always recreate new db cluster after every container restarts.
 
 #### Basic configuration
@@ -153,11 +153,11 @@ user name, password and/or default database name(or multiple databases comma sep
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
 * `-e POSTGRES_DBNAME=<PGDBNAME>`
-* `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology`
+* `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting`
 
 You can pass as many extensions as you need.
 * `-e SHARED_PRELOAD_LIBRARIES='pg_cron'`
-Some extensions need to be registered in the postgresql.conf 
+Some extensions need to be registered in the postgresql.conf
 as shared_preload_libraries. pg_cron should always be added because
 the extension is installed with the image.
 * `-e SSL_CERT_FILE=/your/own/ssl_cert_file.pem`
@@ -166,7 +166,7 @@ the extension is installed with the image.
 * `-e DEFAULT_ENCODING="UTF8"`
 * `-e DEFAULT_COLLATION="en_US.UTF-8"`
 * `-e DEFAULT_CTYPE="en_US.UTF-8"`
-  
+
 #### Specifies whether extensions will also be installed in template1 database.
 * `-e POSTGRES_TEMPLATE_EXTENSIONS=true`
 
@@ -214,7 +214,7 @@ If you want to reinitialize the data directory from scratch, you need to do:
 
 1. Do backup, move data, etc. Any preparations before deleting your data directory.
 2. Set environment variables `RECREATE_DATADIR=TRUE`. Restart the service
-3. The service will delete your `DATADIR` directory and start reinitializing your data directory from scratch. 
+3. The service will delete your `DATADIR` directory and start reinitializing your data directory from scratch.
 
 ## Docker secrets
 
@@ -488,9 +488,9 @@ to pass the environment variables when you initialize the cluster.
 * -e DEFAULT_COLLATION="en_US.UTF-8"
 * -e DEFAULT_CTYPE="en_US.UTF-8"
 
-Initializing a new cluster can be done by using different `DATADIR` location and 
-mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully 
-delete the current cluster and create a new one. Make sure to remove parameter 
+Initializing a new cluster can be done by using different `DATADIR` location and
+mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully
+delete the current cluster and create a new one. Make sure to remove parameter
 `RECREATE_DATADIR` after creating the cluster.
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
