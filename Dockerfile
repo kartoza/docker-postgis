@@ -42,7 +42,7 @@ RUN set -eux \
     && apt-get -y --no-install-recommends install postgresql-client-12 \
         postgresql-common postgresql-12 postgresql-12-postgis-3 \
         netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 \
+        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting \
     && apt-get -y --purge autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
