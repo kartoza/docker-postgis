@@ -79,7 +79,9 @@ Now edit ``71-apt-cacher-ng`` then do:
 docker build -t kartoza/postgis .
 ```
 
-### Building with alternative base distributions
+### Build image
+
+#### Alternative base distributions
 
 There are build args for `DISTRO` (=debian), `IMAGE_VERSION` (=buster)
 and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
@@ -89,6 +91,12 @@ For example making Ubuntu 20.04 based build (for better arm64 support)
 ```
 docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
 ```
+
+#### Locales
+
+By default, the image build will include **all** `locales` to cover any value for `locale` settings such as `DEFAULT_COLLATION`, `DEFAULT_CTYPE` or `DEFAULT_ENCODING`. 
+
+You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
 
 ## Run
 
