@@ -128,6 +128,7 @@ You need to specify different empty directory, like this
 -e DEFAULT_ENCODING="UTF8" \
 -e DEFAULT_COLLATION="id_ID.utf8" \
 -e DEFAULT_CTYPE="id_ID.utf8" \
+-e --auth="scram-sha-256" \
 -e INITDB_EXTRA_ARGS="<some more initdb command args>"
 ```
 
@@ -141,6 +142,7 @@ If the container uses existing cluster, it will be ignored (for example, when th
 * `DEFAULT_COLLATION`: cluster collation
 * `DEFAULT_CTYPE`: cluster ctype
 * `WAL_SEGSIZE`: WAL segsize option
+* `--auth` : PASSWORD AUTHENTICATION
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.

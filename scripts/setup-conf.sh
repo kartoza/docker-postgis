@@ -49,6 +49,7 @@ recovery_target_action=${TARGET_ACTION}
 promote_trigger_file = '${PROMOTE_FILE}'
 shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
 cron.database_name = '${SINGLE_DB}'
+password_encryption= '${PASSWORD_AUTHENTICATION}'
 EOF
 
 

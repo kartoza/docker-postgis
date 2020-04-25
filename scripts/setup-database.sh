@@ -13,7 +13,7 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres ${DATADIR}
     echo "Initializing with command:"
-    command="$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
     su - postgres -c "$command"
 fi;
 

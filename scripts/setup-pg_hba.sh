@@ -17,14 +17,14 @@ cat ${ROOT_CONF}/pg_hba.conf.template > ${ROOT_CONF}/pg_hba.conf
 if [[ "$ALLOW_IP_RANGE" ]]
 then
 	echo "Add rule to pg_hba: $ALLOW_IP_RANGE"
- 	echo "host    all             all             $ALLOW_IP_RANGE              md5" >> ${ROOT_CONF}/pg_hba.conf
+ 	echo "host    all             all             $ALLOW_IP_RANGE              ${PASSWORD_AUTHENTICATION}" >> ${ROOT_CONF}/pg_hba.conf
 fi
 
 # check password first so we can output the warning before postgres
 # messes it up
 if [[ "$POSTGRES_PASS" ]]; then
 	pass="PASSWORD '$POSTGRES_PASS'"
-	authMethod=md5
+	authMethod=${PASSWORD_AUTHENTICATION}
 else
 	# The - option suppresses leading tabs but *not* spaces. :)
 	cat >&2 <<-'EOWARN'
