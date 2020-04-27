@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-DATADIR="/var/lib/postgresql/12/main"
+DEFAULT_DATADIR="/var/lib/postgresql/12/main"
 ROOT_CONF="/etc/postgresql/12/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
@@ -67,8 +67,8 @@ if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
 # If datadir is defined use this
-if [ -n "${DATADIR}" ]; then
-  DATADIR=${DATADIR}
+if [ -z "${DATADIR}" ]; then
+  DATADIR=${DEFAULT_DATADIR}
 fi
 # RECREATE_DATADIR flag default value
 # Always assume that we don't want to recreate datadir if not explicitly defined
