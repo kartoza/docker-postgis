@@ -128,7 +128,7 @@ You need to specify different empty directory, like this
 -e DEFAULT_ENCODING="UTF8" \
 -e DEFAULT_COLLATION="id_ID.utf8" \
 -e DEFAULT_CTYPE="id_ID.utf8" \
--e --auth="scram-sha-256" \
+-e --auth="md5" \
 -e INITDB_EXTRA_ARGS="<some more initdb command args>"
 ```
 
