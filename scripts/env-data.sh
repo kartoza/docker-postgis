@@ -218,7 +218,7 @@ if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
-    PASSWORD_AUTHENTICATION="scram-sha-256"
+    PASSWORD_AUTHENTICATION="md5"
 fi
 
 # Compatibility with official postgres variable
