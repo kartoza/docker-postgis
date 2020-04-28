@@ -66,7 +66,7 @@ fi
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
-# If datadir is defined use this
+# If datadir is not defined, then use this
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
 fi
