@@ -505,6 +505,10 @@ delete the current cluster and create a new one. Make sure to remove parameter
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
+### Support
+
+If you require more substantial assistance from [kartoza](https://kartoza.com)  (because our work and interaction on docker-postgis is pro bono),
+please consider taking out a [Support Level Agreeement](https://kartoza.com/en/shop/product/support) 
 
 ## Credits
 
