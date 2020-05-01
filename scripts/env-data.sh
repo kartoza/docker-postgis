@@ -217,6 +217,10 @@ if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
     SHARED_PRELOAD_LIBRARIES='pg_cron'
 fi
 
+if [ -z "$PASSWORD_AUTHENTICATION" ]; then
+    PASSWORD_AUTHENTICATION="md5"
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then
