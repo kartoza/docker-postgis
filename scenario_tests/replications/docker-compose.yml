@@ -3,22 +3,22 @@ version: '2.1'
 
 volumes:
   pg-master-data-dir:
-  pg-slave-data-dir:
-
+  pg-node-data-dir:
 
 services:
   pg-master:
-    image: 'kartoza/postgis:manual-build'
+    image: 'kartoza/postgis:${TAG:-manual-build}'
     restart: 'always'
     # You can optionally mount to volume, to play with the persistence and
-    # observe how the slave will behave after restarts.
+    # observe how the node will behave after restarts.
     volumes:
       - pg-master-data-dir:/var/lib/postgresql
       - ./tests:/tests
+      - ../utils:/lib/utils
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
-      # This range should allow slaves to connect to master
+      # This range should allow nodes to connect to master
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
       # We can specify optional credentials
@@ -31,26 +31,30 @@ services:
     ports:
       - "7777:5432"
     healthcheck:
-      test: "exit 0"
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
 
-  pg-slave:
-    image: 'kartoza/postgis:manual-build'
+  pg-node:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
     restart: 'always'
     # You can optionally mount to volume, but we're not able to scale it
     # in that case.
-    # The slave will always destroy its database and copy from master at
+    # The node will always destroy its database and copy from master at
     # runtime
     volumes:
-      - pg-slave-data-dir:/var/lib/postgresql
+      - pg-node-data-dir:/var/lib/postgresql
       - ./tests:/tests
+      - ../utils:/lib/utils
 
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
-      # Not really needed in slaves for the replication, but optionally can
-      # be put when slaves are needed to be a failover server when master
+      # Not really needed in nodes for the replication, but optionally can
+      # be put when nodes are needed to be a failover server when master
       # is down. The IP Range are generally needed if other services wants to
-      # connect to this slave
+      # connect to this node
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
       # REPLICATE_FROM options accepts domain-name or IP address
@@ -67,13 +71,13 @@ services:
 #      REPLICATE_PORT: '7777'
 
       # DESTROY_DATABASE_ON_RESTART will default to True if not specified.
-      # If specified other than True, it will prevent slave from destroying
+      # If specified other than True, it will prevent node from destroying
       # database on restart
       DESTROY_DATABASE_ON_RESTART: 'True'
 
       # PROMOTE_MASTER Default empty.
-      # If specified with any value, then it will convert current slave into
-      # a writable state. Useful if master is down and the current slave needs
+      # If specified with any value, then it will convert current node into
+      # a writable state. Useful if master is down and the current node needs
       # to be promoted until manual recovery.
 #      PROMOTE_MASTER: 'True'
 
@@ -89,3 +93,8 @@ services:
     # For this sample, it was disabled by default to allow scaling test
     ports:
       - "7776:5432"
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
