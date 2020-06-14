@@ -2,8 +2,6 @@
 
 # docker-postgis
 
-
-
 A simple docker container that runs PostGIS
 
 Visit our page on the docker hub at: https://hub.docker.com/r/kartoza/postgis/
@@ -54,8 +52,12 @@ The preferred way (but using most bandwidth for the initial image) is to
 get our docker trusted build like this:
 
 ```
-docker pull kartoza/postgis
+docker pull kartoza/postgis:image_version
 ```
+
+
+
+## Building the image
 
 To build the image yourself without apt-cacher (also consumes more bandwidth
 since deb packages need to be refetched each time you build) do:
@@ -64,24 +66,20 @@ since deb packages need to be refetched each time you build) do:
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
 ```
 
-To build with apt-cacher (and minimise download requirements) you need to
-clone this repo locally first and modify the contents of 71-apt-cacher-ng to
-match your cacher host. Then build using a local url instead of directly from
-github.
+Alternatively clone the repository and build against any preferred branch 
 
 ```
 git clone git://github.com/kartoza/docker-postgis
+git checkout branch_name
 ```
 
-Now edit ``71-apt-cacher-ng`` then do:
+Then do:
 
 ```
 docker build -t kartoza/postgis .
 ```
 
-### Build image
-
-#### Alternative base distributions
+#### Alternative base distributions builds
 
 There are build args for `DISTRO` (=debian), `IMAGE_VERSION` (=buster)
 and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
@@ -98,16 +96,8 @@ By default, the image build will include **all** `locales` to cover any value fo
 
 You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
 
-## Run
-
-
-To create a running container do:
-
-```
-docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
-```
-
-## Environment variables
+You can also run the container using the environment variables.
+### Environment variables
 
 #### Cluster Initializations
 
@@ -155,6 +145,35 @@ If you used `RECREATE_DATADIR` and successfully created new cluster. Remember
 that you should remove this parameter afterwards. Because, if it was not omitted,
 it will always recreate new db cluster after every container restarts.
 
+#### Postgres Encoding
+
+The database cluster is initialised with the following encoding settings
+
+`
+-E "UTF8" --lc-collate="en_US.UTF-8" --lc-ctype="en_US.UTF-8"
+`
+
+or
+
+`
+-E "UTF8" --lc-collate="C.UTF-8" --lc-ctype="C.UTF-8"
+`
+
+If you use default `DATADIR` location.
+
+If you need to setup a database cluster with other encoding parameters you need
+to pass the environment variables when you initialize the cluster.
+
+* -e DEFAULT_ENCODING="UTF8"
+* -e DEFAULT_COLLATION="en_US.UTF-8"
+* -e DEFAULT_CTYPE="en_US.UTF-8"
+
+Initializing a new cluster can be done by using different `DATADIR` location and
+mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully
+delete the current cluster and create a new one. Make sure to remove parameter
+`RECREATE_DATADIR` after creating the cluster.
+
+
 #### Basic configuration
 
 You can use the following environment variables to pass a
@@ -177,8 +196,9 @@ the extension is installed with the image.
 * `-e DEFAULT_COLLATION="en_US.UTF-8"`
 * `-e DEFAULT_CTYPE="en_US.UTF-8"`
 
-#### Specifies whether extensions will also be installed in template1 database.
 * `-e POSTGRES_TEMPLATE_EXTENSIONS=true`
+
+ ` Specifies whether extensions will also be installed in template1 database.`
 
 #### Configures archive mode
 
@@ -238,6 +258,16 @@ For more information see [https://docs.docker.com/engine/swarm/secrets/](https:/
 
 Currently, `POSTGRES_PASS`, `POSTGRES_USER` and `POSTGRES_DB` are supported.
 
+
+## Running the container
+
+### Using the terminal
+
+To create a running container do:
+
+```
+docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
+```
 
 ## Convenience docker-compose.yml
 
@@ -308,6 +338,44 @@ docker run -d -v $HOME/postgres_data:/var/lib/postgresql kartoza/postgis`
 You need to ensure the ``postgres_data`` directory has sufficient permissions
 for the docker process to read / write it.
 
+## Postgres SSL setup
+
+By default the image is delivered with an unsigned SSL certificate. This helps to have an
+encrypted connection to clients and avoid eavesdropping but does not help to mitigate
+man in the middle (MITM) attacks.
+
+You need to provide your own, signed private key to avoid this kind of attacks (and make
+sure clients connect with verify-ca or verify-full sslmode).
+
+The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
+
+```
+FROM kartoza/postgis:11.0-2.5
+
+ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
+ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
+
+RUN chmod 400 /etc/ssl/private/ssl_key.pem
+```
+
+And a docker-compose.yml to initialize with this configuration:
+
+```
+services:
+  postgres:
+    build:
+      dockerfile: Dockerfile
+      context: ssl_secured_docker
+    environment:
+      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
+      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
+```
+
+See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
+
+See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
+
+
 ## Postgres Replication Setup
 
 Replication allows you to maintain two or more synchronised copies of a database, with a
@@ -334,6 +402,10 @@ to the database `gis` he also has to update the permission for the user
 with the following SQL assuming the ${REPLICATION_USER} is called replicator
 
      ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
+
+
+**NB** You need to setup a strong password for replication otherwise the 
+default password for ${REPLICATION_USER} will default to `replicator`
 
 To experiment with the replication abilities, you can see a (docker-compose.yml)[sample/replication/docker-compose.yml]
 sample. There are several environment variables that you can set, such as:
@@ -440,70 +512,6 @@ However, you should note that this option doesn't mean anything if you didn't
 persist your database volume. Because if it is not persisted, then it will be lost
 on restart because docker will recreate the container.
 
-## Postgres SSL setup
-
-By default the image is delivered with an unsigned SSL certificate. This helps to have an
-encrypted connection to clients and avoid eavesdropping but does not help to mitigate
-man in the middle (MITM) attacks.
-
-You need to provide your own, signed private key to avoid this kind of attacks (and make
-sure clients connect with verify-ca or verify-full sslmode).
-
-The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
-
-```
-FROM kartoza/postgis:11.0-2.5
-
-ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
-ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
-
-RUN chmod 400 /etc/ssl/private/ssl_key.pem
-```
-
-And a docker-compose.yml to initialize with this configuration:
-
-```
-services:
-  postgres:
-    build:
-      dockerfile: Dockerfile
-      context: ssl_secured_docker
-    environment:
-      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
-      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
-```
-
-See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
-
-## Postgres Encoding
-
-The database cluster is initialised with the following encoding settings
-
-`
--E "UTF8" --lc-collate="en_US.UTF-8" --lc-ctype="en_US.UTF-8"
-`
-
-or
-
-`
--E "UTF8" --lc-collate="C.UTF-8" --lc-ctype="C.UTF-8"
-`
-
-If you use default `DATADIR` location.
-
-If you need to setup a database cluster with other encoding parameters you need
-to pass the environment variables when you initialize the cluster.
-
-* -e DEFAULT_ENCODING="UTF8"
-* -e DEFAULT_COLLATION="en_US.UTF-8"
-* -e DEFAULT_CTYPE="en_US.UTF-8"
-
-Initializing a new cluster can be done by using different `DATADIR` location and
-mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully
-delete the current cluster and create a new one. Make sure to remove parameter
-`RECREATE_DATADIR` after creating the cluster.
-
-See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 ### Support
 
