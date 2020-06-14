@@ -30,8 +30,6 @@ services:
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
-    links:
-      - db:db
     environment:
       - DUMPPREFIX=PG_db
       - POSTGRES_USER=docker

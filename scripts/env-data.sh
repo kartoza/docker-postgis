@@ -242,6 +242,9 @@ list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
 arr=(${list})
 SINGLE_DB=${arr[0]}
 
+if [ -z "${TIMEZONE}" ]; then
+  TIMEZONE='Etc/UTC'
+fi
 
 # usable function definitions
 function kill_postgres {
