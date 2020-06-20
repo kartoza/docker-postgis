@@ -42,8 +42,18 @@ RUN set -eux \
     && apt-get -y --no-install-recommends install postgresql-client-12 \
         postgresql-common postgresql-12 postgresql-12-postgis-3 \
         netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting \
-    && apt-get -y --purge autoremove \
+        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting
+
+# Compile pointcloud extension
+RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-11 libxml2-dev zlib1g-dev
+
+RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
+cd pointcloud-master && \
+./autogen.sh && ./configure && make -j 4 && make install && \
+cd .. && rm -Rf pointcloud-master
+
+# Cleanup resources
+RUN apt-get -y --purge autoremove  \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
