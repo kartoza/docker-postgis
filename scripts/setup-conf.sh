@@ -1,14 +1,12 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
-list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
-arr=(${list})
-SINGLE_DB=${arr[0]}
+
 # This script will setup necessary configuration to enable replications
 
 # Refresh configuration in case environment settings changed.

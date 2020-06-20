@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.pg_hba.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then

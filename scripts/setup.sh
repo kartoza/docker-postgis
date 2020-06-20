@@ -3,7 +3,7 @@
 chmod 600 /etc/ssl/private/ssl-cert-snakeoil.key
 
 # These tasks are run as root
-source /env-data.sh
+source /scripts/env-data.sh
 
 
 # Restrict subnet to docker private network
