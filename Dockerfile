@@ -45,7 +45,7 @@ RUN set -eux \
         postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting
 
 # Compile pointcloud extension
-RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-11 libxml2-dev zlib1g-dev
+RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-12 libxml2-dev zlib1g-dev
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
 cd pointcloud-master && \
