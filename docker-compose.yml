@@ -26,7 +26,7 @@ services:
       test: "exit 0"
 
   dbbackups:
-    image: kartoza/pg-backup:12.0
+    image: kartoza/pg-backup:11.0
     hostname: pg-backups
     volumes:
       - dbbackups:/backups

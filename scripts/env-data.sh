@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-DEFAULT_DATADIR="/var/lib/postgresql/12/main"
-ROOT_CONF="/etc/postgresql/12/main"
+DATADIR="/var/lib/postgresql/11/main"
+ROOT_CONF="/etc/postgresql/11/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/12/bin/postgres"
-INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/11/bin/postgres"
+INITDB="/usr/lib/postgresql/11/bin/initdb"
+SQLDIR="/usr/share/postgresql/11/contrib/postgis-2.5/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/12-main.pid"
+PG_PID="/var/run/postgresql/11-main.pid"
 
 
 # Read data from secrets into env variables.
@@ -111,31 +111,6 @@ if [ -z "${MAINTAINANCE_WORKERS}" ]; then
 	MAINTAINANCE_WORKERS=2
 fi
 
-if [ -z "${ARCHIVE_MODE}" ]; then
-  # https://www.postgresql.org/docs/12/runtime-config-wal.html
-  ARCHIVE_MODE=off
-fi
-
-if [ -z "${ARCHIVE_COMMAND}" ]; then
-  # https://www.postgresql.org/docs/12/continuous-archiving.html#BACKUP-ARCHIVING-WAL
-  ARCHIVE_COMMAND="test ! -f ${WAL_ARCHIVE}/%f && cp %p ${WAL_ARCHIVE}/%f"
-fi
-
-if [ -z "${RESTORE_COMMAND}" ]; then
-  # https://www.postgresql.org/docs/12/runtime-config-wal.html
-  RESTORE_COMMAND="cp ${WAL_ARCHIVE}/%f \"%p\""
-fi
-
-if [ -z "${ARCHIVE_CLEANUP_COMMAND}" ]; then
-  # https://www.postgresql.org/docs/12/runtime-config-wal.html
-  ARCHIVE_CLEANUP_COMMAND="pg_archivecleanup ${WAL_ARCHIVE} %r"
-fi
-
-if [ -z "${WAL_LEVEL}" ]; then
-  # https://www.postgresql.org/docs/12/runtime-config-wal.html
-	WAL_LEVEL=replica
-fi
-
 if [ -z "${WAL_SIZE}" ]; then
 	WAL_SIZE=4GB
 fi
@@ -170,7 +145,7 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,pgrouting,pointcloud,pointcloud_postgis'
 fi
 
 
@@ -192,14 +167,6 @@ if [ -z "${DEFAULT_CTYPE}" ]; then
   DEFAULT_CTYPE="en_US.UTF-8"
 fi
 
-if [ -z "${TARGET_TIMELINE}" ]; then
-	TARGET_TIMELINE='latest'
-fi
-
-if [ -z "${TARGET_ACTION}" ]; then
-	TARGET_ACTION='promote'
-fi
-
 if [ -z "${REPLICATION_USER}" ]; then
   REPLICATION_USER=replicator
 fi
@@ -211,10 +178,6 @@ fi
 
 if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
-fi
-
-if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    SHARED_PRELOAD_LIBRARIES='pg_cron'
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then

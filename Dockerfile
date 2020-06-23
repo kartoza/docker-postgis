@@ -39,13 +39,18 @@ RUN update-locale ${LANG}
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get -y --no-install-recommends install postgresql-client-12 \
-        postgresql-common postgresql-12 postgresql-12-postgis-3 \
-        netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting
+    && apt-get -y  install postgresql-11 \
+    && apt-get -y  install netcat postgresql-11-postgis-2.5 postgresql-common \
+    && apt-get -y install postgresql-11-pgrouting postgresql-11-ogr-fdw  \
+         postgresql-plpython3-11 postgresql-11-cron python3-pip libpq-dev
+
+RUN apt-get remove -y postgresql-11-postgis-3 postgresql-11-postgis-3-scripts || true; \
+    dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5 | grep -xq 'install ok installed' && \
+    dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5-scripts | grep -xq 'install ok installed'
+RUN pip3 install psycopg2
 
 # Compile pointcloud extension
-RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-12 libxml2-dev zlib1g-dev
+RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-11 libxml2-dev zlib1g-dev
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
 cd pointcloud-master && \

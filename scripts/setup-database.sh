@@ -77,11 +77,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
          echo "${db} db already exists"
         fi
 done
-CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
-if [ ! -f "${CRON_LOCKFILE}" ]; then
-	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
-	touch ${CRON_LOCKFILE}
-fi
+
 
 rm custom.sql
 # This should show up in docker logs afterwards

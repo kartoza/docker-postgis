@@ -22,11 +22,7 @@ echo "data_directory = '${DATADIR}'" >> $CONF
 
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 cat >> $CONF <<EOF
-archive_mode = ${ARCHIVE_MODE}
-archive_command = '${ARCHIVE_COMMAND}'
-restore_command = '${RESTORE_COMMAND}'
-archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
-wal_level = ${WAL_LEVEL}
+wal_level = hot_standby
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
 superuser_reserved_connections= 10
@@ -43,12 +39,6 @@ xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
 max_parallel_workers = ${MAX_WORKERS}
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
-primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} sslmode=${PGSSLMODE}'
-recovery_target_timeline=${TARGET_TIMELINE}
-recovery_target_action=${TARGET_ACTION}
-promote_trigger_file = '${PROMOTE_FILE}'
-shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
-cron.database_name = '${SINGLE_DB}'
 password_encryption= '${PASSWORD_AUTHENTICATION}'
 timezone='${TIMEZONE}'
 EOF
