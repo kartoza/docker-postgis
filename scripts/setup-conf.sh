@@ -39,6 +39,8 @@ xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
 max_parallel_workers = ${MAX_WORKERS}
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
+shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
+cron.database_name = '${SINGLE_DB}'
 password_encryption= '${PASSWORD_AUTHENTICATION}'
 timezone='${TIMEZONE}'
 EOF

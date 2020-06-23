@@ -180,6 +180,10 @@ if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
 
+if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
+    SHARED_PRELOAD_LIBRARIES='pg_cron'
+fi
+
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="md5"
 fi
