@@ -13,12 +13,12 @@ class TestExtensionsBase(unittest.TestCase):
     def fetch_extensions(self, cursor):
         cursor.execute(
             """
-            SELECT * FROM pg_extension;
+            SELECT extname FROM pg_extension;
             """.format()
         )
 
         # ignore extensions which are not user-defined
-        installed_ext = [row[1] for row in cursor.fetchall() if row[1] not in self.DEFAULT_EXT]
+        installed_ext = [row[0] for row in cursor.fetchall() if row[0] not in self.DEFAULT_EXT]
 
         return installed_ext
 
