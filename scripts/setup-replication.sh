@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 # This script will setup slave instance to use standby replication
 

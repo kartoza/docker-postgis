@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
+
 list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
 arr=(${list})
 SINGLE_DB=${arr[0]}
@@ -14,15 +15,19 @@ SINGLE_DB=${arr[0]}
 # Refresh configuration in case environment settings changed.
 cat $CONF.template > $CONF
 
+# Reflect DATADIR loaction
+# Delete any data_dir declarations
+sed -i '/data_directory/d' $CONF
+echo "data_directory = '${DATADIR}'" >> $CONF
+
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
 cat >> $CONF <<EOF
 wal_level = hot_standby
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
 superuser_reserved_connections= 10
-min_wal_size =${MIN_WAL_SIZE}
-max_wal_size= ${WAL_SIZE}
-wal_keep_segments= 64
+min_wal_size = ${MIN_WAL_SIZE}
+max_wal_size = ${WAL_SIZE}
 hot_standby = on
 listen_addresses = '${IP_LIST}'
 shared_buffers = 500MB
@@ -34,8 +39,10 @@ xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
 max_parallel_workers = ${MAX_WORKERS}
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
-shared_preload_libraries = 'pg_cron'
+shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
 cron.database_name = '${SINGLE_DB}'
+password_encryption= '${PASSWORD_AUTHENTICATION}'
+timezone='${TIMEZONE}'
 EOF
 
 

@@ -41,6 +41,17 @@ function file_env {
 	unset "$fileVar"
 }
 
+function boolean() {
+  case $1 in
+    [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss])
+        echo 'TRUE'
+        ;;
+    *)
+        echo 'FALSE'
+        ;;
+  esac
+}
+
 file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
 file_env 'POSTGRES_DBNAME'
@@ -54,6 +65,18 @@ if [ -z "${POSTGRES_PASS}" ]; then
 fi
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
+fi
+# If datadir is not defined, then use this
+if [ -z "${DATADIR}" ]; then
+  DATADIR=${DEFAULT_DATADIR}
+fi
+# RECREATE_DATADIR flag default value
+# Always assume that we don't want to recreate datadir if not explicitly defined
+# For issue: https://github.com/kartoza/docker-postgis/issues/226
+if [ -z "${RECREATE_DATADIR}" ]; then
+  RECREATE_DATADIR=FALSE
+else
+  RECREATE_DATADIR=$(boolean ${RECREATE_DATADIR})
 fi
 # SSL mode
 if [ -z "${PGSSLMODE}" ]; then
@@ -100,7 +123,6 @@ if [ -z "${WAL_SEGSIZE}" ]; then
 	WAL_SEGSIZE=1024
 fi
 
-
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
 	CHECK_POINT_TIMEOUT=30min
 fi
@@ -123,7 +145,7 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology'
+  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,pgrouting,pointcloud,pointcloud_postgis'
 fi
 
 
@@ -158,37 +180,92 @@ if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
 
+if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
+    SHARED_PRELOAD_LIBRARIES='pg_cron'
+fi
+
+if [ -z "$PASSWORD_AUTHENTICATION" ]; then
+    PASSWORD_AUTHENTICATION="md5"
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
-if [ ! -z "${POSTGRES_PASSWORD}" ]; then
+if [ -n "${POSTGRES_PASSWORD}" ]; then
 	POSTGRES_PASS=${POSTGRES_PASSWORD}
 fi
-if [ ! -z "${PGDATA}" ]; then
+if [ -n "${PGDATA}" ]; then
 	DATADIR=${PGDATA}
 fi
 
-if [ ! -z "$POSTGRES_DB" ]; then
+if [ -n "${POSTGRES_DB}" ]; then
 	POSTGRES_DBNAME=${POSTGRES_DB}
 fi
 
+if [ -n "${POSTGRES_INITDB_ARGS}" ]; then
+  INITDB_EXTRA_ARGS=${POSTGRES_INITDB_ARGS}
+fi
+
+list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
+arr=(${list})
+SINGLE_DB=${arr[0]}
+
+if [ -z "${TIMEZONE}" ]; then
+  TIMEZONE='Etc/UTC'
+fi
 
 # usable function definitions
+function kill_postgres {
+  PID=`cat ${PG_PID}`
+  kill -TERM ${PID}
+
+  # Wait for background postgres main process to exit
+  # wait until PID file gets deleted
+  while ls -A ${PG_PID} 2> /dev/null; do
+    sleep 1
+  done
+
+  return 0
+}
+
 function restart_postgres {
-PID=`cat ${PG_PID}`
-kill -TERM ${PID}
 
-# Wait for background postgres main process to exit
-while [[ "$(ls -A ${PG_PID} 2>/dev/null)" ]]; do
-  sleep 1
-done
+  kill_postgres
 
-# Brought postgres back up again
-source /env-data.sh
-su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
+  # Brought postgres back up again
+  source /env-data.sh
+  su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
-# wait for postgres to come up
-until su - postgres -c "psql -l"; do
-  sleep 1
-done
-echo "postgres ready"
+  # wait for postgres to come up
+  until su - postgres -c "pg_isready"; do
+    sleep 1
+  done
+  echo "postgres ready"
+  return 0
+}
+
+
+
+# Running extended script or sql if provided.
+# Useful for people who extends the image.
+function entry_point_script {
+  SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
+  # If lockfile doesn't exists, proceed.
+  if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
+      if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
+          for f in /docker-entrypoint-initdb.d/*; do
+          export PGPASSWORD=${POSTGRES_PASS}
+          case "$f" in
+              *.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
+              *.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
+              *.sh)     echo "$0: running $f"; . $f || true;;
+              *)        echo "$0: ignoring $f" ;;
+          esac
+          echo
+          done
+          # Put lock file to make sure entry point scripts were run
+          touch ${SETUP_LOCKFILE}
+      fi
+  fi
+
+  return 0
 }

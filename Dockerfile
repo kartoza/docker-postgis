@@ -1,7 +1,8 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
+ARG DISTRO=debian
 ARG IMAGE_VERSION=buster
 ARG IMAGE_VARIANT=-slim
-FROM debian:$IMAGE_VERSION$IMAGE_VARIANT
+FROM $DISTRO:$IMAGE_VERSION$IMAGE_VARIANT
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
@@ -21,7 +22,7 @@ RUN set -eux \
 
 # Generating locales takes a long time. Utilize caching by runnig it by itself
 # early in the build process.
-COPY locale.gen /etc/locale.gen
+COPY scripts/locale.gen /etc/locale.gen
 RUN set -eux \
     && /usr/sbin/locale-gen
 
@@ -41,36 +42,39 @@ RUN set -eux \
     && apt-get -y  install postgresql-11 \
     && apt-get -y  install netcat postgresql-11-postgis-2.5 postgresql-common \
     && apt-get -y install postgresql-11-pgrouting postgresql-11-ogr-fdw  \
-         postgresql-plpython3-11 postgresql-11-cron python3-pip libpq-dev\
-    && apt-get -y --purge autoremove  \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+         postgresql-plpython3-11 postgresql-11-cron python3-pip libpq-dev
+
 RUN apt-get remove -y postgresql-11-postgis-3 postgresql-11-postgis-3-scripts || true; \
     dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5 | grep -xq 'install ok installed' && \
     dpkg-query -W -f='${Status}' postgresql-11-postgis-2.5-scripts | grep -xq 'install ok installed'
 RUN pip3 install psycopg2
+
+# Compile pointcloud extension
+RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-11 libxml2-dev zlib1g-dev
+
+RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
+cd pointcloud-master && \
+./autogen.sh && ./configure && make -j 4 && make install && \
+cd .. && rm -Rf pointcloud-master
+
+# Cleanup resources
+RUN apt-get -y --purge autoremove  \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
 
 # Copy scripts
-COPY docker-entrypoint.sh \
-     env-data.sh \
-     setup.sh \
-     setup-conf.sh \
-     setup-database.sh \
-     setup-pg_hba.sh \
-     setup-replication.sh \
-     setup-ssl.sh \
-     setup-user.sh \
-     /
+ADD scripts /scripts
+WORKDIR /scripts
+RUN chmod +x *.sh
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 RUN set -eux \
-    && chmod +x /setup.sh \
-    && /setup.sh \
-    && chmod +x /docker-entrypoint.sh
+    && /scripts/setup.sh
 
 VOLUME /var/lib/postgresql
 
-ENTRYPOINT /docker-entrypoint.sh
+ENTRYPOINT /scripts/docker-entrypoint.sh
