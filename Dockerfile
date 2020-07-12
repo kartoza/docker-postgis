@@ -1,7 +1,7 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
 ARG DISTRO=debian
 ARG IMAGE_VERSION=buster
-ARG IMAGE_VARIANT=-slim
+ARG IMAGE_VARIANT=slim
 FROM kartoza/postgis:$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
