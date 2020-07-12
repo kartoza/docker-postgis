@@ -86,6 +86,10 @@ and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
 (but it still needs to be Debian based and have PostgreSQL official apt repo).
 
 For example making Ubuntu 20.04 based build (for better arm64 support)
+First build the base image using the branch `postgres-base` following instructions from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/tree/postgres-base#alternative-base-distributions-builds)
+
+And then build the `PostGIS Image` using
+
 ```
 docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
 ```

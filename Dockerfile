@@ -2,7 +2,7 @@
 ARG DISTRO=debian
 ARG IMAGE_VERSION=buster
 ARG IMAGE_VARIANT=-slim
-FROM $DISTRO:$IMAGE_VERSION$IMAGE_VARIANT
+FROM kartoza/postgis:$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
@@ -11,8 +11,6 @@ ARG IMAGE_VERSION
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get -y --no-install-recommends install \
-        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common gdal-bin iputils-ping \
     && sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main\" > /etc/apt/sources.list.d/pgdg.list" \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add - \
     && apt-get -y --purge autoremove \
@@ -20,16 +18,6 @@ RUN set -eux \
     && rm -rf /var/lib/apt/lists/* \
     && dpkg-divert --local --rename --add /sbin/initctl
 
-# Generating locales takes a long time. Utilize caching by runnig it by itself
-# early in the build process.
-COPY scripts/locale.gen /etc/locale.gen
-RUN set -eux \
-    && /usr/sbin/locale-gen
-
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
-RUN update-locale ${LANG}
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
@@ -42,10 +30,9 @@ RUN set -eux \
     && apt-get -y --no-install-recommends install postgresql-client-12 \
         postgresql-common postgresql-12 postgresql-12-postgis-3 \
         netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting
+        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting postgresql-server-dev-12
 
 # Compile pointcloud extension
-RUN apt-get -y update; apt-get -y install build-essential autoconf postgresql-server-dev-12 libxml2-dev zlib1g-dev
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
 cd pointcloud-master && \
