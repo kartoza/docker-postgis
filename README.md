@@ -407,7 +407,7 @@ with the following SQL assuming the ${REPLICATION_USER} is called replicator
 **NB** You need to setup a strong password for replication otherwise the 
 default password for ${REPLICATION_USER} will default to `replicator`
 
-To experiment with the replication abilities, you can see a (docker-compose.yml)[sample/replication/docker-compose.yml]
+To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
 sample. There are several environment variables that you can set, such as:
 
 Master settings:
