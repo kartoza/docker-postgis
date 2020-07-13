@@ -9,7 +9,7 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
     echo "Initializing Postgres Database at ${DATADIR}"
-    mkdir -p ${DATADIR}
+    create_dir ${DATADIR}
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres ${DATADIR}
     echo "Initializing with command:"
@@ -21,8 +21,9 @@ fi;
 
 # Set proper permissions
 # needs to be done as root:
-chown -R postgres:postgres ${DATADIR}
-chmod -R 750 ${DATADIR}
+create_dir ${WAL_ARCHIVE}
+chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
+chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
@@ -53,7 +54,8 @@ fi
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
 touch custom.sql
 cat >> custom.sql <<EOF
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${REPLICATION_USER}
+ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${REPLICATION_USER};
+CREATE PUBLICATION logical_replication;
 EOF
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`

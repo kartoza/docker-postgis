@@ -56,6 +56,17 @@ file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
 file_env 'POSTGRES_DBNAME'
 
+function create_dir() {
+DATA_PATH=$1
+
+if [[ ! -d ${DATA_PATH} ]];
+then
+    echo "Creating" ${DATA_PATH}  "directory"
+    mkdir -p ${DATA_PATH}
+else
+    echo ${DATA_PATH} "exists - skipping creation"
+fi
+}
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
@@ -90,6 +101,10 @@ if [ -z "${TOPOLOGY}" ]; then
 	TOPOLOGY=true
 fi
 # Replication settings
+
+if [ -z "${REPLICATION}" ]; then
+	REPLICATION=true
+fi
 if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
 fi

@@ -9,16 +9,11 @@ source /scripts/env-data.sh
 
 
 
-mkdir -p ${DATADIR}
-chown -R postgres:postgres ${DATADIR}
-chmod -R 700 ${DATADIR}
+create_dir ${WAL_ARCHIVE}
+chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
+chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 
-# No content yet - but this is a slave database
-until ping -c 1 -W 1 ${REPLICATE_FROM}
-do
-	echo "Waiting for master to ping..."
-	sleep 1s
-done
+
 
 function configure_replication_permissions {
 
@@ -44,15 +39,29 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 
 
 
-if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
-	echo "Get initial database from master"
-	configure_replication_permissions
-  if [ -f "${DATADIR}/backup_label.old" ]; then
-    echo "PG Basebackup already exists so proceed to start the DB"
-	else
-	  streaming_replication
-  fi
+if [[ "$WAL_LEVEL" == 'logical' ]]; then
+	echo "We have setup logical replication"
+elif [[ "$WAL_LEVEL" == 'replica' ]]; then
+  # No content yet - but this is a slave database
+  until ping -c 1 -W 1 "${REPLICATE_FROM}"
+  do
+    echo "Waiting for master to ping..."
+    sleep 1s
+  done
+  if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
+    echo "Get initial database from master"
+    configure_replication_permissions
+    if [ -f "${DATADIR}/backup_label.old" ]; then
+      echo "PG Basebackup already exists so proceed to start the DB"
+    else
+      streaming_replication
+    fi
+ fi
+
 fi
+
+
+
 
 
 
