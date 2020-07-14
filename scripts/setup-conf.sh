@@ -42,13 +42,13 @@ EOF
 
 
 
-if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "${WAL_LEVEL}" == logical ]]; then
+if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
 cat >> "$CONF" <<EOF
 wal_level = ${WAL_LEVEL}
 EOF
 fi
 
-if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "${WAL_LEVEL}" == replica ]]; then
+if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; then
 cat >> "$CONF" <<EOF
 wal_level = ${WAL_LEVEL}
 archive_mode = ${ARCHIVE_MODE}

@@ -86,6 +86,10 @@ and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
 (but it still needs to be Debian based and have PostgreSQL official apt repo).
 
 For example making Ubuntu 20.04 based build (for better arm64 support)
+First build the base image using the branch `postgres-base` following instructions from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/tree/postgres-base#alternative-base-distributions-builds)
+
+And then build the `PostGIS Image` using
+
 ```
 docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
 ```
@@ -378,6 +382,17 @@ See [the postgres documentation about encoding](https://www.postgresql.org/docs/
 
 ## Postgres Replication Setup
 
+The image supports replication out of the box. The two mains replication methods allowed are
+* Streaming replication
+* Logical replication
+
+You can also use the environment variable `-e REPLICATION=false` that disables replication.
+This can be useful in situation you need to have a database for running example Unit tests.
+
+`docker run --name "repl" -e REPLICATION=false -it  kartoza/postgis:12.0`
+
+### Streaming replication
+By default a running container will support streaming replication.
 Replication allows you to maintain two or more synchronised copies of a database, with a
 single **master** copy and one or more **replicant** copies. The animation below illustrates
 this - the layer with the red boundary is accessed from the master database and the layer
@@ -395,7 +410,7 @@ mirror database content from a designated master. This replication scheme allows
 us to sync databases. However a `replicant` is only for read-only transaction, thus
 we can't write new data to it. The whole database cluster will be replicated.
 
-### Database permissions
+#### Database permissions
 Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all
 the tables in a particular schema. So if a user adds another schema called `data`
 to the database `gis` he also has to update the permission for the user
@@ -466,7 +481,7 @@ make slave-log
 
 You can try experiment with several scenarios to see how replication works
 
-### Sync changes from master to replicant
+#### Sync changes from master to replicant
 
 You can use any postgres database tools to create new tables in master, by
 connecting using POSTGRES_USER and POSTGRES_PASS credentials using exposed port.
@@ -490,7 +505,7 @@ make slave-shell
 
 Then view your changes using psql.
 
-### Promoting replicant to master
+#### Promoting replicant to master
 
 You will notice that you cannot make changes in replicant, because it is read-only.
 If somehow you want to promote it to master, you can specify `PROMOTE_MASTER: 'True'`
@@ -501,7 +516,7 @@ be in sync anymore. This is useful if the replicant needs to take over a failove
 However it is recommended to take additional action, such as creating a backup from the
 slave so a dedicated master can be created again.
 
-### Preventing replicant database destroy on restart
+#### Preventing replicant database destroy on restart
 
 You can optionally set `DESTROY_DATABASE_ON_RESTART: 'False'` after successful sync
 to prevent the database from being destroyed on restart. With this setting you can
@@ -511,6 +526,19 @@ database (as long as there are no consistencies conflicts).
 However, you should note that this option doesn't mean anything if you didn't
 persist your database volume. Because if it is not persisted, then it will be lost
 on restart because docker will recreate the container.
+
+### Logical  replication
+To activate the following you need to use the environment variable
+
+`WAL_LEVEL=replica` to get a running instance like
+
+```
+docker run --name "repl1" -e WAL_LEVEL=replica -it  kartoza/postgis:12.0
+```
+
+
+Then you can spin up two running instances of the database. For a detailed example see the 
+docker-compose in the folder sample.
 
 
 ### Support
