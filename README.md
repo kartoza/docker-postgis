@@ -530,15 +530,12 @@ on restart because docker will recreate the container.
 ### Logical  replication
 To activate the following you need to use the environment variable
 
-`WAL_LEVEL=replica` to get a running instance like
+`WAL_LEVEL=logical` to get a running instance like
 
 ```
-docker run --name "repl1" -e WAL_LEVEL=replica -it  kartoza/postgis:12.0
+docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:12.0
 ```
-
-
-Then you can spin up two running instances of the database. For a detailed example see the 
-docker-compose in the folder sample.
+For a detailed example see the docker-compose in the folder `sample/logical_replication`.
 
 
 ### Support
