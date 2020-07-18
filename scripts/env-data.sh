@@ -118,6 +118,16 @@ if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
 	PG_WAL_KEEP_SEGMENTS=250
 fi
 
+
+#Logical replication settings
+if [ -z "${MAX_LOGICAL_REPLICATION_WORKERS}" ]; then
+  MAX_LOGICAL_REPLICATION_WORKERS=4
+fi
+
+if [ -z "${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}" ]; then
+  MAX_SYNC_WORKERS_PER_SUBSCRIPTION=2
+fi
+
 if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi

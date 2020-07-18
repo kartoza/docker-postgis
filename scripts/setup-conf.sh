@@ -45,6 +45,12 @@ EOF
 if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
 cat >> "$CONF" <<EOF
 wal_level = ${WAL_LEVEL}
+max_wal_senders = ${PG_MAX_WAL_SENDERS}
+wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
+min_wal_size = ${MIN_WAL_SIZE}
+max_wal_size = ${WAL_SIZE}
+max_logical_replication_workers = ${MAX_LOGICAL_REPLICATION_WORKERS}
+max_sync_workers_per_subscription = ${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}
 EOF
 fi
 
