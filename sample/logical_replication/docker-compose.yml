@@ -7,12 +7,12 @@ volumes:
 
 
 services:
-  pg-master:
+  pg-publisher:
     image: kartoza/postgis:12.0
     restart: 'always'
     volumes:
       - pg-master-data-dir:/var/lib/postgresql
-      - ./scripts/setup-master.sql:/docker-entrypoint-initdb.d/setup-master.sql
+      - ./scripts/setup-publisher.sql:/docker-entrypoint-initdb.d/setup-publisher.sql
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       REPLICATION_USER: 'replicator'
@@ -23,19 +23,19 @@ services:
     healthcheck:
       test: "exit 0"
 
-  pg-slave:
+  pg-subscriber:
     image: kartoza/postgis:12.0
     restart: 'always'
     volumes:
       - pg-slave-data-dir:/var/lib/postgresql
-      - ./scripts/setup-slave.sql:/docker-entrypoint-initdb.d/setup-slave.sql
+      - ./scripts/setup-subscriber.sql:/docker-entrypoint-initdb.d/setup-subscriber.sql
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       WAL_LEVEL: 'logical'
     depends_on:
-        pg-master:
+        pg-publisher:
           condition: service_healthy
     ports:
       - "7776:5432"

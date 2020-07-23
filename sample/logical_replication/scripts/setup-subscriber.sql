@@ -7,7 +7,14 @@ CREATE TABLE sweets
         CONSTRAINT sweets_pkey PRIMARY KEY (id)
     );
 
+CREATE TABLE public.block (
+    id serial NOT NULL,
+    geom public.geometry(Polygon,4326),
+    fid bigint,
+    tile_name character varying,
+    location character varying
+);
 -- Create a publication
 CREATE SUBSCRIPTION logical_subscription
-    CONNECTION 'host=pg-master port=5432 password=docker user=docker dbname=gis'
+    CONNECTION 'host=pg-publisher port=5432 password=docker user=docker dbname=gis'
     PUBLICATION logical_replication;
