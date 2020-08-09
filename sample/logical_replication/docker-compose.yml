@@ -2,8 +2,8 @@
 version: '2.1'
 
 volumes:
-  pg-master-data-dir:
-  pg-slave-data-dir:
+  pg-publisher-data-dir:
+  pg-subscriber-data-dir:
 
 
 services:

@@ -43,7 +43,7 @@ if [[ "$WAL_LEVEL" == 'logical' ]]; then
 	echo "We have setup logical replication"
 elif [[ "$WAL_LEVEL" == 'replica' ]]; then
   # No content yet - but this is a slave database
-  until ping -c 1 -W 1 "${REPLICATE_FROM}"
+  until su - postgres -c "pg_isready"
   do
     echo "Waiting for master to ping..."
     sleep 1s

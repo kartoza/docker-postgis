@@ -63,8 +63,6 @@ if [[ ! -d ${DATA_PATH} ]];
 then
     echo "Creating" ${DATA_PATH}  "directory"
     mkdir -p ${DATA_PATH}
-else
-    echo ${DATA_PATH} "exists - skipping creation"
 fi
 }
 # Make sure we have a user set up

@@ -1,5 +1,5 @@
 -- Create a table
-CREATE TABLE sweets
+CREATE TABLE IF NOT EXISTS sweets
     (
         id SERIAL,
         name TEXT,
@@ -7,7 +7,7 @@ CREATE TABLE sweets
         CONSTRAINT sweets_pkey PRIMARY KEY (id)
     );
 
-CREATE TABLE public.block (
+CREATE TABLE IF NOT EXISTS public.block (
     id serial NOT NULL,
     geom public.geometry(Polygon,4326),
     fid bigint,
