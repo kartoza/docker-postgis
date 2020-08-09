@@ -13,6 +13,7 @@ env:
   - SCENARIO=replications
   - SCENARIO=collations
   - SCENARIO=extensions
+  - SCENARIO=logical_replication
 
 before_script:
   - ./build-test.sh
