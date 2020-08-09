@@ -24,6 +24,6 @@ until docker-compose exec pg-subscriber pg_isready; do
 done;
 
 # Execute tests
-docker-compose exec pg-node /bin/bash /tests/test_subscriber.sh
+docker-compose exec pg-subscriber /bin/bash /tests/test_subscriber.sh
 
 docker-compose down -v
