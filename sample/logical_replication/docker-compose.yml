@@ -11,7 +11,7 @@ services:
     image: kartoza/postgis:12.0
     restart: 'always'
     volumes:
-      - pg-master-data-dir:/var/lib/postgresql
+      - pg-publisher-data-dir:/var/lib/postgresql
       - ./scripts/setup-publisher.sql:/docker-entrypoint-initdb.d/setup-publisher.sql
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
@@ -27,7 +27,7 @@ services:
     image: kartoza/postgis:12.0
     restart: 'always'
     volumes:
-      - pg-slave-data-dir:/var/lib/postgresql
+      - pg-subscriber-data-dir:/var/lib/postgresql
       - ./scripts/setup-subscriber.sql:/docker-entrypoint-initdb.d/setup-subscriber.sql
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
