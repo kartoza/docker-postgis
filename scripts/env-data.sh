@@ -100,7 +100,7 @@ if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 	PG_MAX_WAL_SENDERS=10
 fi
 if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
-	PG_WAL_KEEP_SEGMENTS=250
+	PG_WAL_KEEP_SEGMENTS=20
 fi
 
 if [ -z "${IP_LIST}" ]; then
@@ -145,7 +145,7 @@ if [ -z "${MIN_WAL_SIZE}" ]; then
 fi
 
 if [ -z "${WAL_SEGSIZE}" ]; then
-	WAL_SEGSIZE=1024
+	WAL_SEGSIZE=256
 fi
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
