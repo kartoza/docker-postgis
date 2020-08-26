@@ -1,0 +1,75 @@
+
+version: '2.1'
+
+volumes:
+  pg-previous-data-dir:
+  pg-previous-cluster-conf-dir:
+  new-pg-data-dir:
+  new-pg-cluster-conf-dir:
+
+services:
+  pg-previous-version:
+    image: 'kartoza/postgis:${PREV_VERSION:-11.0-2.5}'
+    restart: 'always'
+    # You can optionally mount to volume, to play with the persistence and
+    # observe how the node will behave after restarts.
+    volumes:
+      - pg-previous-data-dir:/var/lib/postgresql
+      - pg-previous-cluster-conf-dir:/etc/postgresql/11
+      - ./tests:/tests
+      - ../utils:/lib/utils
+    environment:
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+      POSTGRES_HOST: 'localhost'
+      POSTGRES_DB: 'gis'
+      POSTGRES_DBNAME: 'gis'
+      POSTGRES_USER: 'docker'
+      POSTGRES_PASS: 'docker'
+      POSTGRES_PASSWORD: 'docker'
+      TEST_CLASS: test_upgrade.TestUpgradeInit
+    ports:
+      - "7777:5432"
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
+
+  pg-new:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    restart: 'always'
+    # You can optionally mount to volume, to play with the persistence and
+    # observe how the node will behave after restarts.
+    entrypoint: ""
+    command: "tail -f /dev/null"
+    volumes:
+      - pg-previous-data-dir:/opt/data/postgis/previous
+      - pg-previous-cluster-conf-dir:/etc/postgresql/11
+      - new-pg-data-dir:/opt/data/postgis/new
+      - ./upgrade.d:/upgrade.d
+      - ./tests:/tests
+      - ../utils:/lib/utils
+    environment:
+      PGVERSIONOLD: "11"
+      PGVERSIONNEW: "12"
+      POSTGISVERSIONOLD: "2.5"
+      POSTGISVERSIONNEW: "3"
+      PGDATAOLD: "/opt/data/postgis/previous/11/main"
+      PGDATANEW: "/opt/data/postgis/new/12/main"
+      POSTGISDBNAME: "gis"
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+      # For testing
+      POSTGRES_HOST: 'localhost'
+      POSTGRES_DB: 'gis'
+      POSTGRES_DBNAME: 'gis'
+      POSTGRES_USER: 'docker'
+      POSTGRES_PASS: 'docker'
+      POSTGRES_PASSWORD: 'docker'
+      TEST_CLASS: test_upgrade.TestUpgradeResult
+    ports:
+      - "7776:5432"
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
