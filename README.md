@@ -108,6 +108,11 @@ PostgreSQL listens to you can define it with the following environment variable.
 all connections.
 * -e IP_LIST=<*>
 
+#### Additional configuration
+
+You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
+
+* `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
 
 
 ## Convenience docker-compose.yml
