@@ -89,9 +89,9 @@ source /setup-user.sh
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
 
-RESULT=`su - postgres -c "psql -l | grep -w ${POSTGRES_DBNAME} | wc -l"`
+RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${POSTGRES_DBNAME}';\""`
 echo "Check default db exists"
-if [[ ! ${RESULT} == '1' ]]; then
+if [[ ${RESULT} -eq 0 ]]; then
 	echo "Create default db ${POSTGRES_DBNAME}"
 	su - postgres -c "createdb -O ${POSTGRES_USER} -T template_postgis ${POSTGRES_DBNAME}"
 else
@@ -101,11 +101,4 @@ fi
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l"
 
-# Kill postgres
-PID=`cat $PG_PID`
-kill -TERM ${PID}
 
-# Wait for background postgres main process to exit
-while [ "$(ls -A ${PG_PID} 2>/dev/null)" ]; do
-  sleep 1
-done
