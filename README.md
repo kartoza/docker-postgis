@@ -139,7 +139,7 @@ In addition to that, we have another parameter: `RECREATE_DATADIR` that can be u
 If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create
 new db cluster.
 
-* `RECREATE_DATADIR`: Force database reinitializations in the location `DATADIR`
+* `RECREATE_DATADIR`: Force database reinitialization in the location `DATADIR`
 
 If you used `RECREATE_DATADIR` and successfully created new cluster. Remember
 that you should remove this parameter afterwards. Because, if it was not omitted,
@@ -181,6 +181,9 @@ user name, password and/or default database name(or multiple databases comma sep
 
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
+**NB** You should use a strong passwords. If you are using docker-compose make sure
+docker can interpolate the password. Example using a password with a `$` you will 
+need to escape it ie `$$`
 * `-e POSTGRES_DBNAME=<PGDBNAME>`
 * `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting`
 
