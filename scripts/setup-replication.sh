@@ -43,7 +43,12 @@ if [[ "$WAL_LEVEL" == 'logical' ]]; then
 	echo "We have setup logical replication"
 elif [[ "$WAL_LEVEL" == 'replica' ]]; then
   # No content yet - but this is a slave database
-  until su - postgres -c "pg_isready"
+  if [ -z "${REPLICATE_FROM}" ]; then
+    echo "You have not set REPLICATE_FROM variable."
+    echo "Specify the master address/hostname in REPLICATE_FROM and REPLICATE_PORT variable."
+  fi
+
+  until su - postgres -c "pg_isready -h ${REPLICATE_FROM} -p ${REPLICATE_PORT}"
   do
     echo "Waiting for master to ping..."
     sleep 1s
@@ -59,13 +64,6 @@ elif [[ "$WAL_LEVEL" == 'replica' ]]; then
  fi
 
 fi
-
-
-
-
-
-
-
 
 # Promote to master if desired
 if [[ ! -z "${PROMOTE_MASTER}" ]]; then
