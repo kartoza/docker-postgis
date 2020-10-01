@@ -56,6 +56,15 @@ file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
 file_env 'POSTGRES_DBNAME'
 
+function create_dir() {
+DATA_PATH=$1
+
+if [[ ! -d ${DATA_PATH} ]];
+then
+    echo "Creating" ${DATA_PATH}  "directory"
+    mkdir -p ${DATA_PATH}
+fi
+}
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
@@ -90,6 +99,10 @@ if [ -z "${TOPOLOGY}" ]; then
 	TOPOLOGY=true
 fi
 # Replication settings
+
+if [ -z "${REPLICATION}" ]; then
+	REPLICATION=true
+fi
 if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
 fi
@@ -101,6 +114,16 @@ if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 fi
 if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
 	PG_WAL_KEEP_SEGMENTS=20
+fi
+
+
+#Logical replication settings
+if [ -z "${MAX_LOGICAL_REPLICATION_WORKERS}" ]; then
+  MAX_LOGICAL_REPLICATION_WORKERS=4
+fi
+
+if [ -z "${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}" ]; then
+  MAX_SYNC_WORKERS_PER_SUBSCRIPTION=2
 fi
 
 if [ -z "${IP_LIST}" ]; then
