@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-
-DEFAULT_DATADIR="/var/lib/postgresql/12/main"
-ROOT_CONF="/etc/postgresql/12/main"
+POSTGIS_VER=13
+DEFAULT_DATADIR="/var/lib/postgresql/$POSTGIS_VER/main"
+ROOT_CONF="/etc/postgresql/$POSTGIS_VER/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/12/bin/postgres"
-INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/$POSTGIS_VER/bin/postgres"
+INITDB="/usr/lib/postgresql/$POSTGIS_VER/bin/initdb"
+SQLDIR="/usr/share/postgresql/$POSTGIS_VER/contrib/postgis-3.0/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/12-main.pid"
+PG_PID="/var/run/postgresql/$POSTGIS_VER-main.pid"
 
 
 # Read data from secrets into env variables.
@@ -101,7 +101,7 @@ fi
 # Replication settings
 
 if [ -z "${REPLICATION}" ]; then
-	REPLICATION=true
+	REPLICATION=false
 fi
 if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
@@ -112,8 +112,8 @@ fi
 if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 	PG_MAX_WAL_SENDERS=10
 fi
-if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
-	PG_WAL_KEEP_SEGMENTS=20
+if [ -z "${PG_WAL_KEEP_SIZE}" ]; then
+	PG_WAL_KEEP_SIZE=20
 fi
 
 
@@ -237,11 +237,11 @@ if [ -z "$EXTRA_CONF" ]; then
 fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    SHARED_PRELOAD_LIBRARIES='pg_cron'
+    SHARED_PRELOAD_LIBRARIES=''
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
-    PASSWORD_AUTHENTICATION="md5"
+    PASSWORD_AUTHENTICATION="scram-sha-256"
 fi
 
 # Compatibility with official postgres variable

@@ -8,7 +8,7 @@ volumes:
 
 services:
   pg-publisher:
-    image: kartoza/postgis:12.0
+    image: kartoza/postgis:13.0
     restart: 'always'
     volumes:
       - pg-publisher-data-dir:/var/lib/postgresql
@@ -17,6 +17,7 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
       WAL_LEVEL: 'logical'
     ports:
       - "7777:5432"
@@ -24,7 +25,7 @@ services:
       test: "exit 0"
 
   pg-subscriber:
-    image: kartoza/postgis:12.0
+    image: kartoza/postgis:13.0
     restart: 'always'
     volumes:
       - pg-subscriber-data-dir:/var/lib/postgresql
@@ -33,6 +34,7 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
       WAL_LEVEL: 'logical'
     depends_on:
         pg-publisher:

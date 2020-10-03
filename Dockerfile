@@ -26,11 +26,11 @@ RUN set -eux \
 # The following packages have unmet dependencies:
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update \
-    && apt-get -y --no-install-recommends install postgresql-client-12 \
-        postgresql-common postgresql-12 postgresql-12-postgis-3 \
-        netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting postgresql-server-dev-12
+    && apt-get upgrade; apt-get update \
+    && apt-get -y --no-install-recommends install postgresql-client-13 \
+        postgresql-common postgresql-13 postgresql-13-postgis-3 \
+        netcat postgresql-13-ogr-fdw postgresql-13-postgis-3-scripts \
+         postgresql-plpython3-13 postgresql-13-pgrouting postgresql-server-dev-13
 
 # Compile pointcloud extension
 

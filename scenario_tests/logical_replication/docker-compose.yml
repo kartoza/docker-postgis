@@ -19,6 +19,7 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
       WAL_LEVEL: 'logical'
     ports:
       - "7777:5432"
@@ -44,6 +45,7 @@ services:
       WAL_LEVEL: 'logical'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
     depends_on:
         pg-publisher:
           condition: service_healthy

@@ -38,10 +38,7 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 }
 
 
-
-if [[ "$WAL_LEVEL" == 'logical' ]]; then
-	echo "We have setup logical replication"
-elif [[ "$WAL_LEVEL" == 'replica' ]]; then
+if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   # No content yet - but this is a slave database
   if [ -z "${REPLICATE_FROM}" ]; then
     echo "You have not set REPLICATE_FROM variable."
@@ -62,10 +59,11 @@ elif [[ "$WAL_LEVEL" == 'replica' ]]; then
       streaming_replication
     fi
  fi
-
-fi
-
-# Promote to master if desired
+ # Promote to master if desired
 if [[ ! -z "${PROMOTE_MASTER}" ]]; then
 	touch ${PROMOTE_FILE}
 fi
+
+fi
+
+

@@ -46,7 +46,7 @@ if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; the
 cat >> "$CONF" <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
+wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 max_logical_replication_workers = ${MAX_LOGICAL_REPLICATION_WORKERS}
@@ -62,7 +62,7 @@ archive_command = '${ARCHIVE_COMMAND}'
 restore_command = '${RESTORE_COMMAND}'
 archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
+wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 hot_standby = on
