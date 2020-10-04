@@ -164,11 +164,23 @@ if [ -z "${WAL_SIZE}" ]; then
 fi
 
 if [ -z "${MIN_WAL_SIZE}" ]; then
-	MIN_WAL_SIZE=2048MB
+	MIN_WAL_SIZE=1024MB
 fi
 
 if [ -z "${WAL_SEGSIZE}" ]; then
-	WAL_SEGSIZE=256
+	WAL_SEGSIZE=32
+fi
+
+if [ -z "${SHARED_BUFFERS}" ]; then
+	SHARED_BUFFERS=256MB
+fi
+
+if [ -z "${WORK_MEM}" ]; then
+	WORK_MEM=16MB
+fi
+
+if [ -z "${WAL_BUFFERS}" ]; then
+	WAL_BUFFERS=1MB
 fi
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then

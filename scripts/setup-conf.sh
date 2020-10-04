@@ -24,10 +24,10 @@ echo "data_directory = '${DATADIR}'" >> $CONF
 cat >> $CONF <<EOF
 superuser_reserved_connections= 10
 listen_addresses = '${IP_LIST}'
-shared_buffers = 500MB
-work_mem = 16MB
+shared_buffers = ${SHARED_BUFFERS}
+work_mem = ${WORK_MEM}
 maintenance_work_mem = ${MAINTAINANCE_WORK_MEM}
-wal_buffers = 1MB
+wal_buffers = ${WAL_BUFFERS}
 random_page_cost = 2.0
 xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
