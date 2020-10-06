@@ -40,7 +40,7 @@ RUN set -eux \
 
 
 RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
-RUN cat /tmp/pg_version.txt
+
 # Compile pointcloud extension
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
