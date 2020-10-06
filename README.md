@@ -60,7 +60,7 @@ docker pull kartoza/postgis:image_version
 ## Building the image
 
 To build the image yourself without apt-cacher (also consumes more bandwidth
-since deb packages need to be refetched each time you build) do:
+since deb packages need to be fetched each time you build) do:
 
 ```
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
@@ -79,6 +79,11 @@ Then do:
 docker build -t kartoza/postgis .
 ```
 
+Or
+
+```
+docker build --build-arg POSTGRES_MAJOR_VERSION=13 --build-arg POSTGIS_MAJOR=3 -t kartoza/postgis:POSTGRES_MAJOR_VERSION .
+```
 #### Alternative base distributions builds
 
 There are build args for `DISTRO` (=debian), `IMAGE_VERSION` (=buster)

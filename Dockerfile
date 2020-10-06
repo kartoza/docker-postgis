@@ -7,6 +7,9 @@ MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
 ARG IMAGE_VERSION
+ARG POSTGRES_MAJOR_VERSION=13
+ARG POSTGIS_MAJOR=3
+
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -27,11 +30,17 @@ RUN set -eux \
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     &&  apt-get update \
-    && apt-get -y --no-install-recommends install postgresql-client-13 \
-        postgresql-common postgresql-13 postgresql-13-postgis-3 \
-        netcat postgresql-13-ogr-fdw postgresql-13-postgis-3-scripts \
-         postgresql-plpython3-13 postgresql-13-pgrouting postgresql-server-dev-13
+    && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
+        postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR} \
+        netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR}-scripts \
+        postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}
 
+
+RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
+RUN cat /tmp/pg_version.txt
 # Compile pointcloud extension
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \

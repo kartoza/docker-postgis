@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-POSTGIS_VER=13
-DEFAULT_DATADIR="/var/lib/postgresql/$POSTGIS_VER/main"
-ROOT_CONF="/etc/postgresql/$POSTGIS_VER/main"
+POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/$POSTGIS_VER/bin/postgres"
-INITDB="/usr/lib/postgresql/$POSTGIS_VER/bin/initdb"
-SQLDIR="/usr/share/postgresql/$POSTGIS_VER/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
+INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-3.0/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/$POSTGIS_VER-main.pid"
+PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
 
 # Read data from secrets into env variables.
