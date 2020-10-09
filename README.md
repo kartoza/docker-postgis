@@ -35,7 +35,7 @@ kartoza/postgis:[postgres_major_version]-[postgis-point-releases]
 
 So for example:
 
-``kartoza/postgis:12.0`` Provides PostgreSQL 12.0, PostGIS 3.0
+``kartoza/postgis:13.0`` Provides PostgreSQL 13.0, PostGIS 3.0
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -60,7 +60,7 @@ docker pull kartoza/postgis:image_version
 ## Building the image
 
 To build the image yourself without apt-cacher (also consumes more bandwidth
-since deb packages need to be refetched each time you build) do:
+since deb packages need to be fetched each time you build) do:
 
 ```
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
@@ -79,6 +79,11 @@ Then do:
 docker build -t kartoza/postgis .
 ```
 
+Or
+
+```
+docker build --build-arg POSTGRES_MAJOR_VERSION=13 --build-arg POSTGIS_MAJOR=3 -t kartoza/postgis:POSTGRES_MAJOR_VERSION .
+```
 #### Alternative base distributions builds
 
 There are build args for `DISTRO` (=debian), `IMAGE_VERSION` (=buster)
@@ -382,23 +387,24 @@ See [the postgres documentation about encoding](https://www.postgresql.org/docs/
 
 ## Postgres Replication Setup
 
-The image supports replication out of the box. The two mains replication methods allowed are
+The image supports replication out of the box. By default replication is turned off.
+The two mains replication methods allowed are
 * Streaming replication
 * Logical replication
 
-You can also use the environment variable `-e REPLICATION=false` that disables replication.
-This can be useful in situation you need to have a database for running example Unit tests.
-
-`docker run --name "repl" -e REPLICATION=false -it  kartoza/postgis:12.0`
-
 ### Streaming replication
-By default a running container will support streaming replication.
+
 Replication allows you to maintain two or more synchronised copies of a database, with a
 single **master** copy and one or more **replicant** copies. The animation below illustrates
 this - the layer with the red boundary is accessed from the master database and the layer
 with the green fill is accessed from the replicant database. When edits to the master
 layer are saved, they are automatically propagated to the replicant. Note also that the
 replicant is read-only.
+
+```
+docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:13.0
+```
+
 
 ![qgis](https://user-images.githubusercontent.com/178003/37755610-dd3b774a-2dae-11e8-9fa1-4877e2034675.gif)
 
@@ -533,7 +539,7 @@ To activate the following you need to use the environment variable
 `WAL_LEVEL=logical` to get a running instance like
 
 ```
-docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:12.0
+docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:13.0
 ```
 For a detailed example see the docker-compose in the folder `sample/logical_replication`.
 
@@ -549,4 +555,4 @@ Tim Sutton (tim@kartoza.com)
 Gavin Fleming (gavin@kartoza.com)
 Rizky Maulana (rizky@kartoza.com)
 Admire Nyakudya (admire@kartoza.com)
-December 2018
+October 2020

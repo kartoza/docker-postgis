@@ -24,10 +24,10 @@ echo "data_directory = '${DATADIR}'" >> $CONF
 cat >> $CONF <<EOF
 superuser_reserved_connections= 10
 listen_addresses = '${IP_LIST}'
-shared_buffers = 500MB
-work_mem = 16MB
+shared_buffers = ${SHARED_BUFFERS}
+work_mem = ${WORK_MEM}
 maintenance_work_mem = ${MAINTAINANCE_WORK_MEM}
-wal_buffers = 1MB
+wal_buffers = ${WAL_BUFFERS}
 random_page_cost = 2.0
 xmloption = 'document'
 max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
@@ -46,7 +46,7 @@ if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; the
 cat >> "$CONF" <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
+wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 max_logical_replication_workers = ${MAX_LOGICAL_REPLICATION_WORKERS}
@@ -62,7 +62,7 @@ archive_command = '${ARCHIVE_COMMAND}'
 restore_command = '${RESTORE_COMMAND}'
 archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_segments = ${PG_WAL_KEEP_SEGMENTS}
+wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 hot_standby = on

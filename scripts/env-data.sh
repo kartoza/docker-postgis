@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-
-DEFAULT_DATADIR="/var/lib/postgresql/12/main"
-ROOT_CONF="/etc/postgresql/12/main"
+POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/12/bin/postgres"
-INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
+INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-3.0/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/12-main.pid"
+PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
 
 # Read data from secrets into env variables.
@@ -101,7 +101,7 @@ fi
 # Replication settings
 
 if [ -z "${REPLICATION}" ]; then
-	REPLICATION=true
+	REPLICATION=false
 fi
 if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
@@ -112,8 +112,8 @@ fi
 if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 	PG_MAX_WAL_SENDERS=10
 fi
-if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
-	PG_WAL_KEEP_SEGMENTS=20
+if [ -z "${PG_WAL_KEEP_SIZE}" ]; then
+	PG_WAL_KEEP_SIZE=20
 fi
 
 
@@ -164,11 +164,23 @@ if [ -z "${WAL_SIZE}" ]; then
 fi
 
 if [ -z "${MIN_WAL_SIZE}" ]; then
-	MIN_WAL_SIZE=2048MB
+	MIN_WAL_SIZE=1024MB
 fi
 
 if [ -z "${WAL_SEGSIZE}" ]; then
-	WAL_SEGSIZE=256
+	WAL_SEGSIZE=32
+fi
+
+if [ -z "${SHARED_BUFFERS}" ]; then
+	SHARED_BUFFERS=256MB
+fi
+
+if [ -z "${WORK_MEM}" ]; then
+	WORK_MEM=16MB
+fi
+
+if [ -z "${WAL_BUFFERS}" ]; then
+	WAL_BUFFERS=1MB
 fi
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
@@ -237,11 +249,11 @@ if [ -z "$EXTRA_CONF" ]; then
 fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    SHARED_PRELOAD_LIBRARIES='pg_cron'
+    SHARED_PRELOAD_LIBRARIES=''
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
-    PASSWORD_AUTHENTICATION="md5"
+    PASSWORD_AUTHENTICATION="scram-sha-256"
 fi
 
 # Compatibility with official postgres variable

@@ -7,10 +7,13 @@ MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
 ARG IMAGE_VERSION
+ARG POSTGRES_MAJOR_VERSION=13
+ARG POSTGIS_MAJOR=3
+
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update \
+    && apt-get upgrade;apt-get update \
     && sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main\" > /etc/apt/sources.list.d/pgdg.list" \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add - \
     && apt-get -y --purge autoremove \
@@ -26,11 +29,17 @@ RUN set -eux \
 # The following packages have unmet dependencies:
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update \
-    && apt-get -y --no-install-recommends install postgresql-client-12 \
-        postgresql-common postgresql-12 postgresql-12-postgis-3 \
-        netcat postgresql-12-ogr-fdw postgresql-12-postgis-3-scripts \
-        postgresql-12-cron postgresql-plpython3-12 postgresql-12-pgrouting postgresql-server-dev-12
+    &&  apt-get update \
+    && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
+        postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR} \
+        netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR}-scripts \
+        postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}
+
+
+RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
 
 # Compile pointcloud extension
 
