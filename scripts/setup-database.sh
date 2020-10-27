@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 # test if DATADIR has content
 # Do initialization if DATADIR is empty, or RECREATE_DATADIR is true
@@ -36,7 +36,7 @@ done
 echo "postgres ready"
 
 # Setup user
-source /setup-user.sh
+source /scripts/setup-user.sh
 
 # enable extensions in template1 if env variable set to true
 if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" == TRUE ]] ; then
