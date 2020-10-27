@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-
-DATADIR="/var/lib/postgresql/12/main"
-ROOT_CONF="/etc/postgresql/12/main"
+POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/12/bin/postgres"
-INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
+INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-3.0/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/12-main.pid"
+PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
 
 # Read data from secrets into env variables.
@@ -254,7 +254,7 @@ function restart_postgres {
   kill_postgres
 
   # Brought postgres back up again
-  source /env-data.sh
+  source /scripts/env-data.sh
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up
