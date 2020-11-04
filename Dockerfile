@@ -36,7 +36,7 @@ RUN set -eux \
         netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR}-scripts \
         postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
-        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-cron
 
 
 RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt

@@ -36,6 +36,7 @@ shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
 cron.database_name = '${SINGLE_DB}'
 password_encryption= '${PASSWORD_AUTHENTICATION}'
 timezone='${TIMEZONE}'
+cron.use_background_workers = on
 EOF
 
 # This script will setup necessary replication settings
