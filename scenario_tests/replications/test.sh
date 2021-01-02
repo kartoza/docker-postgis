@@ -8,11 +8,11 @@ source ../test-env.sh
 # Run service
 docker-compose up -d
 
-sleep 5
+sleep 30
 
 # Preparing master cluster
 until docker-compose exec pg-master pg_isready; do
-  sleep 1
+  sleep 30
 done;
 
 # Execute tests
@@ -20,7 +20,7 @@ docker-compose exec pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
 until docker-compose exec pg-node pg_isready; do
-  sleep 1
+  sleep 30
 done;
 
 # Execute tests

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
@@ -8,7 +9,7 @@ WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
-SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-3.0/"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-$POSTGIS_MINOR_RELEASE/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
@@ -337,3 +338,26 @@ function entry_point_script {
 
   return 0
 }
+
+function configure_replication_permissions {
+
+    echo "Setup data permissions"
+    echo "----------------------"
+    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
+        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
+        su - postgres -c "chmod 0600 ~/.pgpass"
+}
+
+function streaming_replication {
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
+	do
+		echo "Waiting for master to connect..."
+		sleep 1s
+		if [[ "$(ls -A ${DATADIR})" ]]; then
+			echo "Need empty folder. Cleaning directory..."
+			rm -rf ${DATADIR}/*
+		fi
+	done
+
+}
+

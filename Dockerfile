@@ -1,19 +1,22 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
 ARG DISTRO=debian
-ARG IMAGE_VERSION=buster
+ARG IMAGE_VERSION=bullseye
 ARG IMAGE_VARIANT=slim
-FROM kartoza/postgis:$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
+FROM kartoza/postgis:$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT-base
+
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
 ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=13
 ARG POSTGIS_MAJOR=3
+ARG POSTGIS_MINOR_RELEASE=3.1
+
 
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get upgrade;apt-get update \
+    && apt-get update \
     && sh -c "echo \"deb http://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main\" > /etc/apt/sources.list.d/pgdg.list" \
     && wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc -O- | apt-key add - \
     && apt-get -y --purge autoremove \
@@ -39,8 +42,10 @@ RUN set -eux \
         postgresql-server-dev-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-cron
 
 
-RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
-
+RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
+RUN  echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
+ENV \
+    PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
 # Compile pointcloud extension
 
 RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
