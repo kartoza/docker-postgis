@@ -7,9 +7,6 @@ if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
 
-list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
-arr=(${list})
-SINGLE_DB=${arr[0]}
 # This script will setup necessary configuration to enable replications
 
 # Refresh configuration in case environment settings changed.
