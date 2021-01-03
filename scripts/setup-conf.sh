@@ -21,7 +21,11 @@ sed -i '/data_directory/d' $CONF
 echo "data_directory = '${DATADIR}'" >> $CONF
 
 # This script will setup necessary configuration to optimise for PostGIS and to enable replications
-cat >> $CONF <<EOF
+if [[  -f ${ROOT_CONF}/postgis.conf ]];then
+  rm $CONF/postgis.conf
+fi
+cat >> ${ROOT_CONF}/postgis.conf <<EOF
+port = 5432
 superuser_reserved_connections= 10
 listen_addresses = '${IP_LIST}'
 shared_buffers = ${SHARED_BUFFERS}
@@ -39,12 +43,16 @@ timezone='${TIMEZONE}'
 cron.use_background_workers = on
 EOF
 
+echo "include 'postgis.conf'" >> $CONF
 # This script will setup necessary replication settings
 
 
 
 if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
-cat >> "$CONF" <<EOF
+  if [[  -f ${ROOT_CONF}/logical_replication.conf ]];then
+    rm $CONF/logical_replication.conf
+  fi
+cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_size = ${PG_WAL_KEEP_SIZE}
@@ -53,10 +61,14 @@ max_wal_size = ${WAL_SIZE}
 max_logical_replication_workers = ${MAX_LOGICAL_REPLICATION_WORKERS}
 max_sync_workers_per_subscription = ${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}
 EOF
+echo "include 'logical_replication.conf'" >> $CONF
 fi
 
 if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; then
-cat >> "$CONF" <<EOF
+  if [[  -f ${ROOT_CONF}/streaming_replication.conf ]];then
+    rm $CONF/streaming_replication.conf
+  fi
+cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 archive_mode = ${ARCHIVE_MODE}
 archive_command = '${ARCHIVE_COMMAND}'
@@ -73,6 +85,7 @@ recovery_target_timeline=${TARGET_TIMELINE}
 recovery_target_action=${TARGET_ACTION}
 promote_trigger_file = '${PROMOTE_FILE}'
 EOF
+echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
 echo -e $EXTRA_CONF >> $CONF
