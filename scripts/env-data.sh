@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
@@ -9,7 +10,7 @@ WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
-SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-$POSTGIS_MINOR_RELEASE/"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGIS_MAJOR}.${POSTGIS_MINOR_RELEASE}/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"

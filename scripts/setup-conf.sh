@@ -10,16 +10,16 @@ fi
 # Refresh configuration in case environment settings changed.
 cat $CONF.template > $CONF
 
-# Reflect DATADIR loaction
+# Reflect DATA DIR location
 # Delete any data_dir declarations
 sed -i '/data_directory/d' $CONF
-echo "data_directory = '${DATADIR}'" >> $CONF
 
 # Create a config to optimise postgis
 if [[  -f ${ROOT_CONF}/postgis.conf ]];then
   rm $CONF/postgis.conf
 fi
 cat >> ${ROOT_CONF}/postgis.conf <<EOF
+data_directory = '${DATADIR}'
 port = 5432
 superuser_reserved_connections= 10
 listen_addresses = '${IP_LIST}'

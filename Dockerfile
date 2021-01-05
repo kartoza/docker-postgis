@@ -10,7 +10,7 @@ MAINTAINER Tim Sutton<tim@kartoza.com>
 ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=13
 ARG POSTGIS_MAJOR=3
-ARG POSTGIS_MINOR_RELEASE=3.1
+ARG POSTGIS_MINOR_RELEASE=1
 
 
 
@@ -43,6 +43,7 @@ RUN set -eux \
 
 
 RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
+RUN  echo $POSTGIS_MAJOR >/tmp/pg_major_version.txt
 RUN  echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
