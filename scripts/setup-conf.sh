@@ -7,8 +7,6 @@ if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
 
-# This script will setup necessary configuration to enable replications
-
 # Refresh configuration in case environment settings changed.
 cat $CONF.template > $CONF
 
@@ -17,7 +15,7 @@ cat $CONF.template > $CONF
 sed -i '/data_directory/d' $CONF
 echo "data_directory = '${DATADIR}'" >> $CONF
 
-# This script will setup necessary configuration to optimise for PostGIS and to enable replications
+# Create a config to optimise postgis
 if [[  -f ${ROOT_CONF}/postgis.conf ]];then
   rm $CONF/postgis.conf
 fi
@@ -41,10 +39,8 @@ cron.use_background_workers = on
 EOF
 
 echo "include 'postgis.conf'" >> $CONF
-# This script will setup necessary replication settings
 
-
-
+# Create a config for logical replication
 if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
   if [[  -f ${ROOT_CONF}/logical_replication.conf ]];then
     rm $CONF/logical_replication.conf
@@ -61,6 +57,7 @@ EOF
 echo "include 'logical_replication.conf'" >> $CONF
 fi
 
+# Create a config for streaming replication
 if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; then
   if [[  -f ${ROOT_CONF}/streaming_replication.conf ]];then
     rm $CONF/streaming_replication.conf

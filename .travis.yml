@@ -10,7 +10,7 @@ python:
 
 env:
   - SCENARIO=datadir_init
-  - SCENARIO=replications
+  - SCENARIO=streaming_replication
   - SCENARIO=collations
   - SCENARIO=extensions
   - SCENARIO=logical_replication
