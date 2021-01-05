@@ -82,7 +82,14 @@ EOF
 echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
-echo -e $EXTRA_CONF >> $CONF
+if [[  -f ${ROOT_CONF}/extra.conf ]];then
+    rm $CONF/extra.conf
+fi
+
+if [[  ! -z $EXTRA_CONF ]]; then
+  echo -e $EXTRA_CONF >> ${ROOT_CONF}/extra.conf
+  echo "include 'extra.conf'" >> $CONF
+fi
 
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
