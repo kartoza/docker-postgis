@@ -1,6 +1,6 @@
 #!/bin/sh
 
-. /env-data.sh
+. /scripts/env-data.sh
 
 set -e
 
