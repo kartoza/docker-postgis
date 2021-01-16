@@ -115,10 +115,6 @@ if [ -z "${MIN_WAL_SIZE}" ]; then
 	MIN_WAL_SIZE=2048MB
 fi
 
-if [ -z "${WAL_SEGSIZE}" ]; then
-	WAL_SEGSIZE=1024
-fi
-
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
 	CHECK_POINT_TIMEOUT=30min
 fi

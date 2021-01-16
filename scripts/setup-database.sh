@@ -14,7 +14,7 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     chown -R postgres:postgres ${DATADIR}
     echo "Initializing with command:"
     echo "postgres" > /tmp/superuser_pass.txt
-    command="$INITDB -U postgres --pwfile "/tmp/superuser_pass.txt" -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres --pwfile "/tmp/superuser_pass.txt" -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
     su - postgres -c "$command"
     rm /tmp/superuser_pass.txt
 fi;
