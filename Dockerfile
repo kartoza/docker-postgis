@@ -6,9 +6,20 @@ RUN  export DEBIAN_FRONTEND=noninteractive
 ENV  DEBIAN_FRONTEND noninteractive
 RUN  dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install lsb-release gnupg2 wget ca-certificates rpl pwgen
+RUN apt-get -y update; apt-get -y install lsb-release gnupg2 wget ca-certificates rpl pwgen locales
 RUN sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ `lsb_release -cs`-pgdg main" >> /etc/apt/sources.list.d/pgdg.list'
 RUN wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -
+
+# Generating locales takes a long time. Utilize caching by runnig it by itself
+# early in the build process.
+COPY scripts/locale.gen /etc/locale.gen
+RUN set -eux \
+    && /usr/sbin/locale-gen
+
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
+RUN update-locale ${LANG}
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
