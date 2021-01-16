@@ -1,8 +1,8 @@
-#!/bin/sh
-
-. /scripts/env-data.sh
+#!/usr/bin/env bash
 
 set -e
+
+source /scripts/env-data.sh
 
 echo "Check slave replication"
 
