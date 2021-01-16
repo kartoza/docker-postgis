@@ -20,23 +20,16 @@ RUN apt-get update; apt-get install -y postgresql-client-10 postgresql-common po
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
 
+# Copy scripts
+ADD scripts /scripts
+WORKDIR /scripts
+RUN chmod +x *.sh
+
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
-ADD env-data.sh /env-data.sh
-ADD setup.sh /setup.sh
-RUN chmod +x /setup.sh
-RUN /setup.sh
+RUN set -eux \
+    && /scripts/setup.sh
 
-# We will run any commands in this when the container starts
-ADD docker-entrypoint.sh /docker-entrypoint.sh
-ADD setup-conf.sh /
-ADD setup-database.sh /
-ADD setup-pg_hba.sh /
-ADD setup-replication.sh /
-ADD setup-ssl.sh /
-ADD setup-user.sh /
-ADD postgresql.conf /tmp/postgresql.conf
-RUN chmod +x /docker-entrypoint.sh
+VOLUME /var/lib/postgresql
 
-
-ENTRYPOINT /docker-entrypoint.sh
+ENTRYPOINT /scripts/docker-entrypoint.sh
