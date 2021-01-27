@@ -59,6 +59,7 @@ jobs:
           context: base_build
           file: base_build/Dockerfile
           push: false
+          load: true
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
           build-args: |
             GENERATE_ALL_LOCALE=0
@@ -75,6 +76,7 @@ jobs:
           context: .
           file: Dockerfile
           push: false
+          load: true
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}
@@ -128,6 +130,7 @@ jobs:
           context: .
           file: Dockerfile
           push: false
+          load: true
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:manual-build
           build-args: |
             DISTRO=${{ matrix.distro }}
