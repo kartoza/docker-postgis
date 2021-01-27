@@ -47,9 +47,12 @@ jobs:
           # - Dockerfile recipe
           # - docker-compose.build.yml
           # - build args (.example.env)
-          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env') }}-${{ github.sha }}
+          # - base_build directory
+          # - scripts directory
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-${{ github.sha }}
           restore-keys: |
-            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env') }}-
+            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
@@ -139,7 +142,6 @@ jobs:
           - collations
           - extensions
           - logical_replication
-          - logical_replications
         include:
           - distro: debian
             imageVersion: bullseye
@@ -158,9 +160,11 @@ jobs:
           # - Dockerfile recipe
           # - docker-compose.build.yml
           # - build args (.example.env)
-          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env') }}-${{ github.sha }}
+          # - base_build directory
+          # - scripts directory
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-${{ github.sha }}
           restore-keys: |
-            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env') }}-
+            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
 
       - name: Build image for testing
         id: docker_build_testing_image

@@ -45,7 +45,7 @@ if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; the
   if [[  -f ${ROOT_CONF}/logical_replication.conf ]];then
     rm $CONF/logical_replication.conf
   fi
-cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
+cat >> ${ROOT_CONF}/logical_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_size = ${PG_WAL_KEEP_SIZE}

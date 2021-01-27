@@ -48,9 +48,16 @@ jobs:
         uses: actions/cache@v2
         with:
           path: /tmp/.buildx-cache
-          key: buildx-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}-${{ github.sha }}
+          # Build inputs are:
+          # - Dockerfile recipe
+          # - docker-compose.build.yml
+          # - build args (.example.env)
+          # - base_build directory
+          # - scripts directory
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-${{ github.sha }}
           restore-keys: |
-            buildx-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}-
+            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:

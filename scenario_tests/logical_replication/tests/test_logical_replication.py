@@ -72,7 +72,7 @@ class TestReplicationSubscriber(unittest.TestCase):
             try:
                 output = func_action()
                 func_assert(output)
-                print('Assertion succes')
+                print('Assertion success')
                 return
             except Exception as e:
                 last_error = e

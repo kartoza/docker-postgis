@@ -47,8 +47,7 @@ services:
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
     depends_on:
-        pg-publisher:
-          condition: service_healthy
+        - pg-publisher
     # You can expose the port to observe it in your local machine
     # For this sample, it was disabled by default to allow scaling test
     ports:
