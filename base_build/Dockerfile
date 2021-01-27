@@ -31,8 +31,13 @@ RUN chmod 0755 /gdal_install.sh;/bin/bash /gdal_install.sh
 # Generating locales takes a long time. Utilize caching by runnig it by itself
 # early in the build process.
 
+# Generate all locale only on deployment mode build
+# Set to empty string to generate only default locale
+ARG GENERATE_ALL_LOCALE=1
+
 COPY scripts/locale.gen /etc/locale.gen
 RUN set -eux \
+    && [[ (! -z "${GENERATE_ALL_LOCALE}") && (! $GENERATE_ALL_LOCALE -eq 0) ]] \
     && /usr/sbin/locale-gen
 
 ENV LANG=en_US.UTF-8 \
