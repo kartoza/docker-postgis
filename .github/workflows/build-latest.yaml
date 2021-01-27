@@ -65,6 +65,7 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
@@ -86,6 +87,7 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
@@ -107,6 +109,7 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
@@ -163,6 +166,7 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}

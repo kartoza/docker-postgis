@@ -36,15 +36,18 @@ RUN chmod 0755 /gdal_install.sh;/bin/bash /gdal_install.sh
 # Generate all locale only on deployment mode build
 # Set to empty string to generate only default locale
 ARG GENERATE_ALL_LOCALE=1
+ARG LANGS="en_US.UTF-8,id_ID.UTF-8"
 ARG LANG=en_US.UTF-8
 ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
 COPY base_build/scripts/locale.gen /etc/all.locale.gen
+COPY base_build/scripts/locale-filter.sh /etc/locale-filter.sh
 RUN if [ -z "${GENERATE_ALL_LOCALE}" ] || [ $GENERATE_ALL_LOCALE -eq 0 ]; \
 	then \
 		cat /etc/all.locale.gen | grep "${LANG}" > /etc/locale.gen; \
+		/bin/bash /etc/locale-filter.sh; \
 	else \
 		cp -f /etc/all.locale.gen /etc/locale.gen; \
 	fi; \
