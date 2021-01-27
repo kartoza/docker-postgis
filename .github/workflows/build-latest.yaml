@@ -69,6 +69,8 @@ jobs:
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
+      - run: docker images -a
+
       - name: Build prod image
         id: docker_build_prod
         uses: docker/build-push-action@v2
