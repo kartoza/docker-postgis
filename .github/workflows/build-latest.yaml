@@ -135,6 +135,7 @@ jobs:
           - collations
           - extensions
           - logical_replication
+          - logical_replications
         include:
           - distro: debian
             imageVersion: bullseye
@@ -177,6 +178,7 @@ jobs:
       - name: Run scenario test
         env:
           COMPOSE_INTERACTIVE_NO_CLI: 1
+          PRINT_TEST_LOGS: 1
         run: |
           pushd scenario_tests/${{ matrix.scenario }}
           ./test.sh

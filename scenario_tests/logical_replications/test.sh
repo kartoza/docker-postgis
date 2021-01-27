@@ -15,16 +15,16 @@ fi
 sleep 30
 
 # Preparing master cluster
-until docker-compose exec -T pg-master pg_isready; do
-  sleep 30
+until docker-compose exec -T pg-publisher pg_isready; do
+  sleep 1
 done;
 
 # Execute tests
-docker-compose exec -T pg-master /bin/bash /tests/test_master.sh
+docker-compose exec -T pg-publisher /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-until docker-compose exec -T pg-node pg_isready; do
-  sleep 30
+until docker-compose exec -T pg-subscriber pg_isready; do
+  sleep 1
 done;
 
 # Execute tests
