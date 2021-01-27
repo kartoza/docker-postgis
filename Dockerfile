@@ -2,7 +2,7 @@
 ARG DISTRO=debian
 ARG IMAGE_VERSION=bullseye
 ARG IMAGE_VARIANT=slim
-FROM kartoza/postgis:$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT-base
+FROM kartoza/postgis:base-$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
 
 MAINTAINER Tim Sutton<tim@kartoza.com>
 

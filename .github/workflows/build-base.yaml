@@ -25,7 +25,9 @@ jobs:
       matrix:
         postgresMajorVersion:
           - 13
-        postgresMinorRelease:
+        postgisMajorVersion:
+          - 3
+        postgisMinorRelease:
           - 1
         include:
           - distro: debian
@@ -55,7 +57,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: base_build
-          file: Dockerfile
+          file: base_build/Dockerfile
           push: false
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
           build-args: |
@@ -72,11 +74,14 @@ jobs:
           context: .
           file: Dockerfile
           push: false
-          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}.${{ matrix.postgresMinorRelease }}
+          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorRelease }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
 
@@ -87,7 +92,9 @@ jobs:
       matrix:
         postgresMajorVersion:
           - 13
-        postgresMinorRelease:
+        postgisMajorVersion:
+          - 3
+        postgisMinorRelease:
           - 1
         scenario:
           - datadir_init
@@ -125,6 +132,9 @@ jobs:
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
 
       - name: Build image for testing
@@ -142,11 +152,6 @@ jobs:
           ./test.sh
           popd
 
-
-
-
-
-
   deploy-image:
     # Identical to the build-image step, but now push to registry
     runs-on: ubuntu-latest
@@ -156,7 +161,9 @@ jobs:
       matrix:
         postgresMajorVersion:
           - 13
-        postgresMinorRelease:
+        postgisMajorVersion:
+          - 3
+        postgisMinorRelease:
           - 1
         include:
           - distro: debian
@@ -187,7 +194,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: base_build
-          file: Dockerfile
+          file: base_build/Dockerfile
           push: ${{ github.ref == env.latest-ref }}
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
           build-args: |
@@ -204,10 +211,13 @@ jobs:
           context: .
           file: Dockerfile
           push: ${{ github.ref == env.latest-ref }}
-          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}.${{ matrix.postgresMinorRelease }}
+          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorRelease }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
