@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
+# For scenario testing purposes
 
-./build.sh
-
-docker build -t kartoza/postgis:manual-build -f Dockerfile.test .
+docker-compose -f docker-compose.build.yml build postgis-test

@@ -56,20 +56,21 @@ jobs:
         id: docker_build_base
         uses: docker/build-push-action@v2
         with:
-          context: base_build
-          file: base_build/Dockerfile
+          context: .
+          file: Dockerfile
           push: false
-          load: true
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
           build-args: |
-            GENERATE_ALL_LOCALE=0
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            GENERATE_ALL_LOCALE=0
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-
-      - run: docker images -a
+          target: postgis-base
 
       - name: Build prod image
         id: docker_build_prod
@@ -82,14 +83,15 @@ jobs:
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}
-            IMAGE_OWNER=${{ secrets.DOCKERHUB_REPO }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
+          target: postgis-prod
 
   run-scenario-tests:
     runs-on: ubuntu-latest
@@ -126,8 +128,8 @@ jobs:
           restore-keys: |
             buildx-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}-
 
-      - name: Build base image for testing
-        id: docker_build_base
+      - name: Build image for testing
+        id: docker_build_testing_image
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -137,23 +139,14 @@ jobs:
           tags: kartoza/postgis:manual-build
           build-args: |
             DISTRO=${{ matrix.distro }}
-            IMAGE_OWNER=kartoza
             IMAGE_VERSION=${{ matrix.imageVersion }}
             IMAGE_VARIANT=${{ matrix.imageVariant }}
+            GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: type=local,src=/tmp/.buildx-cache
+          target: postgis-test
 
-      - name: Build image for testing
-        id: docker_build_testing_image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: Dockerfile.test
-          push: false
-          tags: kartoza/postgis:manual-build
-          load: true
       - name: Run scenario test
         run: |
           pushd scenario_tests/${{ matrix.scenario }}
