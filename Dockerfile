@@ -1,8 +1,9 @@
 #--------- Generic stuff all our Dockerfiles should start with so we get caching ------------
 ARG DISTRO=debian
+ARG IMAGE_OWNER=kartoza
 ARG IMAGE_VERSION=bullseye
 ARG IMAGE_VARIANT=slim
-FROM kartoza/postgis:base-$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
+FROM $IMAGE_OWNER/postgis:base-$DISTRO-$IMAGE_VERSION-$IMAGE_VARIANT
 
 MAINTAINER Tim Sutton<tim@kartoza.com>
 
