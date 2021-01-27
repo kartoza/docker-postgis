@@ -175,6 +175,8 @@ jobs:
           target: postgis-test
 
       - name: Run scenario test
+        env:
+          COMPOSE_INTERACTIVE_NO_CLI: 1
         run: |
           pushd scenario_tests/${{ matrix.scenario }}
           ./test.sh
