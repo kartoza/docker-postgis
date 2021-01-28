@@ -16,6 +16,7 @@ env:
   - SCENARIO=logical_replication
 
 before_script:
+  - pip install -U docker-compose
   - ./build-test.sh
 
 script:
