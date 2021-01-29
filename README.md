@@ -59,8 +59,7 @@ docker pull kartoza/postgis:image_version
 
 ## Building the image
 
-To build the image yourself without apt-cacher (also consumes more bandwidth
-since deb packages need to be fetched each time you build) do:
+To build the image yourself do:
 
 ```
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
@@ -79,7 +78,7 @@ Then do:
 docker build -t kartoza/postgis .
 ```
 
-Or
+Or build against a specific PostgreSQL version
 
 ```
 docker build --build-arg POSTGRES_MAJOR_VERSION=13 --build-arg POSTGIS_MAJOR=3 -t kartoza/postgis:POSTGRES_MAJOR_VERSION .
@@ -91,9 +90,10 @@ and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
 (but it still needs to be Debian based and have PostgreSQL official apt repo).
 
 For example making Ubuntu 20.04 based build (for better arm64 support)
-First build the base image using the branch `postgres-base` following instructions from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/tree/postgres-base#alternative-base-distributions-builds)
+First build the base image using instructions in the folder `base_build`  using the
+build script from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/blob/develop/base_build/build.sh)
 
-And then build the `PostGIS Image` using
+Then build the `PostGIS Image` to match the base build
 
 ```
 docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
@@ -105,14 +105,13 @@ By default, the image build will include **all** `locales` to cover any value fo
 
 You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
 
-You can also run the container using the environment variables.
 ### Environment variables
 
 #### Cluster Initializations
 
-With minimum setup, our image will use initial cluster located in the
+With a minimum setup, our image will use an initial cluster located in the
 `DATADIR` environment variable. If you want to use persistence, mount these
-location into your volume/host. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
+locations into your volume/host. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
 You can instead mount the parent location like this:
 
 * `-v data-volume:/var/lib/postgresql`
@@ -134,8 +133,8 @@ You need to specify different empty directory, like this
 The containers will use above parameters to initialize a new db cluster in the
 specified directory. If the directory is not empty, then initialization parameter will be ignored.
 
-These are some initialization parameter that will only be used to initialize new cluster.
-If the container uses existing cluster, it will be ignored (for example, when the container restarts).
+These are some initialization parameters that will only get used to initialize a new cluster.
+If the container uses an existing cluster, it is ignored (for example, when the container restarts).
 
 * `DEFAULT_ENCODING`: cluster encoding
 * `DEFAULT_COLLATION`: cluster collation
@@ -150,7 +149,7 @@ new db cluster.
 
 * `RECREATE_DATADIR`: Force database reinitialization in the location `DATADIR`
 
-If you used `RECREATE_DATADIR` and successfully created new cluster. Remember
+If you used `RECREATE_DATADIR` and successfully created a new cluster. Remember
 that you should remove this parameter afterwards. Because, if it was not omitted,
 it will always recreate new db cluster after every container restarts.
 
@@ -170,7 +169,7 @@ or
 
 If you use default `DATADIR` location.
 
-If you need to setup a database cluster with other encoding parameters you need
+If you need to set up a database cluster with other encoding parameters you need
 to pass the environment variables when you initialize the cluster.
 
 * -e DEFAULT_ENCODING="UTF8"
@@ -186,7 +185,7 @@ delete the current cluster and create a new one. Make sure to remove parameter
 #### Basic configuration
 
 You can use the following environment variables to pass a
-user name, password and/or default database name(or multiple databases comma separated).
+username, password and/or default database name(or multiple databases comma separated).
 
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
@@ -236,12 +235,12 @@ Maximum size to let the WAL grow to between automatic WAL checkpoints.
 * `-e MAINTAINANCE_WORK_MEM=128MB`
 
 #### Configure networking
-You can open up the PG port by using the following environment variable. By default
+You can open up the PG port by using the following environment variable. By default,
 the container will allow connections only from the docker private subnet.
 
 * `-e ALLOW_IP_RANGE=<0.0.0.0/0> By default`
 
-Postgres conf is setup to listen to all connections and if a user needs to restrict which IP address
+Postgres conf is set up to listen to all connections and if a user needs to restrict which IP address
 PostgreSQL listens to you can define it with the following environment variable. The default is set to listen to
 all connections.
 * `-e IP_LIST=<*>`
