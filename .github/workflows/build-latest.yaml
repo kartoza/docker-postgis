@@ -16,6 +16,8 @@ on:
 #        default: slim
   push:
   pull_request:
+    branches:
+      - develop
 jobs:
   build-image:
     runs-on: ubuntu-latest
@@ -53,7 +55,7 @@ jobs:
           restore-keys: |
             buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-
 
-      - name: Build base image
+      - name: Build all stages
         id: docker_build_base
         uses: docker/build-push-action@v2
         with:
@@ -73,51 +75,6 @@ jobs:
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,mode=max,dest=/tmp/.buildx-cache
-          target: postgis-base
-
-      - name: Build prod image
-        id: docker_build_prod
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: Dockerfile
-          push: false
-          load: true
-          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
-          build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
-            LANGS=en_US.UTF-8,id_ID.UTF-8
-            GENERATE_ALL_LOCALE=0
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache
-          target: postgis-prod
-
-      - name: Build image for testing
-        id: docker_build_testing_image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          file: Dockerfile
-          push: false
-          load: true
-          tags: kartoza/postgis:manual-build
-          build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
-            LANGS=en_US.UTF-8,id_ID.UTF-8
-            GENERATE_ALL_LOCALE=0
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,mode=max,dest=/tmp/.buildx-cache
-          target: postgis-test
 
   run-scenario-tests:
     runs-on: ubuntu-latest
@@ -156,9 +113,9 @@ jobs:
           # - build args (.example.env)
           # - base_build directory
           # - scripts directory
-          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-${{ github.sha }}
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-${{ github.sha }}
           restore-keys: |
-            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
+              buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-
 
       - name: Build image for testing
         id: docker_build_testing_image
@@ -191,7 +148,7 @@ jobs:
           popd
 
   push-internal-pr-images:
-    if: github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url
+    if: github.event_name == 'pull_request' && github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url
     runs-on: ubuntu-latest
     needs: [ build-image ]
     strategy:
