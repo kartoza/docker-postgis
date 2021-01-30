@@ -5,7 +5,7 @@ ARG DISTRO=debian
 ARG IMAGE_VERSION=bullseye
 ARG IMAGE_VARIANT=slim
 FROM $DISTRO:$IMAGE_VERSION-$IMAGE_VARIANT AS postgis-base
-MAINTAINER Tim Sutton<tim@kartoza.com>
+LABEL maintainer="Tim Sutton<tim@kartoza.com>"
 
 # Reset ARG for version
 ARG IMAGE_VERSION
@@ -67,7 +67,6 @@ RUN apt-get -y --purge autoremove  \
 ##############################################################################
 FROM postgis-base AS postgis-prod
 
-MAINTAINER Tim Sutton<tim@kartoza.com>
 
 # Reset ARG for version
 ARG IMAGE_VERSION
