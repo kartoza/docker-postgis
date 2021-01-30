@@ -91,7 +91,6 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          load: true
           tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}

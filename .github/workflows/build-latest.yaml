@@ -53,12 +53,6 @@ jobs:
           restore-keys: |
             buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
       - name: Build base image
         id: docker_build_base
         uses: docker/build-push-action@v2
