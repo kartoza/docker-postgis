@@ -5,3 +5,4 @@
 base_build/README.md
 
 !scripts
+!scenario_tests/utils/requirements.txt
