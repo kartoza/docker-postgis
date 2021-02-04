@@ -54,9 +54,9 @@ jobs:
           # - build args (.example.env)
           # - base_build directory
           # - scripts directory
-          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-${{ github.sha }}
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-${{ github.sha }}
           restore-keys: |
-            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts') }}-
+            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -71,7 +71,9 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
+          tags: |
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:base
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
@@ -91,8 +93,10 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          load: true
-          tags: ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
+          tags: |
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
