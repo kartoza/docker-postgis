@@ -247,9 +247,15 @@ all connections.
 
 #### Additional configuration
 
-You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
+You can also define any other configuration to add to `extra.conf`, separated by '\n' e.g.:
 
 * `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
+
+You can alternatively mount an extra  config file into the setting's folder i.e
+
+```
+docker run --name "postgis" -v /data/extra.conf:/settings/extra.conf -p 25432:5432 -d -t kartoza/postgis
+```
 
 If you want to reinitialize the data directory from scratch, you need to do:
 
