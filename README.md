@@ -211,6 +211,14 @@ the extension is installed with the image.
 
  ` Specifies whether extensions will also be installed in template1 database.`
 
+### Schema Initialisation
+* `-e SCHEMA_NAME=<PGSCHEMA>`
+You can pass a comma separated value of schema names which will be created when the
+  database initialises. The default behaviour is to create the schema in the first
+  database specified in the environment variable `POSTGRES_DBNAME`. If you need to
+  create matching schemas in all the databases that will be created you use
+  the environment variable `ALL_DATABASES=TRUE`
+  
 #### Configures archive mode
 
 This image uses the initial PostgreSQL values which disables the archiving option by default.
