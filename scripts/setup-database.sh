@@ -85,10 +85,10 @@ done
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
     for schemas in $(echo ${SCHEMA_NAME} | tr ',' ' '); do
       SCHEMA_RESULT=`PGPASSWORD=${POSTGRES_PASS} psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';"`
-     if [[ ${SCHEMA_RESULT} -eq 0 || "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+     if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
           echo "Creating schema ${schemas} in database ${SINGLE_DB}"
           PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schemas};"
-      elif [[ ${SCHEMA_RESULT} -eq 0 || "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
+      elif [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
           echo "Creating schema ${schemas} in database ${db}"
           PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schemas};"
       fi
