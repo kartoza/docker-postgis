@@ -15,10 +15,7 @@ cat $CONF.template > $CONF
 sed -i '/data_directory/d' $CONF
 
 # Create a config to optimise postgis
-if [[  -f ${ROOT_CONF}/postgis.conf ]];then
-  rm $CONF/postgis.conf
-fi
-cat >> ${ROOT_CONF}/postgis.conf <<EOF
+cat > ${ROOT_CONF}/postgis.conf <<EOF
 data_directory = '${DATADIR}'
 port = 5432
 superuser_reserved_connections= 10
@@ -42,10 +39,8 @@ echo "include 'postgis.conf'" >> $CONF
 
 # Create a config for logical replication
 if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
-  if [[  -f ${ROOT_CONF}/logical_replication.conf ]];then
-    rm $CONF/logical_replication.conf
-  fi
-cat >> ${ROOT_CONF}/logical_replication.conf <<EOF
+
+cat > ${ROOT_CONF}/logical_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_size = ${PG_WAL_KEEP_SIZE}
@@ -59,10 +54,8 @@ fi
 
 # Create a config for streaming replication
 if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; then
-  if [[  -f ${ROOT_CONF}/streaming_replication.conf ]];then
-    rm $CONF/streaming_replication.conf
-  fi
-cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
+
+cat > ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 archive_mode = ${ARCHIVE_MODE}
 archive_command = '${ARCHIVE_COMMAND}'
@@ -82,13 +75,19 @@ EOF
 echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
-if [[  -f ${ROOT_CONF}/extra.conf ]];then
-    rm $CONF/extra.conf
-fi
+if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
+    # If it doesn't exists, copy from /settings directory if exists
+    if [[ -f /settings/extra.conf ]]; then
+      cp -f /settings/extra.conf ${ROOT_CONF}/extra.conf
+      echo "include 'extra.conf'" >> $CONF
+    else
+      # default value
+      if [[  ! -z $EXTRA_CONF ]]; then
+          echo -e $EXTRA_CONF >> ${ROOT_CONF}/extra.conf
+          echo "include 'extra.conf'" >> $CONF
+      fi
+    fi
 
-if [[  ! -z $EXTRA_CONF ]]; then
-  echo -e $EXTRA_CONF >> ${ROOT_CONF}/extra.conf
-  echo "include 'extra.conf'" >> $CONF
 fi
 
 # Optimise PostgreSQL shared memory for PostGIS

@@ -89,6 +89,10 @@ if [ -z "${RECREATE_DATADIR}" ]; then
 else
   RECREATE_DATADIR=$(boolean ${RECREATE_DATADIR})
 fi
+
+if [ -z "${ALL_DATABASES}" ]; then
+  ALL_DATABASES=FALSE
+fi
 # SSL mode
 if [ -z "${PGSSLMODE}" ]; then
 	PGSSLMODE=require

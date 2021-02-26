@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deploy
+  labels:
+    name: db-pod
+    app: postgis
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: db-pod
+      app: postgis
+  template:
+    metadata:
+      name: db-pod
+      labels:
+        name: db-pod
+        app: postgis
+    spec:
+      containers:
+        - name: db
+          image: kartoza/postgis:13.0
+          env:
+            - name: ALLOW_IP_RANGE
+              value: "0.0.0.0/0"
+            - name: POSTGRES_DB
+              value: "gis"
+            - name: POSTGRES_PASS
+              value: "docker"
+            - name: POSTGRES_USER
+              value: "docker"
+            - name: POSTGRES_PORT
+              value: "5432"
+          ports:
+            - containerPort: 5432
+
+
