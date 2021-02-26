@@ -76,7 +76,6 @@ echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
 if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
-    echo "${ROOT_CONF}/extra.conf doesn't exists"
     # If it doesn't exists, copy from /settings directory if exists
     if [[ -f /settings/extra.conf ]]; then
       cp -f /settings/extra.conf ${ROOT_CONF}/extra.conf
