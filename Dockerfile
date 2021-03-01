@@ -17,12 +17,11 @@ RUN set -eux \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
         locales gnupg2 wget ca-certificates rpl pwgen software-properties-common  iputils-ping \
-        apt-transport-https curl gettex \
+        apt-transport-https curl gettext \
     && dpkg-divert --local --rename --add /sbin/initctl
 
-
-
 RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin
+
 
 
 # Generating locales takes a long time. Utilize caching by runnig it by itself
