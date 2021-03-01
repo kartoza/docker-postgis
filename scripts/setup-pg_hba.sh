@@ -12,6 +12,11 @@ fi
 # Reconfigure pg_hba if environment settings changed
 cat ${ROOT_CONF}/pg_hba.conf.template > ${ROOT_CONF}/pg_hba.conf
 
+# Restrict subnet to docker private network
+echo "host    all             all             172.0.0.0/8              ${PASSWORD_AUTHENTICATION}" >> $ROOT_CONF/pg_hba.conf
+# And allow access from DockerToolbox / Boot to docker on OSX
+echo "host    all             all             192.168.0.0/16               ${PASSWORD_AUTHENTICATION}" >> $ROOT_CONF/pg_hba.conf
+
 # Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
 # Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16'
 if [[ "$ALLOW_IP_RANGE" ]]

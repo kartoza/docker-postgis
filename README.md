@@ -211,6 +211,14 @@ the extension is installed with the image.
 
  ` Specifies whether extensions will also be installed in template1 database.`
 
+### Schema Initialisation
+* `-e SCHEMA_NAME=<PGSCHEMA>`
+You can pass a comma separated value of schema names which will be created when the
+  database initialises. The default behaviour is to create the schema in the first
+  database specified in the environment variable `POSTGRES_DBNAME`. If you need to
+  create matching schemas in all the databases that will be created you use
+  the environment variable `ALL_DATABASES=TRUE`
+  
 #### Configures archive mode
 
 This image uses the initial PostgreSQL values which disables the archiving option by default.
@@ -247,9 +255,15 @@ all connections.
 
 #### Additional configuration
 
-You can also define any other configuration to add to `postgres.conf`, separated by '\n' e.g.:
+You can also define any other configuration to add to `extra.conf`, separated by '\n' e.g.:
 
 * `-e EXTRA_CONF="log_destination = 'stderr'\nlogging_collector = on"`
+
+You can alternatively mount an extra  config file into the setting's folder i.e
+
+```
+docker run --name "postgis" -v /data/extra.conf:/settings/extra.conf -p 25432:5432 -d -t kartoza/postgis
+```
 
 If you want to reinitialize the data directory from scratch, you need to do:
 
@@ -557,4 +571,4 @@ Tim Sutton (tim@kartoza.com)
 Gavin Fleming (gavin@kartoza.com)
 Rizky Maulana (rizky@kartoza.com)
 Admire Nyakudya (admire@kartoza.com)
-October 2020
+March 2021

@@ -17,18 +17,13 @@ RUN set -eux \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
         locales gnupg2 wget ca-certificates rpl pwgen software-properties-common  iputils-ping \
-        apt-transport-https curl \
+        apt-transport-https curl gettex \
     && dpkg-divert --local --rename --add /sbin/initctl
 
 
 
 RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin
 
-
-
-# Temporary - PostgreSQL requires this which is not available in bullseye
-ADD base_build/gdal_install.sh /gdal_install.sh
-RUN chmod 0755 /gdal_install.sh;/bin/bash /gdal_install.sh
 
 # Generating locales takes a long time. Utilize caching by runnig it by itself
 # early in the build process.

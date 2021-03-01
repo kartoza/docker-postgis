@@ -7,7 +7,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:13.1
+    image: kartoza/postgis:13-3.1
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
