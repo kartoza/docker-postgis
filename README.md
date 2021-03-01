@@ -65,7 +65,7 @@ To build the image yourself do:
 docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
 ```
 
-Alternatively clone the repository and build against any preferred branch 
+Alternatively clone the repository and build against any preferred branch
 
 ```
 git clone git://github.com/kartoza/docker-postgis
@@ -101,7 +101,7 @@ docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-a
 
 #### Locales
 
-By default, the image build will include **all** `locales` to cover any value for `locale` settings such as `DEFAULT_COLLATION`, `DEFAULT_CTYPE` or `DEFAULT_ENCODING`. 
+By default, the image build will include **all** `locales` to cover any value for `locale` settings such as `DEFAULT_COLLATION`, `DEFAULT_CTYPE` or `DEFAULT_ENCODING`.
 
 You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
 
@@ -190,7 +190,7 @@ username, password and/or default database name(or multiple databases comma sepa
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
 **NB** You should use a strong passwords. If you are using docker-compose make sure
-docker can interpolate the password. Example using a password with a `$` you will 
+docker can interpolate the password. Example using a password with a `$` you will
 need to escape it ie `$$`
 * `-e POSTGRES_DBNAME=<PGDBNAME>`
 * `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting`
@@ -326,7 +326,7 @@ database. Since the environment variable POSTGRES_DB allows
 us to specify multiple database that can be created on startup.
 When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
-The SQL script will be executed against the gis database.
+The SQL script will be executed against the gis database. Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
 
 Currently you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
 
@@ -427,7 +427,7 @@ with the following SQL assuming the ${REPLICATION_USER} is called replicator
      ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
 
 
-**NB** You need to setup a strong password for replication otherwise the 
+**NB** You need to setup a strong password for replication otherwise the
 default password for ${REPLICATION_USER} will default to `replicator`
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
@@ -549,7 +549,7 @@ For a detailed example see the docker-compose in the folder `sample/logical_repl
 ### Support
 
 If you require more substantial assistance from [kartoza](https://kartoza.com)  (because our work and interaction on docker-postgis is pro bono),
-please consider taking out a [Support Level Agreeement](https://kartoza.com/en/shop/product/support) 
+please consider taking out a [Support Level Agreeement](https://kartoza.com/en/shop/product/support)
 
 ## Credits
 

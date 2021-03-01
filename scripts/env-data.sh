@@ -246,6 +246,10 @@ if [ -z "${REPLICATION_PASS}" ]; then
 fi
 
 
+if [ -z "$IGNORE_INIT_HOOK_LOCKFILE" ]; then
+    IGNORE_INIT_HOOK_LOCKFILE=false
+fi
+
 if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
@@ -320,7 +324,7 @@ function restart_postgres {
 function entry_point_script {
   SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
-  if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
+  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" == true ]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}
@@ -361,4 +365,3 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 	done
 
 }
-
