@@ -1,20 +1,22 @@
 #!/usr/bin/env bash
-
-DEFAULT_DATADIR="/var/lib/postgresql/12/main"
-ROOT_CONF="/etc/postgresql/12/main"
+POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
+POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
+DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
 WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
-POSTGRES="/usr/lib/postgresql/12/bin/postgres"
-INITDB="/usr/lib/postgresql/12/bin/initdb"
-SQLDIR="/usr/share/postgresql/12/contrib/postgis-3.0/"
+POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
+INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGIS_MAJOR}.${POSTGIS_MINOR_RELEASE}/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
-PG_PID="/var/run/postgresql/12-main.pid"
+PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
 
 # Read data from secrets into env variables.
@@ -56,6 +58,15 @@ file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
 file_env 'POSTGRES_DBNAME'
 
+function create_dir() {
+DATA_PATH=$1
+
+if [[ ! -d ${DATA_PATH} ]];
+then
+    echo "Creating" ${DATA_PATH}  "directory"
+    mkdir -p ${DATA_PATH}
+fi
+}
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
@@ -90,6 +101,10 @@ if [ -z "${TOPOLOGY}" ]; then
 	TOPOLOGY=true
 fi
 # Replication settings
+
+if [ -z "${REPLICATION}" ]; then
+	REPLICATION=false
+fi
 if [ -z "${REPLICATE_PORT}" ]; then
 	REPLICATE_PORT=5432
 fi
@@ -99,8 +114,18 @@ fi
 if [ -z "${PG_MAX_WAL_SENDERS}" ]; then
 	PG_MAX_WAL_SENDERS=10
 fi
-if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
-	PG_WAL_KEEP_SEGMENTS=250
+if [ -z "${PG_WAL_KEEP_SIZE}" ]; then
+	PG_WAL_KEEP_SIZE=20
+fi
+
+
+#Logical replication settings
+if [ -z "${MAX_LOGICAL_REPLICATION_WORKERS}" ]; then
+  MAX_LOGICAL_REPLICATION_WORKERS=4
+fi
+
+if [ -z "${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}" ]; then
+  MAX_SYNC_WORKERS_PER_SUBSCRIPTION=2
 fi
 
 if [ -z "${IP_LIST}" ]; then
@@ -141,11 +166,23 @@ if [ -z "${WAL_SIZE}" ]; then
 fi
 
 if [ -z "${MIN_WAL_SIZE}" ]; then
-	MIN_WAL_SIZE=2048MB
+	MIN_WAL_SIZE=1024MB
 fi
 
 if [ -z "${WAL_SEGSIZE}" ]; then
-	WAL_SEGSIZE=1024
+	WAL_SEGSIZE=32
+fi
+
+if [ -z "${SHARED_BUFFERS}" ]; then
+	SHARED_BUFFERS=256MB
+fi
+
+if [ -z "${WORK_MEM}" ]; then
+	WORK_MEM=16MB
+fi
+
+if [ -z "${WAL_BUFFERS}" ]; then
+	WAL_BUFFERS=1MB
 fi
 
 if [ -z "${CHECK_POINT_TIMEOUT}" ]; then
@@ -218,7 +255,7 @@ if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
-    PASSWORD_AUTHENTICATION="md5"
+    PASSWORD_AUTHENTICATION="scram-sha-256"
 fi
 
 # Compatibility with official postgres variable
@@ -242,6 +279,9 @@ list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
 arr=(${list})
 SINGLE_DB=${arr[0]}
 
+if [ -z "${TIMEZONE}" ]; then
+  TIMEZONE='Etc/UTC'
+fi
 
 # usable function definitions
 function kill_postgres {
@@ -299,3 +339,26 @@ function entry_point_script {
 
   return 0
 }
+
+function configure_replication_permissions {
+
+    echo "Setup data permissions"
+    echo "----------------------"
+    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
+        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
+        su - postgres -c "chmod 0600 ~/.pgpass"
+}
+
+function streaming_replication {
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
+	do
+		echo "Waiting for master to connect..."
+		sleep 1s
+		if [[ "$(ls -A ${DATADIR})" ]]; then
+			echo "Need empty folder. Cleaning directory..."
+			rm -rf ${DATADIR}/*
+		fi
+	done
+
+}
+
