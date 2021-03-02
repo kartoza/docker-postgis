@@ -258,6 +258,10 @@ if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="scram-sha-256"
 fi
 
+if [ -z "${ALL_DATABASES}" ]; then
+  ALL_DATABASES=FALSE
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then

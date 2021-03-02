@@ -53,8 +53,10 @@ fi
 # It will be owned by the docker db user
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
 
+
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
+
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
@@ -78,6 +80,21 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
          echo "${db} db already exists"
         fi
 done
+
+# Create schemas in the DB
+for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+    for schema in $(echo ${SCHEMA_NAME} | tr ',' ' '); do
+      SCHEMA_RESULT=`PGPASSWORD=${POSTGRES_PASS} psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';"`
+     if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+          echo "Creating schema ${schema} in database ${SINGLE_DB}"
+          PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+      elif [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
+          echo "Creating schema ${schema} in database ${db}"
+          PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+      fi
+    done
+done
+
 
 CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
 if [ ! -f "${CRON_LOCKFILE}" ]; then
