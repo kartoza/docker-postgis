@@ -82,7 +82,7 @@ if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
       echo "include 'extra.conf'" >> $CONF
     else
       # default value
-      if [[  ! -z $EXTRA_CONF ]]; then
+      if [[  -n "$EXTRA_CONF" ]]; then
           echo -e $EXTRA_CONF >> ${ROOT_CONF}/extra.conf
           echo "include 'extra.conf'" >> $CONF
       fi

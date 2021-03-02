@@ -19,7 +19,7 @@ echo "host    all             all             192.168.0.0/16               ${PAS
 
 # Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
 # Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16'
-if [[ "$ALLOW_IP_RANGE" ]]
+if [[ -n "$ALLOW_IP_RANGE" ]]
 then
 	echo "Add rule to pg_hba: $ALLOW_IP_RANGE"
  	echo "host    all             all             $ALLOW_IP_RANGE              ${PASSWORD_AUTHENTICATION}" >> ${ROOT_CONF}/pg_hba.conf
