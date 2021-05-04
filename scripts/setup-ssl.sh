@@ -22,11 +22,7 @@ mkdir -p ${PGSTAT_TMP}
 chmod 0777 ${PGSTAT_TMP}
 
 # moved from setup.sh
-if [[  -f ${ROOT_CONF}/ssl.conf ]];then
-    rm $CONF/ssl.conf
-fi
-
-cat >> ${ROOT_CONF}/ssl.conf <<EOF
+cat > ${ROOT_CONF}/ssl.conf <<EOF
 ssl = true
 ssl_cert_file = '${SSL_CERT_FILE}'
 ssl_key_file = '${SSL_KEY_FILE}'
