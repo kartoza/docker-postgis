@@ -400,6 +400,8 @@ See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/li
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
+To force SSL connection between clients you need to use the environment 
+variable `FORCE_SSL=TRUE`
 
 ## Postgres Replication Setup
 
@@ -559,6 +561,14 @@ docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis
 ```
 For a detailed example see the docker-compose in the folder `sample/logical_replication`.
 
+### Docker image versions
+All instructions mentioned in the README are valid for the latest running image.
+Other docker images might have a few missing features than the ones in the 
+latest image. We mainly do not back port changes to current stable images that are being 
+used in production. However, if you feel that some  changes included
+in the latest tagged version of the image are essential for the previous image
+you can cherry pick the changes against that specific branch and we will 
+test and merge.
 
 ### Support
 

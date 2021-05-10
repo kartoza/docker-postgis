@@ -266,6 +266,10 @@ if [ -z "${ALL_DATABASES}" ]; then
   ALL_DATABASES=FALSE
 fi
 
+if [ -z "${FORCE_SSL}" ]; then
+  FORCE_SSL=FALSE
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then
