@@ -44,8 +44,8 @@ source /scripts/setup-user.sh
 # enable extensions in template1 if env variable set to true
 if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" == TRUE ]] ; then
     for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-        echo "Enabling ${ext} in the database template1"
-        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' template1"
+        echo "Enabling \"${ext}\" in the database template1"
+        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' template1"
     done
 fi
 
@@ -61,11 +61,11 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             echo "Create db ${db}"
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-                echo "Enabling ${ext} in the database ${db}"
+                echo "Enabling \"${ext}\" in the database ${db}"
                 if [[ ${ext} = 'pg_cron' ]]; then
                   echo " pg_cron doesn't need to be installed"
                 else
-                  su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS ${ext} cascade;' $db"
+                  su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' $db"
                 fi
             done
             echo "Loading legacy sql"
