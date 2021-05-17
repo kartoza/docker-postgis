@@ -181,6 +181,7 @@ mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully
 delete the current cluster and create a new one. Make sure to remove parameter
 `RECREATE_DATADIR` after creating the cluster.
 
+See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 #### Basic configuration
 
@@ -342,7 +343,7 @@ When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
 The SQL script will be executed against the gis database. Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
 
-Currently you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
+Currently, you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
 
 ```
 
@@ -387,33 +388,19 @@ need to use the environment variable
 FORCE_SSL=TRUE
 ```
 
-The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
+The following example sets up a container with custom ssl private key and certificate:
+
 
 ```
-FROM kartoza/postgis:11.0-2.5
-
-ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
-ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
-
-RUN chmod 400 /etc/ssl/private/ssl_key.pem
+docker run -p 25432:5432 -e FORCE_SSL=TRUE -e SSL_DIR="/etc/ssl_certificates" -e SSL_CERT_FILE='/etc/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/etc/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/etc/ssl_certificates/root.crt' -v /tmp/postgres/letsencrypt:/etc/ssl_certificates --name ssl -d kartoza/postgis:13-3.1
 ```
 
-The docker-compose.yml to initialize with this configuration:
-
-```
-services:
-  postgres:
-    build:
-      dockerfile: Dockerfile
-      context: ssl_secured_docker
-    environment:
-      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
-      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
-```
+The environment variable `SSL_DIR` allows a user to specify the location
+where custom SSL certificates will be located. The environment variable currently
+defaults to `SSL_DIR=/ssl_certificates`
 
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
 
-See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 ### Forced SSL: forced using the shipped snakeoil certificates
 
