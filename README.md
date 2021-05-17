@@ -365,12 +365,27 @@ for the docker process to read / write it.
 
 ## Postgres SSL setup
 
-By default the image is delivered with an unsigned SSL certificate. This helps to have an
-encrypted connection to clients and avoid eavesdropping but does not help to mitigate
+There are three modalities in which you can work with SSL:
+
+  1. Optional: using the shipped snakeoil certificates
+  2. Forced SSL: forced using the shipped snakeoil certificates
+  3. Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority
+
+
+By default, the image is delivered with an unsigned SSL certificate. 
+This helps to have an encrypted connection to clients and avoid eavesdropping but does not help to mitigate
 man in the middle (MITM) attacks.
 
 You need to provide your own, signed private key to avoid this kind of attacks (and make
 sure clients connect with verify-ca or verify-full sslmode).
+
+Although SSL is enabled by default, connection to PostgreSQL with other clients 
+i.e (PSQL or QGIS) still doesn't enforce SSL encryption. To force SSL connection between clients you 
+need to use the environment variable 
+
+```
+FORCE_SSL=TRUE
+```
 
 The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
 
@@ -383,7 +398,7 @@ ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
 RUN chmod 400 /etc/ssl/private/ssl_key.pem
 ```
 
-And a docker-compose.yml to initialize with this configuration:
+The docker-compose.yml to initialize with this configuration:
 
 ```
 services:
@@ -400,28 +415,26 @@ See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/li
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
-### SSL Client connection using default certificates
-To force SSL connection between clients you need to use the environment 
-variable `FORCE_SSL=TRUE`
+### Forced SSL: forced using the shipped snakeoil certificates
 
 If you are using the default certificates provided by the image when connecting
 to the database you will need to set `SSL Mode` to any value besides
 `verify-full` or `verify-ca`
 
-### SSL Client connection using user defined certificates
-To force SSL connection between clients you need to use the environment 
-variable `FORCE_SSL=TRUE`
+### Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority
 
-If you are using your own certificates when connecting to the database you will need to set
-`SSL Mode` to force the connection to use SSL.
-
-You also need to define the following environment variables when setting up the database connection.
+When setting up the database you need to define the following environment variables.
 
 SSL_CERT_FILE:
 
 SSL_KEY_FILE: 
 
 SSL_CA_FILE:
+
+Example:
+```
+docker run -p 5432:5432 -e FORCE_SSL=TRUE -e SSL_CERT_FILE='/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/ssl_certificates/root.crt' --name ssl -d kartoza/postgis:13-3.1
+```
 
 On the host machine where you need to connect to the database you also 
 need to copy the `SSL_CA_FILE` file to the location `/home/$user/.postgresql/root.crt`
@@ -433,23 +446,24 @@ example: `PGSSLROOTCERT=/etc/letsencrypt/root.crt`
 
 Generate the certificates inside the container
 ```
-LETSENCRYPT_CERT_DIR=/etc/letsencrypt
-mkdir $LETSENCRYPT_CERT_DIR
-openssl req -x509 -newkey rsa:4096 -keyout ${LETSENCRYPT_CERT_DIR}/privkey.pem -out \
-      ${LETSENCRYPT_CERT_DIR}/fullchain.pem -days 3650 -nodes -sha256 -subj '/CN=localhost'
+CERT_DIR=/ssl_certificates
+mkdir $CERT_DIR
+openssl req -x509 -newkey rsa:4096 -keyout ${CERT_DIR}/privkey.pem -out \
+      ${CERT_DIR}/fullchain.pem -days 3650 -nodes -sha256 -subj '/CN=localhost'
 
-cp $LETSENCRYPT_CERT_DIR/fullchain.pem $LETSENCRYPT_CERT_DIR/root.crt
-chmod -R 0700 ${LETSENCRYPT_CERT_DIR}
-chown -R postgres ${LETSENCRYPT_CERT_DIR}
+cp $CERT_DIR/fullchain.pem $CERT_DIR/root.crt
+chmod -R 0700 ${CERT_DIR}
+chown -R postgres ${CERT_DIR}
 ```
 
 Set up your ssl config to point to the new location
 ```
 ssl = true
-ssl_cert_file = '/etc/letsencrypt/fullchain.pem'
-ssl_key_file = '/etc/letsencrypt/privkey.pem'
-ssl_ca_file = '/etc/letsencrypt/root.crt' 
+ssl_cert_file = '/ssl_certificates/fullchain.pem'
+ssl_key_file = '/ssl_certificates/privkey.pem'
+ssl_ca_file = '/ssl_certificates/root.crt' 
 ```
+
 Then connect to the database using the psql command:
 ```
 psql "dbname=gis port=5432 user=docker host=localhost sslmode=verify-full  sslcert=/etc/letsencrypt/fullchain.pem sslkey=/etc/letsencrypt/privkey.pem sslrootcert=/etc/letsencrypt/root.crt"
@@ -458,7 +472,7 @@ psql "dbname=gis port=5432 user=docker host=localhost sslmode=verify-full  sslce
 
 ## Postgres Replication Setup
 
-The image supports replication out of the box. By default replication is turned off.
+The image supports replication out of the box. By default, replication is turned off.
 The two mains replication methods allowed are
 * Streaming replication
 * Logical replication
