@@ -9,15 +9,17 @@ Visit our page on the docker hub at: https://hub.docker.com/r/kartoza/postgis/
 There are a number of other docker postgis containers out there. This one
 differentiates itself by:
 
-* provides ssl support out of the box
+* provides ssl support out of the box and enforces ssl client connections
 * connections are restricted to the docker subnet
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
-* replication support included
+* Streaming replication and logical replication support included (turned off by default)
 * Ability to create multiple database when you spin the database.
-* Enable multiple extensions in the database when setting it up
-* Gdal drivers automatically registered for pg raster
-* Support for out-of-db rasters
+* Ability to create multiple schemas when spinning the database.  
+* Enable multiple extensions in the database when setting it up.
+* Gdal drivers automatically registered for pg raster.
+* Support for out-of-db rasters.
+
 
 We will work to add more security features to this container in the future with
 the aim of making a PostGIS image that is ready to be used in a production
@@ -90,20 +92,28 @@ and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
 (but it still needs to be Debian based and have PostgreSQL official apt repo).
 
 For example making Ubuntu 20.04 based build (for better arm64 support)
-First build the base image using instructions in the folder `base_build`  using the
-build script from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/blob/develop/base_build/build.sh)
-
-Then build the `PostGIS Image` to match the base build
+Edit the `.env` file to change the build arguments 
 
 ```
-docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
+DISTRO=ubuntu 
+IMAGE_VERSION=focal 
+IMAGE_VARIANT="" 
 ```
+
+Then run the script
+
+```
+./build.sh
+```
+
 
 #### Locales
 
 By default, the image build will include **all** `locales` to cover any value for `locale` settings such as `DEFAULT_COLLATION`, `DEFAULT_CTYPE` or `DEFAULT_ENCODING`.
 
-You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
+You can use the build argument: `GENERATE_ALL_LOCALE=0`
+
+This will build with the default locate and speed up the build considerably.
 
 ### Environment variables
 
@@ -126,7 +136,7 @@ You need to specify different empty directory, like this
 -e DEFAULT_ENCODING="UTF8" \
 -e DEFAULT_COLLATION="id_ID.utf8" \
 -e DEFAULT_CTYPE="id_ID.utf8" \
--e --auth="md5" \
+-e PASSWORD_AUTHENTICATION="md5" \
 -e INITDB_EXTRA_ARGS="<some more initdb command args>"
 ```
 
@@ -140,7 +150,7 @@ If the container uses an existing cluster, it is ignored (for example, when the 
 * `DEFAULT_COLLATION`: cluster collation
 * `DEFAULT_CTYPE`: cluster ctype
 * `WAL_SEGSIZE`: WAL segsize option
-* `--auth` : PASSWORD AUTHENTICATION
+* `PASSWORD_AUTHENTICATION` : PASSWORD AUTHENTICATION
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
@@ -181,6 +191,7 @@ mounting an empty volume. Or use parameter `RECREATE_DATADIR` to forcefully
 delete the current cluster and create a new one. Make sure to remove parameter
 `RECREATE_DATADIR` after creating the cluster.
 
+See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
 #### Basic configuration
 
@@ -281,7 +292,8 @@ in conjunction with Docker secrets, as passwords can be loaded from `/run/secret
 
 For more information see [https://docs.docker.com/engine/swarm/secrets/](https://docs.docker.com/engine/swarm/secrets/).
 
-Currently, `POSTGRES_PASS`, `POSTGRES_USER` and `POSTGRES_DB` are supported.
+Currently, `POSTGRES_PASS`, `POSTGRES_USER`, `POSTGRES_DB`, `SSL_CERT_FILE`,
+`SSL_KEY_FILE`, `SSL_CA_FILE` are supported.
 
 
 ## Running the container
@@ -296,7 +308,7 @@ docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 
 ## Convenience docker-compose.yml
 
-For convenience we have provided a ``docker-compose.yml`` that will run a
+For convenience, we  provide a ``docker-compose.yml`` that will run a
 copy of the database image and also our related database backup image (see
 [https://github.com/kartoza/docker-pg-backup](https://github.com/kartoza/docker-pg-backup)).
 
@@ -336,13 +348,15 @@ sudo apt-get install postgresql-client-12
 
 
 In some instances users want to run some SQL scripts to populate the
-database. Since the environment variable POSTGRES_DB allows
+database. The environment variable POSTGRES_DB allows
 us to specify multiple database that can be created on startup.
 When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
-The SQL script will be executed against the gis database. Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
+The SQL script will be executed against the `gis` database. Additionally, a lock file is generated in
+`/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
+container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
 
-Currently you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
+Currently, you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
 
 ```
 
@@ -365,47 +379,116 @@ for the docker process to read / write it.
 
 ## Postgres SSL setup
 
-By default the image is delivered with an unsigned SSL certificate. This helps to have an
-encrypted connection to clients and avoid eavesdropping but does not help to mitigate
+There are three modalities in which you can work with SSL:
+
+  1. Optional: using the shipped snakeoil certificates
+  2. Forced SSL: forced using the shipped snakeoil certificates
+  3. Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority
+
+
+By default, the image is delivered with an unsigned SSL certificate. 
+This helps to have an encrypted connection to clients and avoid eavesdropping but does not help to mitigate
 man in the middle (MITM) attacks.
 
 You need to provide your own, signed private key to avoid this kind of attacks (and make
 sure clients connect with verify-ca or verify-full sslmode).
 
-The following is an example Dockerfile that sets up a container with custom ssl private key and certificate:
+Although SSL is enabled by default, connection to PostgreSQL with other clients 
+i.e (PSQL or QGIS) still doesn't enforce SSL encryption. To force SSL connection between clients you 
+need to use the environment variable 
 
 ```
-FROM kartoza/postgis:11.0-2.5
-
-ADD ssl_cert.pem /etc/ssl/certs/ssl_cert.pem
-ADD localhost_ssl_key.pem /etc/ssl/private/ssl_key.pem
-
-RUN chmod 400 /etc/ssl/private/ssl_key.pem
+FORCE_SSL=TRUE
 ```
 
-And a docker-compose.yml to initialize with this configuration:
+The following example sets up a container with custom ssl private key and certificate:
+
 
 ```
-services:
-  postgres:
-    build:
-      dockerfile: Dockerfile
-      context: ssl_secured_docker
-    environment:
-      - SSL_CERT_FILE=/etc/ssl/certs/ssl_cert.pem
-      - SSL_KEY_FILE=/etc/ssl/private/ssl_key.pem
+docker run -p 25432:5432 -e FORCE_SSL=TRUE -e SSL_DIR="/etc/ssl_certificates" -e SSL_CERT_FILE='/etc/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/etc/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/etc/ssl_certificates/root.crt' -v /tmp/postgres/letsencrypt:/etc/ssl_certificates --name ssl -d kartoza/postgis:13-3.1
 ```
+
+The environment variable `SSL_DIR` allows a user to specify the location
+where custom SSL certificates will be located. The environment variable currently
+defaults to `SSL_DIR=/ssl_certificates`
 
 See [the postgres documentation about SSL](https://www.postgresql.org/docs/11/libpq-ssl.html#LIBQ-SSL-CERTIFICATES) for more information.
 
-See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
-To force SSL connection between clients you need to use the environment 
-variable `FORCE_SSL=TRUE`
+### Forced SSL: forced using the shipped snakeoil certificates
+
+If you are using the default certificates provided by the image when connecting
+to the database you will need to set `SSL Mode` to any value besides
+`verify-full` or `verify-ca`
+
+The pg_hba.con will have entries like:
+```
+hostssl all all 0.0.0.0/0 scram-sha-256 clientcert=0
+```
+
+where  `PASSWORD_AUTHENTICATION=scram-sha-256` and `ALLOW_IP_RANGE=0.0.0.0/0`
+
+
+### Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority
+
+When setting up the database you need to define the following environment variables.
+
+SSL_CERT_FILE:
+
+SSL_KEY_FILE: 
+
+SSL_CA_FILE:
+
+Example:
+```
+docker run -p 5432:5432 -e FORCE_SSL=TRUE -e SSL_CERT_FILE='/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/ssl_certificates/root.crt' --name ssl -d kartoza/postgis:13-3.1
+```
+
+On the host machine where you need to connect to the database you also 
+need to copy the `SSL_CA_FILE` file to the location `/home/$user/.postgresql/root.crt`
+or define an environment variable pointing to location of the `SSL_CA_FILE`
+example: `PGSSLROOTCERT=/etc/letsencrypt/root.crt`
+
+The pg_hba.con will have entries like:
+```
+hostssl all all 0.0.0.0/0 cert
+```
+
+where `ALLOW_IP_RANGE=0.0.0.0/0`
+
+
+#### SSL connection inside the docker container using openssl certificates
+
+
+Generate the certificates inside the container
+```
+CERT_DIR=/ssl_certificates
+mkdir $CERT_DIR
+openssl req -x509 -newkey rsa:4096 -keyout ${CERT_DIR}/privkey.pem -out \
+      ${CERT_DIR}/fullchain.pem -days 3650 -nodes -sha256 -subj '/CN=localhost'
+
+cp $CERT_DIR/fullchain.pem $CERT_DIR/root.crt
+chmod -R 0700 ${CERT_DIR}
+chown -R postgres ${CERT_DIR}
+```
+
+Set up your ssl config to point to the new location
+```
+ssl = true
+ssl_cert_file = '/ssl_certificates/fullchain.pem'
+ssl_key_file = '/ssl_certificates/privkey.pem'
+ssl_ca_file = '/ssl_certificates/root.crt' 
+```
+
+Then connect to the database using the psql command:
+```
+psql "dbname=gis port=5432 user=docker host=localhost sslmode=verify-full  sslcert=/etc/letsencrypt/fullchain.pem sslkey=/etc/letsencrypt/privkey.pem sslrootcert=/etc/letsencrypt/root.crt"
+
+```
 
 ## Postgres Replication Setup
 
-The image supports replication out of the box. By default replication is turned off.
+The image supports replication out of the box. By default, replication is turned off.
 The two mains replication methods allowed are
 * Streaming replication
 * Logical replication
@@ -431,7 +514,7 @@ categorize an instance of the container as `master` or `replicant`. A `master`
 instance means that a particular container has a role as a single point of
 database write. A `replicant` instance means that a particular container will
 mirror database content from a designated master. This replication scheme allows
-us to sync databases. However a `replicant` is only for read-only transaction, thus
+us to sync databases. However, a `replicant` is only for read-only transaction, thus
 we can't write new data to it. The whole database cluster will be replicated.
 
 #### Database permissions
@@ -443,7 +526,7 @@ with the following SQL assuming the ${REPLICATION_USER} is called replicator
      ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
 
 
-**NB** You need to setup a strong password for replication otherwise the
+**NB** You need to set up a strong password for replication otherwise the
 default password for ${REPLICATION_USER} will default to `replicator`
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
@@ -490,7 +573,7 @@ command to run both master and slave services.
 make up
 ```
 
-To shutdown services, execute:
+To shut down services, execute:
 
 ```
 make down
@@ -567,7 +650,7 @@ Other docker images might have a few missing features than the ones in the
 latest image. We mainly do not back port changes to current stable images that are being 
 used in production. However, if you feel that some  changes included
 in the latest tagged version of the image are essential for the previous image
-you can cherry pick the changes against that specific branch and we will 
+you can cherry-pick the changes against that specific branch and we will 
 test and merge.
 
 ### Support

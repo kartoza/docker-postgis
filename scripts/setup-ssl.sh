@@ -17,7 +17,17 @@ chown -R postgres /tmp/ssl-copy
 rm -r /etc/ssl
 mv /tmp/ssl-copy /etc/ssl
 
-# Needed under debian, wasnt needed under ubuntu
+# Setup Permission for SSL Directory
+create_dir ${SSL_DIR}
+chmod -R 0700 ${SSL_DIR}
+chown -R postgres ${SSL_DIR}
+
+# Docker secrets for certificates
+file_env 'SSL_CERT_FILE'
+file_env 'SSL_KEY_FILE'
+file_env 'SSL_CA_FILE'
+
+# Needed under debian, wasn't needed under ubuntu
 mkdir -p ${PGSTAT_TMP}
 chmod 0777 ${PGSTAT_TMP}
 
