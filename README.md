@@ -9,15 +9,17 @@ Visit our page on the docker hub at: https://hub.docker.com/r/kartoza/postgis/
 There are a number of other docker postgis containers out there. This one
 differentiates itself by:
 
-* provides ssl support out of the box
+* provides ssl support out of the box and enforces ssl client connections
 * connections are restricted to the docker subnet
 * a default database 'gis' is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
-* replication support included
+* Streaming replication and logical replication support included (turned off by default)
 * Ability to create multiple database when you spin the database.
-* Enable multiple extensions in the database when setting it up
-* Gdal drivers automatically registered for pg raster
-* Support for out-of-db rasters
+* Ability to create multiple schemas when spinning the database.  
+* Enable multiple extensions in the database when setting it up.
+* Gdal drivers automatically registered for pg raster.
+* Support for out-of-db rasters.
+
 
 We will work to add more security features to this container in the future with
 the aim of making a PostGIS image that is ready to be used in a production
@@ -90,20 +92,28 @@ and `IMAGE_VARIANT` (=slim) which can be used to control the base image used
 (but it still needs to be Debian based and have PostgreSQL official apt repo).
 
 For example making Ubuntu 20.04 based build (for better arm64 support)
-First build the base image using instructions in the folder `base_build`  using the
-build script from [Kartoza base image builds](https://github.com/kartoza/docker-postgis/blob/develop/base_build/build.sh)
-
-Then build the `PostGIS Image` to match the base build
+Edit the `.env` file to change the build arguments 
 
 ```
-docker build --build-arg DISTRO=ubuntu --build-arg IMAGE_VERSION=focal --build-arg IMAGE_VARIANT="" -t kartoza/postgis .
+DISTRO=ubuntu 
+IMAGE_VERSION=focal 
+IMAGE_VARIANT="" 
 ```
+
+Then run the script
+
+```
+./build.sh
+```
+
 
 #### Locales
 
 By default, the image build will include **all** `locales` to cover any value for `locale` settings such as `DEFAULT_COLLATION`, `DEFAULT_CTYPE` or `DEFAULT_ENCODING`.
 
-You can safely delete all `locales` except for the ones you need in `scripts/locale.gen`. This will speed up the build considerably.
+You can use the build argument: `GENERATE_ALL_LOCALE=0`
+
+This will build with the default locate and speed up the build considerably.
 
 ### Environment variables
 
@@ -126,7 +136,7 @@ You need to specify different empty directory, like this
 -e DEFAULT_ENCODING="UTF8" \
 -e DEFAULT_COLLATION="id_ID.utf8" \
 -e DEFAULT_CTYPE="id_ID.utf8" \
--e --auth="md5" \
+-e PASSWORD_AUTHENTICATION="md5" \
 -e INITDB_EXTRA_ARGS="<some more initdb command args>"
 ```
 
@@ -140,7 +150,7 @@ If the container uses an existing cluster, it is ignored (for example, when the 
 * `DEFAULT_COLLATION`: cluster collation
 * `DEFAULT_CTYPE`: cluster ctype
 * `WAL_SEGSIZE`: WAL segsize option
-* `--auth` : PASSWORD AUTHENTICATION
+* `PASSWORD_AUTHENTICATION` : PASSWORD AUTHENTICATION
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
@@ -282,7 +292,8 @@ in conjunction with Docker secrets, as passwords can be loaded from `/run/secret
 
 For more information see [https://docs.docker.com/engine/swarm/secrets/](https://docs.docker.com/engine/swarm/secrets/).
 
-Currently, `POSTGRES_PASS`, `POSTGRES_USER` and `POSTGRES_DB` are supported.
+Currently, `POSTGRES_PASS`, `POSTGRES_USER`, `POSTGRES_DB`, `SSL_CERT_FILE`,
+`SSL_KEY_FILE`, `SSL_CA_FILE` are supported.
 
 
 ## Running the container
@@ -297,7 +308,7 @@ docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 
 ## Convenience docker-compose.yml
 
-For convenience we have provided a ``docker-compose.yml`` that will run a
+For convenience, we  provide a ``docker-compose.yml`` that will run a
 copy of the database image and also our related database backup image (see
 [https://github.com/kartoza/docker-pg-backup](https://github.com/kartoza/docker-pg-backup)).
 
@@ -337,11 +348,13 @@ sudo apt-get install postgresql-client-12
 
 
 In some instances users want to run some SQL scripts to populate the
-database. Since the environment variable POSTGRES_DB allows
+database. The environment variable POSTGRES_DB allows
 us to specify multiple database that can be created on startup.
 When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
-The SQL script will be executed against the gis database. Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
+The SQL script will be executed against the `gis` database. Additionally, a lock file is generated in
+`/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
+container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
 
 Currently, you can pass `.sql` , `.sql.gz` and `.sh` files as mounted volumes.
 
@@ -408,6 +421,14 @@ If you are using the default certificates provided by the image when connecting
 to the database you will need to set `SSL Mode` to any value besides
 `verify-full` or `verify-ca`
 
+The pg_hba.con will have entries like:
+```
+hostssl all all 0.0.0.0/0 scram-sha-256 clientcert=0
+```
+
+where  `PASSWORD_AUTHENTICATION=scram-sha-256` and `ALLOW_IP_RANGE=0.0.0.0/0`
+
+
 ### Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority
 
 When setting up the database you need to define the following environment variables.
@@ -427,6 +448,14 @@ On the host machine where you need to connect to the database you also
 need to copy the `SSL_CA_FILE` file to the location `/home/$user/.postgresql/root.crt`
 or define an environment variable pointing to location of the `SSL_CA_FILE`
 example: `PGSSLROOTCERT=/etc/letsencrypt/root.crt`
+
+The pg_hba.con will have entries like:
+```
+hostssl all all 0.0.0.0/0 cert
+```
+
+where `ALLOW_IP_RANGE=0.0.0.0/0`
+
 
 #### SSL connection inside the docker container using openssl certificates
 
@@ -485,7 +514,7 @@ categorize an instance of the container as `master` or `replicant`. A `master`
 instance means that a particular container has a role as a single point of
 database write. A `replicant` instance means that a particular container will
 mirror database content from a designated master. This replication scheme allows
-us to sync databases. However a `replicant` is only for read-only transaction, thus
+us to sync databases. However, a `replicant` is only for read-only transaction, thus
 we can't write new data to it. The whole database cluster will be replicated.
 
 #### Database permissions
@@ -497,7 +526,7 @@ with the following SQL assuming the ${REPLICATION_USER} is called replicator
      ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
 
 
-**NB** You need to setup a strong password for replication otherwise the
+**NB** You need to set up a strong password for replication otherwise the
 default password for ${REPLICATION_USER} will default to `replicator`
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
@@ -544,7 +573,7 @@ command to run both master and slave services.
 make up
 ```
 
-To shutdown services, execute:
+To shut down services, execute:
 
 ```
 make down
@@ -621,7 +650,7 @@ Other docker images might have a few missing features than the ones in the
 latest image. We mainly do not back port changes to current stable images that are being 
 used in production. However, if you feel that some  changes included
 in the latest tagged version of the image are essential for the previous image
-you can cherry pick the changes against that specific branch and we will 
+you can cherry-pick the changes against that specific branch and we will 
 test and merge.
 
 ### Support
