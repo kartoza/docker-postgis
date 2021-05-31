@@ -2,7 +2,9 @@
 
 source /scripts/env-data.sh
 
-SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
+create_dir ${EXTRA_CONF_DIR}
+
+SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
@@ -76,9 +78,9 @@ echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
 if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
-    # If it doesn't exists, copy from /settings directory if exists
-    if [[ -f /settings/extra.conf ]]; then
-      cp -f /settings/extra.conf ${ROOT_CONF}/extra.conf
+    # If it doesn't exists, copy from ${EXTRA_CONF_DIR} directory if exists
+    if [[ -f ${EXTRA_CONF_DIR}/extra.conf ]]; then
+      cp -f ${EXTRA_CONF_DIR}/extra.conf ${ROOT_CONF}/extra.conf
       echo "include 'extra.conf'" >> $CONF
     else
       # default value

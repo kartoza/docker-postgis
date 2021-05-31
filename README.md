@@ -276,6 +276,15 @@ You can alternatively mount an extra  config file into the setting's folder i.e
 docker run --name "postgis" -v /data/extra.conf:/settings/extra.conf -p 25432:5432 -d -t kartoza/postgis
 ```
 
+The setting folder storing the extra configuration is controlled by the env
+variable `EXTRA_CONF_DIR`
+
+Running the command can then be called:
+
+```
+docker run --name "postgis" -e EXTRA_CONF_DIR=/etc/conf_settings -v /data:/etc/conf_settings -p 25432:5432 -d -t kartoza/postgis
+```
+
 If you want to reinitialize the data directory from scratch, you need to do:
 
 1. Do backup, move data, etc. Any preparations before deleting your data directory.

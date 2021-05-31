@@ -96,7 +96,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
 done
 
 
-CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
+CRON_LOCKFILE="${EXTRA_CONF_DIR}/.cron_ext.lock"
 if [ ! -f "${CRON_LOCKFILE}" ]; then
 	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
 	touch ${CRON_LOCKFILE}

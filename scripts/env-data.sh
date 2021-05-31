@@ -81,6 +81,10 @@ fi
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
 fi
+
+if [ -z "${EXTRA_CONF_DIR}" ]; then
+  EXTRA_CONF_DIR=/settings
+fi
 # RECREATE_DATADIR flag default value
 # Always assume that we don't want to recreate datadir if not explicitly defined
 # For issue: https://github.com/kartoza/docker-postgis/issues/226
@@ -334,7 +338,7 @@ function restart_postgres {
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
 function entry_point_script {
-  SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
+  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
   if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" == true ]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
