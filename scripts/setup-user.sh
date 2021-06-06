@@ -14,9 +14,9 @@ source /scripts/env-data.sh
 
 # Only create credentials if this is a master database
 # Slave database will just mirror from master users
-echo "Setup postgres User:Password"
-echo "postgresql user: $POSTGRES_USER" > /tmp/PGPASSWORD.txt
-echo "postgresql password: $POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+
+
+POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
 
 # Check user already exists
 echo "Creating superuser $POSTGRES_USER"

@@ -3,6 +3,7 @@ POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
 POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+POSTGRES_INITDB_WALDIR="/opt/${POSTGRES_MAJOR_VERSION}/pg_waldir"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
@@ -67,13 +68,18 @@ then
     mkdir -p ${DATA_PATH}
 fi
 }
+
+
+if [ -z "${POSTGRES_INITDB_WALDIR}" ]; then
+	POSTGRES_INITDB_WALDIR=${POSTGRES_INITDB_WALDIR}
+fi
+
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
 fi
-if [ -z "${POSTGRES_PASS}" ]; then
-	POSTGRES_PASS=docker
-fi
+
+
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
@@ -81,6 +87,7 @@ fi
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
 fi
+
 # RECREATE_DATADIR flag default value
 # Always assume that we don't want to recreate datadir if not explicitly defined
 # For issue: https://github.com/kartoza/docker-postgis/issues/226
@@ -376,4 +383,24 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 		fi
 	done
 
+}
+
+function pg_password() {
+  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.pass.lock"
+  if [ -z "${POSTGRES_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
+	  POSTGRES_PASS=$(openssl rand -base64 15)
+	  touch ${SETUP_LOCKFILE}
+	  echo "$POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+	else
+	  echo "$POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+  fi
+
+}
+
+function advertise() {
+  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.bash.lock"
+  if [[ ! -f ${SETUP_LOCKFILE} ]]; then
+    echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
+    touch ${SETUP_LOCKFILE}
+  fi
 }

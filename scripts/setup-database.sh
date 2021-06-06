@@ -2,6 +2,8 @@
 
 source /scripts/env-data.sh
 
+POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
+
 # test if DATADIR has content
 # Do initialization if DATADIR is empty, or RECREATE_DATADIR is true
 if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]]; then
@@ -9,14 +11,12 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
     echo "Initializing Postgres Database at ${DATADIR}"
-    create_dir ${DATADIR}
+    create_dir ${DATADIR} ${POSTGRES_INITDB_WALDIR}
     rm -rf ${DATADIR}/*
-    chown -R postgres:postgres ${DATADIR}
+    chown -R postgres:postgres ${DATADIR} ${POSTGRES_INITDB_WALDIR}
     echo "Initializing with command:"
-    echo "postgres" > /tmp/superuser_pass.txt
-    command="$INITDB -U postgres --pwfile "/tmp/superuser_pass.txt" -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres --pwfile=<(echo "$POSTGRES_PASS") -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} --waldir=${POSTGRES_INITDB_WALDIR} ${INITDB_EXTRA_ARGS}"
     su - postgres -c "$command"
-    rm /tmp/superuser_pass.txt
 fi;
 
 # Set proper permissions
