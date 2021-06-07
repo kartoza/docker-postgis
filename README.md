@@ -306,6 +306,10 @@ To create a running container do:
 docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+**NB** If you do not pass the env variable `POSTGRES_PASS` a random password
+will be generated and will be visible from the logs or within the container in 
+`/tmp/PGPASSWORD.txt`
+
 ## Convenience docker-compose.yml
 
 For convenience, we  provide a ``docker-compose.yml`` that will run a
