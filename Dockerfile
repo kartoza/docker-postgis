@@ -128,7 +128,7 @@ RUN chmod +x *.sh
 # this dockerfile directly.
 RUN set -eux \
     && /scripts/setup.sh
-
+RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 VOLUME /var/lib/postgresql
 
 ENTRYPOINT /scripts/docker-entrypoint.sh

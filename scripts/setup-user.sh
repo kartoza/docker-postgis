@@ -27,6 +27,9 @@ if [ -z "$RESULT" ]; then
 fi
 su - postgres -c "psql postgres -c \"$COMMAND USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
 
+replication_password
+REPLICATION_PASS=$(cat /tmp/REPLPASSWORD.txt)
+
 echo "Creating replication user $REPLICATION_USER"
 RESULT_REPLICATION=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$REPLICATION_USER'\""`
 COMMANDS="ALTER"

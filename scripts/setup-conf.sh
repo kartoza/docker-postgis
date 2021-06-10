@@ -3,6 +3,7 @@
 source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.postgresql.conf.lock"
+create_dir /settings
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi

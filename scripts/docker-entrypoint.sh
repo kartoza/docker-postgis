@@ -15,7 +15,6 @@ source /scripts/setup-ssl.sh
 
 source /scripts/setup-pg_hba.sh
 # Function to add figlet
-advertise
 figlet -t "Kartoza Docker PostGIS"
 
 POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)

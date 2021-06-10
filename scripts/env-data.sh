@@ -20,6 +20,7 @@ PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
 
+
 # Read data from secrets into env variables.
 
 # usage: file_env VAR [DEFAULT]
@@ -386,7 +387,7 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 }
 
 function pg_password() {
-  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.pass.lock"
+  SETUP_LOCKFILE="/settings/.pgpasspass.lock"
   if [ -z "${POSTGRES_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
 	  POSTGRES_PASS=$(openssl rand -base64 15)
 	  touch ${SETUP_LOCKFILE}
@@ -397,10 +398,15 @@ function pg_password() {
 
 }
 
-function advertise() {
-  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.bash.lock"
-  if [[ ! -f ${SETUP_LOCKFILE} ]]; then
-    echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
-    touch ${SETUP_LOCKFILE}
+function replication_password() {
+  SETUP_LOCKFILE="/settings/.replicationpass.lock"
+  if [ -z "${REPLICATION_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
+	  REPLICATION_PASS=$(openssl rand -base64 15)
+	  touch ${SETUP_LOCKFILE}
+	  echo "$REPLICATION_PASS" >> /tmp/REPLPASSWORD.txt
+	else
+	  echo "$REPLICATION_PASS" >> /tmp/REPLPASSWORD.txt
   fi
+
 }
+
