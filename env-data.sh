@@ -86,3 +86,7 @@ fi
 if [ -z "${SSL_KEY_FILE}" ]; then
 	SSL_KEY_FILE='/etc/ssl/private/ssl-cert-snakeoil.key'
 fi
+
+if [ -z "$PASSWORD_AUTHENTICATION" ]; then
+    PASSWORD_AUTHENTICATION="md5"
+fi
