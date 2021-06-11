@@ -70,3 +70,19 @@ fi
 if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
+
+if [ -z "${SSL_DIR}" ]; then
+  SSL_DIR="/ssl_certificates"
+fi
+
+if [ -z "${PGSSLMODE}" ]; then
+	PGSSLMODE=require
+fi
+
+if [ -z "${SSL_CERT_FILE}" ]; then
+	SSL_CERT_FILE='/etc/ssl/certs/ssl-cert-snakeoil.pem'
+fi
+
+if [ -z "${SSL_KEY_FILE}" ]; then
+	SSL_KEY_FILE='/etc/ssl/private/ssl-cert-snakeoil.key'
+fi
