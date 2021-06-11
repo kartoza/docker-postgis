@@ -2,16 +2,40 @@
 
 source /env-data.sh
 
+SETUP_LOCKFILE="${ROOT_CONF}/.pg_hba.conf.lock"
+if [ -f "${SETUP_LOCKFILE}" ]; then
+	return 0
+fi
+
 # This script will setup pg_hba.conf
 
-# Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
-# Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16'
+# Reconfigure pg_hba if environment settings changed
+# cat ${ROOT_CONF}/pg_hba.conf.template > ${ROOT_CONF}/pg_hba.conf
 
-# moved from setup.sh. Delete if unnecessary
+
+if [[ "${FORCE_SSL}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+  PG_CONF_HOST='host'
+  CERT_AUTH=${PASSWORD_AUTHENTICATION}
+  CLIENT_VERIFY=
+else
+  # If user has their own cert we default to force auth using cert method
+  if  [[ "${SSL_KEY_FILE}" != '/etc/ssl/private/ssl-cert-snakeoil.key' ]]; then
+    PG_CONF_HOST='hostssl'
+    CERT_AUTH='cert'
+    CLIENT_VERIFY=
+  else
+    # Used when using the default ssl certs
+    PG_CONF_HOST='hostssl'
+    CERT_AUTH=${PASSWORD_AUTHENTICATION}
+    CLIENT_VERIFY='clientcert=0'
+  fi
+
+fi
+
 # Restrict subnet to docker private network
-echo "host    all             all             172.0.0.0/8               md5" >> $ROOT_CONF/pg_hba.conf
-# And allow access from DockerToolbox / Boottodocker on OSX or any other host in this range
-#echo "host    all             all             192.168.0.0/16               md5" >> $ROOT_CONF/pg_hba.conf
+echo "$PG_CONF_HOST   all             all             172.0.0.0/8              ${CERT_AUTH}   $CLIENT_VERIFY" >> $ROOT_CONF/pg_hba.conf
+# And allow access from DockerToolbox / Boot to docker on OSX
+echo "$PG_CONF_HOST    all             all             192.168.0.0/16               ${CERT_AUTH}    $CLIENT_VERIFY" >> $ROOT_CONF/pg_hba.conf
 
 if [ "$ALLOW_IP_RANGE" ]
 then
@@ -23,7 +47,7 @@ fi
 # messes it up
 if [ "$POSTGRES_PASS" ]; then
 	pass="PASSWORD '$POSTGRES_PASS'"
-	authMethod=md5
+	authMethod=${CERT_AUTH}
 else
 	# The - option suppresses leading tabs but *not* spaces. :)
 	cat >&2 <<-'EOWARN'
