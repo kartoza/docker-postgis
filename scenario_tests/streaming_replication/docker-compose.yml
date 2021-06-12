@@ -22,6 +22,7 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
 
       # We can specify optional credentials
+      POSTGRES_PASS: 'docker'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
