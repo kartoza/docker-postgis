@@ -62,6 +62,7 @@ services:
       # REPLICATE_FROM options accepts domain-name or IP address
       # with this in mind, you can also put docker service name, because it
       # will be resolved as host name.
+      POSTGRES_PASS: 'docker'
       REPLICATE_FROM: 'pg-master'
       REPLICATION: 'true'
 
