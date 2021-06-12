@@ -11,7 +11,8 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
     echo "Initializing Postgres Database at ${DATADIR}"
-    create_dir ${DATADIR} ${POSTGRES_INITDB_WALDIR}
+    create_dir ${POSTGRES_INITDB_WALDIR}
+    create_dir ${DATADIR}
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres ${DATADIR} ${POSTGRES_INITDB_WALDIR}
     echo "Initializing with command:"
