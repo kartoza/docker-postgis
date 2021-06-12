@@ -1,0 +1,43 @@
+
+version: '2.1'
+
+volumes:
+  pg-publisher-data-dir:
+  pg-subscriber-data-dir:
+
+
+services:
+  pg-publisher:
+    image: kartoza/postgis:13.0
+    restart: 'always'
+    volumes:
+      - pg-publisher-data-dir:/var/lib/postgresql
+      - ./scripts/setup-publisher.sql:/docker-entrypoint-initdb.d/setup-publisher.sql
+    environment:
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+      REPLICATION_USER: 'replicator'
+      REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
+      WAL_LEVEL: 'logical'
+    ports:
+      - "7777:5432"
+    healthcheck:
+      test: "exit 0"
+
+  pg-subscriber:
+    image: kartoza/postgis:13.0
+    restart: 'always'
+    volumes:
+      - pg-subscriber-data-dir:/var/lib/postgresql
+      - ./scripts/setup-subscriber.sql:/docker-entrypoint-initdb.d/setup-subscriber.sql
+    environment:
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+      REPLICATION_USER: 'replicator'
+      REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
+      WAL_LEVEL: 'logical'
+    depends_on:
+        pg-publisher:
+          condition: service_healthy
+    ports:
+      - "7776:5432"

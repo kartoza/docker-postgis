@@ -1,2 +1,8 @@
-sample
-docs
+# Ignore everything except selected directory
+**
+
+!base_build
+base_build/README.md
+
+!scripts
+!scenario_tests/utils/requirements.txt

@@ -4,7 +4,7 @@ source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.ssl.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
-  return 0
+	return 0
 fi
 
 # This script will setup default SSL config
@@ -39,7 +39,7 @@ ssl_key_file = '${SSL_KEY_FILE}'
 EOF
 
 if [ ! -z "${SSL_CA_FILE}" ]; then
-  echo "ssl_ca_file = '${SSL_CA_FILE}'                       # (change requires restart)" >> ${ROOT_CONF}/ssl.conf
+	echo "ssl_ca_file = '${SSL_CA_FILE}'                       # (change requires restart)" >> ${ROOT_CONF}/ssl.conf
 fi
 echo "include 'ssl.conf'" >> $CONF
 # Put lock file to make sure conf was not reinitialized

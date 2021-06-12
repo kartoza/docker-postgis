@@ -1,0 +1,110 @@
+name: deploy-image
+on:
+  workflow_dispatch:
+#    inputs:
+#      distro:
+#        description: Base image distro
+#        required: true
+#        default: debian
+#      imageVersion:
+#        description: Base distro image version/release
+#        required: true
+#        default: bullseye
+#      imageVariant:
+#        description: Base image variant
+#        required: true
+#        default: slim
+  workflow_run:
+    workflows:
+      - build-latest
+    branches:
+      - develop
+    types:
+      - completed
+jobs:
+  deploy-image:
+    runs-on: ubuntu-latest
+    env:
+      latest-ref: refs/heads/develop
+    strategy:
+      matrix:
+        postgresMajorVersion:
+          - 13
+        postgisMajorVersion:
+          - 3
+        postgisMinorRelease:
+          - 1
+        include:
+          - distro: debian
+            imageVersion: bullseye
+            imageVariant: slim
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Get build cache
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          # Build inputs are:
+          # - Dockerfile recipe
+          # - docker-compose.build.yml
+          # - build args (.example.env)
+          # - base_build directory
+          # - scripts directory
+          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-${{ github.sha }}
+          restore-keys: |
+            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Build base image
+        id: docker_build_base
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:base
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
+          build-args: |
+            DISTRO=${{ matrix.distro }}
+            IMAGE_VERSION=${{ matrix.imageVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            GENERATE_ALL_LOCALE=1
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          target: postgis-base
+
+      - name: Build prod image
+        id: docker_build_prod
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: Dockerfile
+          push: true
+          tags: |
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
+          build-args: |
+            DISTRO=${{ matrix.distro }}
+            IMAGE_VERSION=${{ matrix.imageVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            GENERATE_ALL_LOCALE=1
+            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
+            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          target: postgis-prod
