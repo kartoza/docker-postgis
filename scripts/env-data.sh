@@ -253,10 +253,6 @@ if [ -z "${REPLICATION_USER}" ]; then
   REPLICATION_USER=replicator
 fi
 
-if [ -z "${REPLICATION_PASS}" ]; then
-  REPLICATION_PASS=replicator
-fi
-
 
 if [ -z "$IGNORE_INIT_HOOK_LOCKFILE" ]; then
     IGNORE_INIT_HOOK_LOCKFILE=false
