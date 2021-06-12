@@ -7,7 +7,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:9.6-2.4
+    image: kartoza/postgis:13-3.1
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -18,7 +18,7 @@ services:
       - POSTGRES_PASS=docker
       - ALLOW_IP_RANGE=0.0.0.0/0
       # Add extensions you need to be enabled by default in the DB. Default are the five specified below
-      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,pgrouting
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
     ports:
       - 25432:5432
     restart: on-failure
@@ -26,12 +26,10 @@ services:
       test: "exit 0"
 
   dbbackups:
-    image: kartoza/pg-backup:9.6
+    image: kartoza/pg-backup:13.0
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
-    links:
-      - db:db
     environment:
       - DUMPPREFIX=PG_db
       - POSTGRES_USER=docker

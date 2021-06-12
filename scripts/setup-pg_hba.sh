@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /env-data.sh
+source /scripts/env-data.sh
 
 SETUP_LOCKFILE="${ROOT_CONF}/.pg_hba.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
@@ -10,7 +10,7 @@ fi
 # This script will setup pg_hba.conf
 
 # Reconfigure pg_hba if environment settings changed
-# cat ${ROOT_CONF}/pg_hba.conf.template > ${ROOT_CONF}/pg_hba.conf
+cat ${ROOT_CONF}/pg_hba.conf.template > ${ROOT_CONF}/pg_hba.conf
 
 
 if [[ "${FORCE_SSL}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
@@ -37,17 +37,21 @@ echo "$PG_CONF_HOST   all             all             172.0.0.0/8              $
 # And allow access from DockerToolbox / Boot to docker on OSX
 echo "$PG_CONF_HOST    all             all             192.168.0.0/16               ${CERT_AUTH}    $CLIENT_VERIFY" >> $ROOT_CONF/pg_hba.conf
 
-if [ "$ALLOW_IP_RANGE" ]
+# Custom IP range via docker run -e (https://docs.docker.com/engine/reference/run/#env-environment-variables)
+# Usage is: docker run [...] -e ALLOW_IP_RANGE='192.168.0.0/16'
+if [[ -n "$ALLOW_IP_RANGE" ]]
 then
 	echo "Add rule to pg_hba: $ALLOW_IP_RANGE"
- 	echo "host    all             all             $ALLOW_IP_RANGE              md5" >> $ROOT_CONF/pg_hba.conf
+ 	echo "$PG_CONF_HOST   all             all             $ALLOW_IP_RANGE              ${CERT_AUTH}   $CLIENT_VERIFY" >> ${ROOT_CONF}/pg_hba.conf
 fi
 
 # check password first so we can output the warning before postgres
 # messes it up
-if [ "$POSTGRES_PASS" ]; then
+
+if [[ "$POSTGRES_PASS" ]]; then
 	pass="PASSWORD '$POSTGRES_PASS'"
 	authMethod=${CERT_AUTH}
+
 else
 	# The - option suppresses leading tabs but *not* spaces. :)
 	cat >&2 <<-'EOWARN'
@@ -68,9 +72,12 @@ else
 	authMethod=trust
 fi
 
-if [ -z "$REPLICATE_FROM" ]; then
+if [[ -z "$REPLICATE_FROM" ]]; then
 	# if env not set, then assume this is master instance
 	# add rules to pg_hba.conf to allow replication from all
-	echo "Add rule to pg_hba: replication user"
-	echo "host replication all 0.0.0.0/0 $authMethod" >> $ROOT_CONF/pg_hba.conf
+	echo "Add rule to pg_hba: replication ${REPLICATION_USER} "
+	echo "$PG_CONF_HOST   replication            ${REPLICATION_USER}             ${ALLOW_IP_RANGE}          $authMethod   $CLIENT_VERIFY" >> ${ROOT_CONF}/pg_hba.conf
 fi
+
+# Put lock file to make sure conf was not reinitialized
+touch ${SETUP_LOCKFILE}
