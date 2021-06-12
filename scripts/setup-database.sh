@@ -14,7 +14,7 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]
     chown -R postgres:postgres ${DATADIR}
     echo "Initializing with command:"
     echo "postgres" > /tmp/superuser_pass.txt
-    command="$INITDB -U postgres --pwfile "/tmp/superuser_pass.txt" -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres --pwfile "/tmp/superuser_pass.txt" -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE}  --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_EXTRA_ARGS}"
     su - postgres -c "$command"
     rm /tmp/superuser_pass.txt
 fi;
@@ -23,7 +23,7 @@ fi;
 # needs to be done as root:
 create_dir ${WAL_ARCHIVE}
 chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
-chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+
 
 # test database existing
 trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
@@ -98,9 +98,13 @@ done
 
 CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
 if [ ! -f "${CRON_LOCKFILE}" ]; then
-	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
+	PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c ''' CREATE EXTENSION IF NOT EXISTS pg_cron VERSION "1.0" cascade;'''
+	PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c "ALTER EXTENSION pg_cron UPDATE;"
+
 	touch ${CRON_LOCKFILE}
 fi
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l 2>&1"
+
+

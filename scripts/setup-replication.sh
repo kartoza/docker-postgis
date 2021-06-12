@@ -12,7 +12,7 @@ chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
 chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 
 
-if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
+if [[ "$WAL_LEVEL" == 'hot_standby' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   # No content yet - but this is a slave database
   if [ -z "${REPLICATE_FROM}" ]; then
     echo "You have not set REPLICATE_FROM variable."
@@ -33,11 +33,24 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
       streaming_replication
     fi
  fi
+
+# Setup recovery.conf, a configuration file for slave
+cat > ${DATADIR}/recovery.conf <<EOF
+standby_mode = on
+primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${POSTGRES_USER} password=${POSTGRES_PASS} sslmode=${PGSSLMODE}'
+trigger_file = '${PROMOTE_FILE}'
+#restore_command = 'cp /opt/archive/%f "%p"' Use if you are syncing the wal segments from master
+EOF
+# Setup permissions. Postgres won't start without this.
+chown postgres ${DATADIR}/recovery.conf
+chmod 600 ${DATADIR}/recovery.conf
+
  # Promote to master if desired
 if [[ ! -z "${PROMOTE_MASTER}" ]]; then
 	touch ${PROMOTE_FILE}
 fi
 
 fi
+
 
 

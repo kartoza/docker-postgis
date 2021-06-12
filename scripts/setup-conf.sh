@@ -26,13 +26,10 @@ maintenance_work_mem = ${MAINTAINANCE_WORK_MEM}
 wal_buffers = ${WAL_BUFFERS}
 random_page_cost = 2.0
 xmloption = 'document'
-max_parallel_maintenance_workers = ${MAINTAINANCE_WORKERS}
-max_parallel_workers = ${MAX_WORKERS}
+password_encryption = on
 shared_preload_libraries = '${SHARED_PRELOAD_LIBRARIES}'
 cron.database_name = '${SINGLE_DB}'
-password_encryption= '${PASSWORD_AUTHENTICATION}'
 timezone='${TIMEZONE}'
-cron.use_background_workers = on
 EOF
 
 echo "include 'postgis.conf'" >> $CONF
@@ -43,11 +40,8 @@ if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; the
 cat > ${ROOT_CONF}/logical_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
-max_logical_replication_workers = ${MAX_LOGICAL_REPLICATION_WORKERS}
-max_sync_workers_per_subscription = ${MAX_SYNC_WORKERS_PER_SUBSCRIPTION}
 EOF
 echo "include 'logical_replication.conf'" >> $CONF
 fi
@@ -59,18 +53,12 @@ cat > ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 archive_mode = ${ARCHIVE_MODE}
 archive_command = '${ARCHIVE_COMMAND}'
-restore_command = '${RESTORE_COMMAND}'
-archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
-wal_keep_size = ${PG_WAL_KEEP_SIZE}
+wal_keep_segments = $PG_WAL_KEEP_SEGMENTS
 min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 hot_standby = on
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
-primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} sslmode=${PGSSLMODE}'
-recovery_target_timeline=${TARGET_TIMELINE}
-recovery_target_action=${TARGET_ACTION}
-promote_trigger_file = '${PROMOTE_FILE}'
 EOF
 echo "include 'streaming_replication.conf'" >> $CONF
 fi

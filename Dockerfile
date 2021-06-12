@@ -64,7 +64,7 @@ FROM postgis-base AS postgis-prod
 
 # Reset ARG for version
 ARG IMAGE_VERSION
-ARG POSTGRES_MAJOR_VERSION=13
+ARG POSTGRES_MAJOR_VERSION=9.6
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=1
 
@@ -90,7 +90,7 @@ RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     &&  apt-get update \
     && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
-        postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
+        postgresql-common  postgresql-contrib-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
         netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \

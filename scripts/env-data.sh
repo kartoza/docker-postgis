@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+
 POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
 POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
@@ -67,6 +68,8 @@ then
     mkdir -p ${DATA_PATH}
 fi
 }
+
+
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
@@ -77,6 +80,7 @@ fi
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
+
 # If datadir is not defined, then use this
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
@@ -162,7 +166,7 @@ fi
 
 if [ -z "${WAL_LEVEL}" ]; then
   # https://www.postgresql.org/docs/12/runtime-config-wal.html
-	WAL_LEVEL=replica
+	WAL_LEVEL=hot_standby
 fi
 
 if [ -z "${WAL_SIZE}" ]; then
@@ -263,7 +267,11 @@ if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
-    PASSWORD_AUTHENTICATION="scram-sha-256"
+    PASSWORD_AUTHENTICATION="md5"
+fi
+
+if [ -z "${PG_WAL_KEEP_SEGMENTS}" ]; then
+	PG_WAL_KEEP_SEGMENTS=100
 fi
 
 if [ -z "${ALL_DATABASES}" ]; then
