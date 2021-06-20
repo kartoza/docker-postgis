@@ -359,7 +359,7 @@ container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scrip
 Currently, you can pass `.sql`, `.sql.gz` and `.sh` files as mounted volumes.
 
 ```shell
-docker run -d -v ./setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql kartoza/postgis
+docker run -d -v `pwd`/setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql kartoza/postgis
 ```
 
 ## Storing data on the host rather than the container.
