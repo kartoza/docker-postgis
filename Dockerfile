@@ -20,7 +20,8 @@ RUN set -eux \
         apt-transport-https curl gettext \
     && dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin
+RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin \
+    figlet toilet
 
 
 
@@ -127,7 +128,7 @@ RUN chmod +x *.sh
 # this dockerfile directly.
 RUN set -eux \
     && /scripts/setup.sh
-
+RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 VOLUME /var/lib/postgresql
 
 ENTRYPOINT /scripts/docker-entrypoint.sh

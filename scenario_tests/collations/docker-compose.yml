@@ -20,6 +20,7 @@ services:
       DEFAULT_CTYPE: ${DEFAULT_COLLATION:-id_ID.utf8}
       ALLOW_IP_RANGE: '0.0.0.0/0'
       TEST_CLASS: test_collation.TestCollationDefault
+      POSTGRES_PASS: 'docker'
     ports:
       - "7777:5432"
     healthcheck:
@@ -45,6 +46,7 @@ services:
       DEFAULT_CTYPE: ${DEFAULT_COLLATION:-id_ID.utf8}
       ALLOW_IP_RANGE: '0.0.0.0/0'
       TEST_CLASS: test_collation.TestCollationInitialization
+      POSTGRES_PASS: 'docker'
     ports:
       - "7776:5432"
     healthcheck:

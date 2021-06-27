@@ -307,6 +307,10 @@ To create a running container do:
 docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
+**Note** If you do not pass the env variable `POSTGRES_PASS` a random password
+will be generated and will be visible from the logs or within the container in 
+`/tmp/PGPASSWORD.txt`
+
 ## Convenience docker-compose.yml
 
 For convenience, we  provide a ``docker-compose.yml`` that will run a
@@ -506,6 +510,9 @@ replicant is read-only.
 docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:13.0
 ```
 
+**Note** If you do not pass the env variable `REPLICATION_PASS` a random password
+will be generated and will be visible from the logs or within the container in 
+`/tmp/REPLPASSWORD.txt`
 
 ![qgis](https://user-images.githubusercontent.com/178003/37755610-dd3b774a-2dae-11e8-9fa1-4877e2034675.gif)
 
