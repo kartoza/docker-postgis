@@ -3,7 +3,7 @@ POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
 POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
-POSTGRES_INITDB_WALDIR="/opt/postgresql/${POSTGRES_MAJOR_VERSION}/pg_waldir"
+DEFAULT_INITDB_WALDIR="/opt/postgresql/${POSTGRES_MAJOR_VERSION}/pg_waldir"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
@@ -72,7 +72,7 @@ fi
 
 
 if [ -z "${POSTGRES_INITDB_WALDIR}" ]; then
-	POSTGRES_INITDB_WALDIR=${POSTGRES_INITDB_WALDIR}
+	POSTGRES_INITDB_WALDIR=${DEFAULT_INITDB_WALDIR}
 fi
 
 # Make sure we have a user set up
