@@ -387,9 +387,9 @@ function pg_password() {
   if [ -z "${POSTGRES_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
 	  POSTGRES_PASS=$(openssl rand -base64 15)
 	  touch ${SETUP_LOCKFILE}
-	  echo "$POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
 	else
-	  echo "$POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
   fi
 
 }
@@ -399,9 +399,9 @@ function replication_password() {
   if [ -z "${REPLICATION_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
 	  REPLICATION_PASS=$(openssl rand -base64 15)
 	  touch ${SETUP_LOCKFILE}
-	  echo "$REPLICATION_PASS" >> /tmp/REPLPASSWORD.txt
+	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
 	else
-	  echo "$REPLICATION_PASS" >> /tmp/REPLPASSWORD.txt
+	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
   fi
 
 }

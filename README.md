@@ -135,7 +135,9 @@ You need to specify different empty directory, like this
 -e DEFAULT_COLLATION="id_ID.utf8" \
 -e DEFAULT_CTYPE="id_ID.utf8" \
 -e PASSWORD_AUTHENTICATION="md5" \
--e INITDB_EXTRA_ARGS="<some more initdb command args>"
+-e INITDB_EXTRA_ARGS="<some more initdb command args>" \
+-v pgwal-volume:/opt/postgres/pg_wal \
+-e POSTGRES_INITDB_WALDIR=/opt/postgres/pg_wal
 ```
 
 The containers will use above parameters to initialize a new db cluster in the
