@@ -4,7 +4,7 @@ source /scripts/env-data.sh
 
 create_dir ${EXTRA_CONF_DIR}
 
-SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.postgresql.conf.lock"
+SETUP_LOCKFILE="${CONF_LOCKFILE_DIR}/.postgresql.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi

@@ -6,7 +6,7 @@ POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
 
 # test if DATADIR has content
 # Do initialization if DATADIR is empty, or RECREATE_DATADIR is true
-if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" == 'TRUE' ]]; then
+if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][Rr][Uu][Ee] ]]; then
     # Only attempt reinitializations if ${RECREATE_DATADIR} is true
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
@@ -61,10 +61,11 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
+            su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling \"${ext}\" in the database ${db}"
                 if [[ ${ext} = 'pg_cron' ]]; then
-                  echo " pg_cron doesn't need to be installed"
+                  echo " pg_cron is only installed in a single DB"
                 else
                   su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' $db"
                 fi
@@ -96,12 +97,6 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
     done
 done
 
-
-CRON_LOCKFILE="${EXTRA_CONF_DIR}/.cron_ext.lock"
-if [ ! -f "${CRON_LOCKFILE}" ]; then
-	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
-	touch ${CRON_LOCKFILE}
-fi
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l 2>&1"

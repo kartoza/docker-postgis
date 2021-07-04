@@ -4,10 +4,13 @@ POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 DEFAULT_INITDB_WALDIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/pg_waldir"
+DEFAULT_SCRIPTS_LOCKFILE_DIR='/docker-entrypoint.initdb.d'
+DEFAULT_CONF_LOCKFILE_DIR="/settings"
+DEFAULT_EXTRA_CONF_DIR="/settings"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
-WAL_ARCHIVE="/opt/archivedir"
+DEFAULT_WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
@@ -75,11 +78,26 @@ if [ -z "${POSTGRES_INITDB_WALDIR}" ]; then
 	POSTGRES_INITDB_WALDIR=${DEFAULT_INITDB_WALDIR}
 fi
 
+if [ -z "${WAL_ARCHIVE}" ]; then
+	WAL_ARCHIVE=${DEFAULT_WAL_ARCHIVE}
+fi
+
+if [ -z "${SCRIPTS_LOCKFILE_DIR}" ]; then
+	SCRIPTS_LOCKFILE_DIR=${DEFAULT_SCRIPTS_LOCKFILE_DIR}
+fi
+
+if [ -z "${CONF_LOCKFILE_DIR}" ]; then
+	CONF_LOCKFILE_DIR=${DEFAULT_CONF_LOCKFILE_DIR}
+fi
+
+if [ -z "${EXTRA_CONF_DIR}" ]; then
+  EXTRA_CONF_DIR=${DEFAULT_EXTRA_CONF_DIR}
+fi
+
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
 fi
-
 
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
@@ -87,10 +105,6 @@ fi
 # If datadir is not defined, then use this
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
-fi
-
-if [ -z "${EXTRA_CONF_DIR}" ]; then
-  EXTRA_CONF_DIR=/settings
 fi
 
 # RECREATE_DATADIR flag default value
@@ -342,9 +356,9 @@ function restart_postgres {
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
 function entry_point_script {
-  SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.entry_point.lock"
+  SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
-  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" == true ]; then
+  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}

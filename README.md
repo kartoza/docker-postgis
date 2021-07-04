@@ -31,7 +31,7 @@ just getting started with docker, PostGIS and QGIS, we really recommend that you
 
 ## Tagged versions
 
-The following convention is used for tagging the images we build:
+We use the following convention to tag images we build:
 
 kartoza/postgis:[postgres_major_version]-[postgis-point-releases]
 
@@ -279,10 +279,11 @@ You can alternatively mount an extra  config file into the setting's folder i.e
 docker run --name "postgis" -v /data/extra.conf:/settings/extra.conf -p 25432:5432 -d -t kartoza/postgis
 ```
 
-The setting folder storing the extra configuration is controlled by the env
-variable `EXTRA_CONF_DIR`
+The `/setting` folder stores the extra configuration and is copied to the proper directory
+on runtime. The environment variable `EXTRA_CONF_DIR` controls the location of the mounted
+folder.
 
-Running the command can then be called:
+Then proceed to run the following:
 
 ```
 docker run --name "postgis" -e EXTRA_CONF_DIR=/etc/conf_settings -v /data:/etc/conf_settings -p 25432:5432 -d -t kartoza/postgis
@@ -294,11 +295,25 @@ If you want to reinitialize the data directory from scratch, you need to do:
 2. Set environment variables `RECREATE_DATADIR=TRUE`. Restart the service
 3. The service will delete your `DATADIR` directory and start reinitializing your data directory from scratch.
 
+## Lockfile
+
+During container startup, some lockfile are generated which prevent reinitialisation of some
+settings. These lockfile are by default stored in the `/settings` folder, but a user can control
+where to store these files using the environment variable `CONF_LOCKFILE_DIR` Example
+
+```
+-e /opt/conf_lockfiles \
+-v /data/lock_files:/opt/conf_lockfiles 
+```
+
+**Note** If you change the environment variable to point to another location when you restart the container
+the settings are reinitialized again.
+
 ## Docker secrets
 
 To avoid passing sensitive information in environment variables, `_FILE` can be appended to
-some of the variables to read from files present in the container. This is particularly useful
-in conjunction with Docker secrets, as passwords can be loaded from `/run/secrets/<secret_name>` e.g.:
+some environment variables to read from files present in the container. This is particularly useful
+in conjunction with Docker secrets, as passwords can be loaded from `/run/secrets/<secret_name>` Example:
 
 * `-e POSTGRES_PASS_FILE=/run/secrets/<pg_pass_secret>`
 
@@ -367,9 +382,21 @@ database. The environment variable POSTGRES_DB allows
 us to specify multiple database that can be created on startup.
 When running scripts they will only be executed against the
 first database ie POSTGRES_DB=gis,data,sample
-The SQL script will be executed against the `gis` database. Additionally, a lock file is generated in
-`/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
-container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
+The SQL script will be executed against the `gis` database. 
+Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
+container startup. 
+
+Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start. This is 
+useful for example in testing environments where you are trying to create users in the DB using SQL or 
+a bash script.
+
+By default, the lockfile is generated in `/docker-entrypoint-initdb.d` but it can be overwritten by
+passing the environment variable `SCRIPTS_LOCKFILE_DIR` which can point to another location i.e
+
+``` 
+-e SCRIPTS_LOCKFILE_DIR=/data/ \
+-v /data:/data
+```
 
 Currently, you can pass `.sql`, `.sql.gz` and `.sh` files as mounted volumes.
 
