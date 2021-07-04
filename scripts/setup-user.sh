@@ -14,9 +14,9 @@ source /scripts/env-data.sh
 
 # Only create credentials if this is a master database
 # Slave database will just mirror from master users
-echo "Setup postgres User:Password"
-echo "postgresql user: $POSTGRES_USER" > /tmp/PGPASSWORD.txt
-echo "postgresql password: $POSTGRES_PASS" >> /tmp/PGPASSWORD.txt
+
+
+POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
 
 # Check user already exists
 echo "Creating superuser $POSTGRES_USER"
@@ -26,6 +26,9 @@ if [ -z "$RESULT" ]; then
 	COMMAND="CREATE"
 fi
 su - postgres -c "psql postgres -c \"$COMMAND USER $POSTGRES_USER WITH SUPERUSER ENCRYPTED PASSWORD '$POSTGRES_PASS';\""
+
+replication_password
+REPLICATION_PASS=$(cat /tmp/REPLPASSWORD.txt)
 
 echo "Creating replication user $REPLICATION_USER"
 RESULT_REPLICATION=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$REPLICATION_USER'\""`

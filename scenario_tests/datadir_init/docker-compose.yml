@@ -14,6 +14,7 @@ services:
     environment:
       # Default usage, no datadir location defined
       TEST_CLASS: TestDefault
+      POSTGRES_PASS: 'docker'
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -31,6 +32,7 @@ services:
       # Tell the new location
       TEST_CLASS: TestNew
       DATADIR: /opt/mypostgis/data
+      POSTGRES_PASS: 'docker'
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -50,6 +52,7 @@ services:
       DEFAULT_ENCODING: ${DEFAULT_ENCODING:-UTF-8}
       DEFAULT_COLLATION: ${DEFAULT_COLLATION:-id_ID.utf8}
       DEFAULT_CTYPE: ${DEFAULT_COLLATION:-id_ID.utf8}
+      POSTGRES_PASS: 'docker'
     healthcheck:
       interval: 60s
       timeout: 30s

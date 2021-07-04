@@ -17,6 +17,7 @@ services:
       - ../utils:/lib/utils
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
+      POSTGRES_PASS: 'docker'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
@@ -43,6 +44,7 @@ services:
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       WAL_LEVEL: 'logical'
+      POSTGRES_PASS: 'docker'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
