@@ -2,7 +2,7 @@
 
 source /scripts/env-data.sh
 
-SETUP_LOCKFILE="${ROOT_CONF}/.pg_hba.conf.lock"
+SETUP_LOCKFILE="${CONF_LOCKFILE_DIR}/.pg_hba.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
