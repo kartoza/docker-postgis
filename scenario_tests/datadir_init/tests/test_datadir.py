@@ -1,6 +1,7 @@
 import unittest
 import os
 from utils.utils import DBConnection
+from pathlib import Path
 
 
 class TestCollationBase(unittest.TestCase):
@@ -78,3 +79,14 @@ class TestRecreate(TestCollationBase):
             self.assertEqual(dbcollate, os.environ.get('DEFAULT_COLLATION'))
             self.assertEqual(dbctype, os.environ.get('DEFAULT_CTYPE'))
 
+
+class TestCustomWALdir(TestCollationBase):
+
+    def test_check_pg_wal_symlink(self):
+        self.db.conn.autocommit = True
+        postgres_initdb_waldir = os.environ.get('POSTGRES_INITDB_WALDIR')
+        with self.db.cursor() as c:
+            datadir_location = self.fetch_datadir_location(c)
+            pg_wal_symlink = os.path.join(datadir_location, 'pg_wal')
+            self.assertTrue(
+                Path(pg_wal_symlink).resolve().match(postgres_initdb_waldir))

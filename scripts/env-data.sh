@@ -3,7 +3,9 @@ POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
 POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
-DEFAULT_INITDB_WALDIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/pg_waldir"
+# Commented for documentation. You can specify the location of
+# pg_wal directory/volume using the following environment variable:
+# POSTGRES_INITDB_WALDIR (default value is unset)
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
@@ -70,10 +72,6 @@ then
 fi
 }
 
-
-if [ -z "${POSTGRES_INITDB_WALDIR}" ]; then
-	POSTGRES_INITDB_WALDIR=${DEFAULT_INITDB_WALDIR}
-fi
 
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then

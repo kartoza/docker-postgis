@@ -6,7 +6,7 @@ set -e
 source ../test-env.sh
 
 # Run service
-docker-compose up -d
+docker-compose up -d pg-default pg-new pg-recreate
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   docker-compose logs -f &
@@ -27,5 +27,8 @@ for service in "${services[@]}"; do
   docker-compose exec -T $service /bin/bash /tests/test.sh
 
 done
+
+# special meta test to check the setup
+bash ./test_custom_waldir.sh
 
 docker-compose down -v

@@ -44,19 +44,6 @@ jobs:
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
-      - name: Get build cache
-        uses: actions/cache@v2
-        with:
-          path: /tmp/.buildx-cache
-          # Build inputs are:
-          # - Dockerfile recipe
-          # - docker-compose.build.yml
-          # - build args (.example.env)
-          # - base_build directory
-          # - scripts directory
-          key: buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-${{ github.sha }}
-          restore-keys: |
-            buildx-${{ hashFiles('Dockerfile', 'docker-compose.build.yml', '.example.env', 'base_build', 'scripts', 'scenario_tests/utils/requirements.txt') }}-
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
@@ -82,8 +69,11 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: |
+            type=gha,scope=test
+            type=gha,scope=prod
+            type=gha,scope=base
+          cache-to: type=gha,scope=base
           target: postgis-base
 
       - name: Build prod image
@@ -105,6 +95,9 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          cache-from: |
+            type=gha,scope=test
+            type=gha,scope=prod
+            type=gha,scope=base
+          cache-to: type=gha,scope=prod
           target: postgis-prod
