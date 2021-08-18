@@ -101,7 +101,7 @@ sleep 60
 warning_text="Can't proceed because \"/opt/mypostgis/data/pg_wal\" directory is empty."
 while true; do
     if [[ -n "$(docker-compose logs $service | grep 'Error')" && \
-        -n "$(docker-compose logs $service | grep \"$warning_text\")" ]]; then
+        -n "$(docker-compose logs $service | grep "$warning_text")" ]]; then
         break
     fi
     sleep 5

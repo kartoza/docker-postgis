@@ -112,7 +112,7 @@ services:
       - ./tests:/tests
       - ../utils:/lib/utils
     environment:
-      TEST_CLASS: TestCustomWALdir
+      TEST_CLASS: TestCustomWALdirNotMatch
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/waldir
       POSTGRES_PASS: 'docker'
@@ -132,7 +132,7 @@ services:
       - ./tests:/tests
       - ../utils:/lib/utils
     environment:
-      TEST_CLASS: TestCustomWALdir
+      TEST_CLASS: TestCustomWALdirNotMatch
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/waldir
       POSTGRES_PASS: 'docker'

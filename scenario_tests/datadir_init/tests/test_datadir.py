@@ -88,5 +88,26 @@ class TestCustomWALdir(TestCollationBase):
         with self.db.cursor() as c:
             datadir_location = self.fetch_datadir_location(c)
             pg_wal_symlink = os.path.join(datadir_location, 'pg_wal')
+            # In this correct setup, pg_wal symlink must resolve to the 
+            # correct POSTGRES_INITDB_WALDIR location
             self.assertTrue(
                 Path(pg_wal_symlink).resolve().match(postgres_initdb_waldir))
+
+
+class TestCustomWALdirNotMatch(TestCollationBase):
+
+    def test_check_pg_wal_symlink(self):
+        self.db.conn.autocommit = True
+        postgres_initdb_waldir = os.environ.get('POSTGRES_INITDB_WALDIR')
+        with self.db.cursor() as c:
+            datadir_location = self.fetch_datadir_location(c)
+            pg_wal_symlink = os.path.join(datadir_location, 'pg_wal')
+            # In this wrong setup, pg_wal symlink and POSTGRES_INITDB_WALDIR
+            # must resolve to a different path to raise the warning
+            self.assertFalse(
+                Path(pg_wal_symlink).resolve().match(postgres_initdb_waldir))
+
+            # It has different path, but if this unittests runs, that means
+            # postgres was able to start and the pg_wal symlink contains correct
+            # data
+            self.assertTrue(os.listdir(pg_wal_symlink))
