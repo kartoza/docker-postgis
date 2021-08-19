@@ -50,6 +50,14 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
+      
+      - name: Get Current Date
+        id: current_date
+        shell: python
+        run: |
+          import datetime
+          now = datetime.datetime.utcnow()
+          print(f'::set-output name=formatted::{now:%Y.%m.%d}')
 
       - name: Build base image
         id: docker_build_base
@@ -87,6 +95,7 @@ jobs:
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}
           build-args: |
             DISTRO=${{ matrix.distro }}
             IMAGE_VERSION=${{ matrix.imageVersion }}
