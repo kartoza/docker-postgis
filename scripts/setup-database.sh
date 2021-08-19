@@ -50,7 +50,7 @@ else
     # Check if pg_wal symlink point to the correct directory described by POSTGRES_INITDB_WALDIR.
     # Give warning if the value is not the same
     if [[ -n "${POSTGRES_INITDB_WALDIR}" && \
-        "$(realpath ${POSTGRES_INITDB_WALDIR})" != "$(realpath \"$(readlink ${DATADIR}/pg_wal)\")" ]]; then
+        "$(realpath ${POSTGRES_INITDB_WALDIR})" != "$(realpath "$(readlink ${DATADIR}/pg_wal)")" ]]; then
 cat << EOF 1>&2
 Warning!
 POSTGRES_INITDB_WALDIR is not the same as what pg_wal is pointing to.
