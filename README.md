@@ -1,4 +1,5 @@
-[![Build Status](https://travis-ci.org/kartoza/docker-postgis.svg?branch=develop)](https://travis-ci.org/kartoza/docker-postgis)
+[![Scenario Tests](https://github.com/kartoza/docker-postgis/actions/workflows/build-latest.yaml/badge.svg?branch=develop&event=push)](https://github.com/kartoza/docker-postgis/actions/workflows/build-latest.yaml)
+[![deploy-image](https://github.com/kartoza/docker-postgis/actions/workflows/deploy-image.yaml/badge.svg)](https://github.com/kartoza/docker-postgis/actions/workflows/deploy-image.yaml)
 
 # docker-postgis
 
@@ -143,7 +144,7 @@ You need to specify different empty directory, like this
 The containers will use above parameters to initialize a new db cluster in the
 specified directory. If the directory is not empty, then initialization parameter will be ignored.
 
-These are some initialization parameters that will only get used to initialize a new cluster.
+These are some initialization parameters that will only be used to initialize a new cluster.
 If the container uses an existing cluster, it is ignored (for example, when the container restarts).
 
 * `DEFAULT_ENCODING`: cluster encoding
@@ -152,6 +153,7 @@ If the container uses an existing cluster, it is ignored (for example, when the 
 * `WAL_SEGSIZE`: WAL segsize option
 * `PASSWORD_AUTHENTICATION` : PASSWORD AUTHENTICATION
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
+* `POSTGRES_INITDB_WALDIR`: parameter to tell postgres about the initial waldir location. Note that you must always mount persistent volume to this location. Postgres will expect that the directory will always be available, even though it doesn't need the environment variable anymore. If you didn't persist this location, postgres will not be able to find the `pg_wal` directory and consider the instance to be broken.
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
 If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create
