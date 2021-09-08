@@ -31,6 +31,20 @@ file_env 'SSL_CA_FILE'
 mkdir -p ${PGSTAT_TMP}
 chmod 0777 ${PGSTAT_TMP}
 
+if [ ! -z "${SSL_CA_FILE}" ]; then
+  chmod 0640 ${SSL_CA_FILE}
+fi
+
+if [ ! -z "${SSL_KEY_FILE}" ]; then
+  chmod 0600 ${SSL_KEY_FILE}
+fi
+
+
+if [ ! -z "${SSL_CERT_FILE}" ]; then
+  chmod 0600 ${SSL_CERT_FILE}
+fi
+
+
 # moved from setup.sh
 cat > ${ROOT_CONF}/ssl.conf <<EOF
 ssl = true
