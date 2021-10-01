@@ -8,7 +8,7 @@ volumes:
 
 services:
   pg-master:
-    image: 'kartoza/postgis:13.0'
+    image: kartoza/postgis:14-3.1
     restart: 'always'
     # You can optionally mount to volume, to play with the persistence and
     # observe how the slave will behave after restarts.
@@ -35,7 +35,7 @@ services:
       test: "exit 0"
 
   pg-slave:
-    image: 'kartoza/postgis:13.0'
+    image: kartoza/postgis:14-3.1
     restart: 'always'
     # You can optionally mount to volume, but we're not able to scale it
     # in that case.

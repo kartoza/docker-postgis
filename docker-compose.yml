@@ -7,7 +7,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:13-3.1
+    image: kartoza/postgis:14-3.1
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -26,7 +26,7 @@ services:
       test: "exit 0"
 
   dbbackups:
-    image: kartoza/pg-backup:13.0
+    image: kartoza/pg-backup:14.0
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
