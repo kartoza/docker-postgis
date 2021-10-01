@@ -14,6 +14,12 @@ source /scripts/setup-ssl.sh
 # Setup pg_hba.conf
 
 source /scripts/setup-pg_hba.sh
+# Function to add figlet
+figlet -t "Kartoza Docker PostGIS"
+
+POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
+echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $POSTGRES_PASS"
+echo -e "\033[0m PGPASSWORD Generated above: "
 
 if [[ -z "$REPLICATE_FROM" ]]; then
     # This means this is a master instance. We check that database exists
@@ -42,5 +48,6 @@ if [[ "${1:0:1}" = '-' ]]; then
     # append postgres into the arguments
     set -- postgres "$@"
 fi
+
 
 exec su - "$@"

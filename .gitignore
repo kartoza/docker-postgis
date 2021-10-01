@@ -1,8 +1,12 @@
 .idea
+.vscode
 *.*~
 */replication/pg-*
 */replication/docker-compose.override.yml
 .DS_Store
 .python-version
 venv
+.venv
 __pycache__
+
+.env

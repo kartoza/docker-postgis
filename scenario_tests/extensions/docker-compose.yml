@@ -13,6 +13,7 @@ services:
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       TEST_CLASS: test_extensions.TestExtensions
+      POSTGRES_PASS: 'docker'
     ports:
       - "7777:5432"
     healthcheck:
@@ -33,6 +34,7 @@ services:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       TEST_CLASS: test_extensions.TestExtensions
       POSTGRES_MULTIPLE_EXTENSIONS: postgis,pgrouting
+      POSTGRES_PASS: 'docker'
     ports:
       - "7776:5432"
     healthcheck:

@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
+POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
+POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
+# Commented for documentation. You can specify the location of
+# pg_wal directory/volume using the following environment variable:
+# POSTGRES_INITDB_WALDIR (default value is unset)
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
@@ -8,13 +13,14 @@ WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
-SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-3.0/"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGIS_MAJOR}.${POSTGIS_MINOR_RELEASE}/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
+
 
 
 # Read data from secrets into env variables.
@@ -65,13 +71,14 @@ then
     mkdir -p ${DATA_PATH}
 fi
 }
+
+
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
 fi
-if [ -z "${POSTGRES_PASS}" ]; then
-	POSTGRES_PASS=docker
-fi
+
+
 if [ -z "${POSTGRES_DBNAME}" ]; then
 	POSTGRES_DBNAME=gis
 fi
@@ -79,6 +86,7 @@ fi
 if [ -z "${DATADIR}" ]; then
   DATADIR=${DEFAULT_DATADIR}
 fi
+
 # RECREATE_DATADIR flag default value
 # Always assume that we don't want to recreate datadir if not explicitly defined
 # For issue: https://github.com/kartoza/docker-postgis/issues/226
@@ -87,6 +95,10 @@ if [ -z "${RECREATE_DATADIR}" ]; then
 else
   RECREATE_DATADIR=$(boolean ${RECREATE_DATADIR})
 fi
+if [ -z "${SSL_DIR}" ]; then
+  SSL_DIR="/ssl_certificates"
+fi
+
 # SSL mode
 if [ -z "${PGSSLMODE}" ]; then
 	PGSSLMODE=require
@@ -239,10 +251,10 @@ if [ -z "${REPLICATION_USER}" ]; then
   REPLICATION_USER=replicator
 fi
 
-if [ -z "${REPLICATION_PASS}" ]; then
-  REPLICATION_PASS=replicator
-fi
 
+if [ -z "$IGNORE_INIT_HOOK_LOCKFILE" ]; then
+    IGNORE_INIT_HOOK_LOCKFILE=false
+fi
 
 if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
@@ -254,6 +266,14 @@ fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="scram-sha-256"
+fi
+
+if [ -z "${ALL_DATABASES}" ]; then
+  ALL_DATABASES=FALSE
+fi
+
+if [ -z "${FORCE_SSL}" ]; then
+  FORCE_SSL=FALSE
 fi
 
 # Compatibility with official postgres variable
@@ -318,7 +338,7 @@ function restart_postgres {
 function entry_point_script {
   SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
-  if [[ ! -f "${SETUP_LOCKFILE}" ]]; then
+  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" == true ]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}
@@ -337,3 +357,50 @@ function entry_point_script {
 
   return 0
 }
+
+function configure_replication_permissions {
+
+    echo "Setup data permissions"
+    echo "----------------------"
+    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
+        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
+        su - postgres -c "chmod 0600 ~/.pgpass"
+}
+
+function streaming_replication {
+until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
+	do
+		echo "Waiting for master to connect..."
+		sleep 1s
+		if [[ "$(ls -A ${DATADIR})" ]]; then
+			echo "Need empty folder. Cleaning directory..."
+			rm -rf ${DATADIR}/*
+		fi
+	done
+
+}
+
+function pg_password() {
+  SETUP_LOCKFILE="/settings/.pgpasspass.lock"
+  if [ -z "${POSTGRES_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
+	  POSTGRES_PASS=$(openssl rand -base64 15)
+	  touch ${SETUP_LOCKFILE}
+	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
+	else
+	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
+  fi
+
+}
+
+function replication_password() {
+  SETUP_LOCKFILE="/settings/.replicationpass.lock"
+  if [ -z "${REPLICATION_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
+	  REPLICATION_PASS=$(openssl rand -base64 15)
+	  touch ${SETUP_LOCKFILE}
+	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
+	else
+	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
+  fi
+
+}
+
