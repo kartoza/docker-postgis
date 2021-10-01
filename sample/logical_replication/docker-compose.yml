@@ -8,7 +8,7 @@ volumes:
 
 services:
   pg-publisher:
-    image: kartoza/postgis:13.0
+    image: kartoza/postgis:13-3.1
     restart: 'always'
     volumes:
       - pg-publisher-data-dir:/var/lib/postgresql
@@ -25,7 +25,7 @@ services:
       test: "exit 0"
 
   pg-subscriber:
-    image: kartoza/postgis:13.0
+    image: kartoza/postgis:13-3.1
     restart: 'always'
     volumes:
       - pg-subscriber-data-dir:/var/lib/postgresql

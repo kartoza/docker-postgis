@@ -18,7 +18,7 @@ on:
     workflows:
       - build-latest
     branches:
-      - develop
+      - 13.0
     types:
       - completed
 jobs:
