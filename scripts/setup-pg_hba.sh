@@ -25,12 +25,12 @@ else
   if  [[ "${SSL_KEY_FILE}" != '/etc/ssl/private/ssl-cert-snakeoil.key' ]]; then
     PG_CONF_HOST='hostssl'
     CERT_AUTH='cert'
-    CLIENT_VERIFY=
+    CLIENT_VERIFY='clientcert=verify-full'
   else
     # Used when using the default ssl certs
     PG_CONF_HOST='hostssl'
     CERT_AUTH=${PASSWORD_AUTHENTICATION}
-    CLIENT_VERIFY='clientcert=0'
+    CLIENT_VERIFY=
   fi
 
 fi
