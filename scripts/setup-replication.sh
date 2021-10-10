@@ -7,35 +7,9 @@ source /scripts/env-data.sh
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
 
-
-
 create_dir ${WAL_ARCHIVE}
 chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
 chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
-
-
-
-function configure_replication_permissions {
-
-    echo "Setup data permissions"
-    echo "----------------------"
-    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
-        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
-        su - postgres -c "chmod 0600 ~/.pgpass"
-}
-
-function streaming_replication {
-until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
-	do
-		echo "Waiting for master to connect..."
-		sleep 1s
-		if [[ "$(ls -A ${DATADIR})" ]]; then
-			echo "Need empty folder. Cleaning directory..."
-			rm -rf ${DATADIR}/*
-		fi
-	done
-
-}
 
 
 if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then

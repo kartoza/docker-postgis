@@ -17,6 +17,7 @@ services:
       - ../utils:/lib/utils
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
+      POSTGRES_PASS: 'docker'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
@@ -43,12 +44,12 @@ services:
     environment:
       ALLOW_IP_RANGE: '0.0.0.0/0'
       WAL_LEVEL: 'logical'
+      POSTGRES_PASS: 'docker'
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
     depends_on:
-        pg-publisher:
-          condition: service_healthy
+        - pg-publisher
     # You can expose the port to observe it in your local machine
     # For this sample, it was disabled by default to allow scaling test
     ports:
