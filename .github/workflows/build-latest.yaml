@@ -18,6 +18,9 @@ on:
   pull_request:
     branches:
       - develop
+  push:
+    branches:
+      - develop
 jobs:
   run-scenario-tests:
     runs-on: ubuntu-latest
