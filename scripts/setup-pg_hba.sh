@@ -7,8 +7,6 @@ if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
 
-# Setup Postgresql password
-pg_password
 
 # This script will setup pg_hba.conf
 

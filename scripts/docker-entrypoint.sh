@@ -17,9 +17,19 @@ source /scripts/setup-pg_hba.sh
 # Function to add figlet
 figlet -t "Kartoza Docker PostGIS"
 
-POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
-echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $POSTGRES_PASS"
-echo -e "\033[0m PGPASSWORD Generated above: "
+
+if [[ -f /tmp/PGPASSWORD.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /tmp/PGPASSWORD.txt)
+  echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS"
+  echo -e "\033[0m PGPASSWORD Generated above: "
+fi
+
+if [[ -f /tmp/REPLPASSWORD.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /tmp/REPLPASSWORD.txt)
+  echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS"
+  echo -e "\033[0m Replication password Generated above: "
+fi
+
 
 if [[ -z "$REPLICATE_FROM" ]]; then
     # This means this is a master instance. We check that database exists
