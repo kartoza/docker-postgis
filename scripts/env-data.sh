@@ -348,17 +348,17 @@ function entry_point_script {
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
                       psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
                   else
-                    for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                      psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
-                    done
+                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+                        psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      done
                   fi;;
                 *.sql.gz) echo "$0: running $f";
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
                       gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true
                   else
-                    for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                      gunzip < "$f" | psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost || true
-                    done
+                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+                        gunzip < "$f" | psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      done
                   fi;;
                 *.sh)     echo "$0: running $f"; . $f || true;;
                 *)        echo "$0: ignoring $f" ;;
