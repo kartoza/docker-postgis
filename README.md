@@ -568,17 +568,12 @@ we can't write new data to it. The whole database cluster will be replicated.
 
 #### Database permissions
 
-Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all
-the tables in a particular schema. So if a user adds another schema called `data`
-to the database `gis` he also has to update the permission for the user
-with the following SQL assuming the ${REPLICATION_USER} is called replicator
+The role ${REPLICATION_USER} uses the default group role `pg_read_all_data`.
+You can read more about this from the [PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
 
-```sql
-ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
-```
-
-**NB** You need to set up a strong password for replication otherwise the
-default password for ${REPLICATION_USER} will default to `replicator`
+**NB** If you do not pass the env variable `-e REPLICATION_PASS` a random strong
+password will be generated. This is visible in the startup logs as well
+as a text file within the container in `/tmp`.
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
 sample. There are several environment variables that you can set, such as:
