@@ -15,7 +15,6 @@ source /scripts/env-data.sh
 # Only create credentials if this is a master database
 # Slave database will just mirror from master users
 
-
 # Check user already exists
 echo "Creating superuser $POSTGRES_USER"
 RESULT=`su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$POSTGRES_USER'\""`

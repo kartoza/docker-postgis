@@ -86,10 +86,10 @@ if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
 fi
 
+
 if [ -z "${POSTGRES_PASS}" ]; then
   generate_random_string 20
 	POSTGRES_PASS=${RAND}
-	echo ${POSTGRES_PASS} >/tmp/PGPASSWORD.txt
 fi
 
 
@@ -268,7 +268,6 @@ fi
 if [ -z "${REPLICATION_PASS}" ]; then
   generate_random_string 22
 	REPLICATION_PASS=${RAND}
-	echo ${REPLICATION_PASS} >/tmp/REPLPASSWORD.txt
 fi
 
 if [ -z "$IGNORE_INIT_HOOK_LOCKFILE" ]; then
@@ -339,7 +338,7 @@ function restart_postgres {
   kill_postgres
 
   # Brought postgres back up again
-  source /env-data.sh
+  source  /scripts/env-data.sh
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up

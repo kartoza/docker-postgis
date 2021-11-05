@@ -18,15 +18,15 @@ source /scripts/setup-pg_hba.sh
 figlet -t "Kartoza Docker PostGIS"
 
 
-if [[ -f /tmp/PGPASSWORD.txt ]]; then
-  USER_CREDENTIAL_PASS=$(cat /tmp/PGPASSWORD.txt)
+if [[ -f /scripts/.pass_20.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /scripts/.pass_20.txt)
   echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS"
   echo -e "\033[0m PGPASSWORD Generated above: "
 fi
 
-if [[ -f /tmp/REPLPASSWORD.txt ]]; then
-  USER_CREDENTIAL_PASS=$(cat /tmp/REPLPASSWORD.txt)
-  echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS"
+if [[ -f /scripts/.pass_22.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /scripts/.pass_22.txt)
+  echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;34m $USER_CREDENTIAL_PASS"
   echo -e "\033[0m Replication password Generated above: "
 fi
 
