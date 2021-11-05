@@ -381,7 +381,9 @@ host / client):
 psql -h localhost -U docker -p 25432 -l
 ```
 
-**Note:** Default postgresql user is 'docker' with password 'docker'.
+**Note:** Default postgresql user is 'docker'. If you do not pass
+the env variable `POSTGRES_PASS` a random strong password will be generated
+and can be accessed within the startup logs.
 
 You can then go on to use any normal postgresql commands against the container.
 
