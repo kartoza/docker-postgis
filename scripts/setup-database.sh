@@ -122,7 +122,6 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             echo "Loading legacy sql"
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
             su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
-            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT SELECT ON TABLES TO ${REPLICATION_USER};"
             if [[ "$WAL_LEVEL" == 'logical' ]];then
               PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
             fi
