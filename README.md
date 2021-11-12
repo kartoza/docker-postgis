@@ -6,11 +6,14 @@
    * [Tagged versions](#tagged-versions)
    * [Getting the image](#getting-the-image)
    * [Building the image](#building-the-image)
+       * [Self build using Repository checkout](#self-build-using-repository-checkout)
            * [Alternative base distributions builds](#alternative-base-distributions-builds)
            * [Locales](#locales)
        * [Environment variables](#environment-variables)
            * [Cluster Initializations](#cluster-initializations)
            * [Postgres Encoding](#postgres-encoding)
+       * [PostgreSQL extensions](#postgresql-extensions)
+       * [Shared preload libraries](#shared-preload-libraries)
            * [Basic configuration](#basic-configuration)
        * [Schema Initialisation](#schema-initialisation)
            * [Configures archive mode](#configures-archive-mode)
@@ -38,6 +41,7 @@
        * [Docker image versions](#docker-image-versions)
        * [Support](#support)
    * [Credits](#credits)
+
   
 # docker-postgis
 
@@ -97,6 +101,8 @@ docker pull kartoza/postgis:image_version
 ```
 
 ## Building the image
+
+### Self build using Repository checkout
 
 To build the image yourself do:
 
@@ -233,6 +239,36 @@ delete the current cluster and create a new one. Make sure to remove parameter
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
+### PostgreSQL extensions
+
+The container ships with some default extensions i.e. `postgis,hstore,postgis_topology,postgis_raster,pgrouting`
+
+You can use the environment variable `POSTGRES_MULTIPLE_EXTENSIONS` to activate a subset
+or multiple extensions i.e.
+
+```bash
+-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting`
+
+```
+**Note:** Some extensions require extra configurations to get them running properly otherwise
+they will cause the container to exit. Users should also consult documentation
+relating to that specific extension i.e. [timescaledb](https://github.com/timescale/timescaledb),
+[pg_cron](https://github.com/citusdata/pg_cron), [pgrouting](https://pgrouting.org/)
+
+### Shared preload libraries
+Some PostgreSQL extensions require shared_preload_libraries to be specified in the conf files.
+Using the environment variable `SHARED_PRELOAD_LIBRARIES` you can pass comma separated values that correspond to the extensions defined
+using the environment variable `POSTGRES_MULTIPLE_EXTENSIONS`.
+
+The default libraries that are loaded are `pg_cron,timescaledb`
+You can pass the env variable
+```bash
+  -e SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
+````
+**Note** You cannot pass the environment variable `SHARED_PRELOAD_LIBRARIES` without
+specifying the PostgreSQL extension that correspond to the `SHARED_PRELOAD_LIBRARIES`. 
+This will cause the container to exit immediately.
+
 #### Basic configuration
 
 You can use the following environment variables to pass a
@@ -240,17 +276,10 @@ username, password and/or default database name(or multiple databases comma sepa
 
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
-**NB** You should use a strong passwords. If you are using docker-compose make sure
+**Note:** You should use a strong passwords. If you are using docker-compose make sure
 docker can interpolate the password. Example using a password with a `$` you will
 need to escape it ie `$$`
 * `-e POSTGRES_DBNAME=<PGDBNAME>`
-* `-e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting`
-
-You can pass as many extensions as you need.
-* `-e SHARED_PRELOAD_LIBRARIES='pg_cron'`
-Some extensions need to be registered in the `postgresql.conf`
-as shared_preload_libraries. pg_cron should always be added because
-the extension is installed with the image.
 * `-e SSL_CERT_FILE=/your/own/ssl_cert_file.pem`
 * `-e SSL_KEY_FILE=/your/own/ssl_key_file.key`
 * `-e SSL_CA_FILE=/your/own/ssl_ca_file.pem`
@@ -571,7 +600,7 @@ we can't write new data to it. The whole database cluster will be replicated.
 The role ${REPLICATION_USER} uses the default group role `pg_read_all_data`.
 You can read more about this from the [PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
 
-**NB** If you do not pass the env variable `-e REPLICATION_PASS` a random strong
+**Note:** If you do not pass the env variable `-e REPLICATION_PASS` a random strong
 password will be generated. This is visible in the startup logs as well
 as a text file within the container in `/tmp`.
 
