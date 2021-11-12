@@ -6,16 +6,16 @@
    * [Tagged versions](#tagged-versions)
    * [Getting the image](#getting-the-image)
    * [Building the image](#building-the-image)
-       * [Self build using Repository checkout](#self-build-using-repository-checkout)
+           * [Self build using Repository checkout](#self-build-using-repository-checkout)
            * [Alternative base distributions builds](#alternative-base-distributions-builds)
            * [Locales](#locales)
        * [Environment variables](#environment-variables)
            * [Cluster Initializations](#cluster-initializations)
            * [Postgres Encoding](#postgres-encoding)
-       * [PostgreSQL extensions](#postgresql-extensions)
-       * [Shared preload libraries](#shared-preload-libraries)
+           * [PostgreSQL extensions](#postgresql-extensions)
+           * [Shared preload libraries](#shared-preload-libraries)
            * [Basic configuration](#basic-configuration)
-       * [Schema Initialisation](#schema-initialisation)
+           * [Schema Initialisation](#schema-initialisation)
            * [Configures archive mode](#configures-archive-mode)
            * [Configure WAL level](#configure-wal-level)
            * [Configure networking](#configure-networking)
@@ -23,7 +23,7 @@
    * [Docker secrets](#docker-secrets)
    * [Running the container](#running-the-container)
        * [Using the terminal](#using-the-terminal)
-   * [Convenience docker-compose.yml](#convenience-docker-composeyml)
+       * [Convenience docker-compose.yml](#convenience-docker-composeyml)
    * [Connect via psql](#connect-via-psql)
    * [Running SQL scripts on container startup.](#running-sql-scripts-on-container-startup)
    * [Storing data on the host rather than the container.](#storing-data-on-the-host-rather-than-the-container)
@@ -32,15 +32,17 @@
        * [Forced SSL with Certificate Exchange: using SSL certificates signed by a certificate authority](#forced-ssl-with-certificate-exchange-using-ssl-certificates-signed-by-a-certificate-authority)
            * [SSL connection inside the docker container using openssl certificates](#ssl-connection-inside-the-docker-container-using-openssl-certificates)
    * [Postgres Replication Setup](#postgres-replication-setup)
+       * [Database permissions and password authentication](#database-permissions-and-password-authentication)
        * [Streaming replication](#streaming-replication)
-           * [Database permissions](#database-permissions)
            * [Sync changes from master to replicant](#sync-changes-from-master-to-replicant)
            * [Promoting replicant to master](#promoting-replicant-to-master)
            * [Preventing replicant database destroy on restart](#preventing-replicant-database-destroy-on-restart)
        * [Logical replication](#logical-replication)
-       * [Docker image versions](#docker-image-versions)
-       * [Support](#support)
+   * [Docker image versions](#docker-image-versions)
+   * [Support](#support)
    * [Credits](#credits)
+
+
 
   
 # docker-postgis
@@ -52,13 +54,13 @@ Visit our page on the docker hub at: https://hub.docker.com/r/kartoza/postgis/
 There are a number of other docker postgis containers out there. This one
 differentiates itself by:
 
-* provides ssl support out of the box and enforces ssl client connections
-* connections are restricted to the docker subnet
-* a default database 'gis' is created for you so you can use this container 'out of the
+* Provides SSL support out of the box and enforces SSL client connections
+* Connections are restricted to the docker subnet
+* A default database `gis` is created for you so you can use this container 'out of the
   box' when it runs with e.g. QGIS
 * Streaming replication and logical replication support included (turned off by default)
-* Ability to create multiple database when you spin the database.
-* Ability to create multiple schemas when spinning the database.  
+* Ability to create multiple database when starting the container.
+* Ability to create multiple schemas when starting the container.  
 * Enable multiple extensions in the database when setting it up.
 * Gdal drivers automatically registered for pg raster.
 * Support for out-of-db rasters.
@@ -70,17 +72,18 @@ environment (though probably not for heavy load databases).
 
 There is a nice 'from scratch' tutorial on using this docker image on Alex Urquhart's
 blog [here](https://alexurquhart.com/post/set-up-postgis-with-docker/) - if you are
-just getting started with docker, PostGIS and QGIS, we really recommend that you use it.
+just getting started with docker, PostGIS and QGIS, we recommend that you read it and try out
+the instructions specified on the blog.
 
 ## Tagged versions
 
 The following convention is used for tagging the images we build:
 
-kartoza/postgis:[postgres_major_version]-[postgis-point-releases]
+kartoza/postgis:[POSTGRES_MAJOR_VERSION]-[POSTGIS_MAJOR_VERSION].[POSTGIS_MINOR_RELEASE]
 
 So for example:
 
-``kartoza/postgis:13.0`` Provides PostgreSQL 13.0, PostGIS 3.0
+``kartoza/postgis:14-3.1`` Provides PostgreSQL 14.0, PostGIS 3.1
 
 **Note:** We highly recommend that you use tagged versions because
 successive minor versions of PostgreSQL write their database clusters
@@ -102,7 +105,7 @@ docker pull kartoza/postgis:image_version
 
 ## Building the image
 
-### Self build using Repository checkout
+#### Self build using Repository checkout
 
 To build the image yourself do:
 
@@ -164,10 +167,12 @@ This will build with the default locate and speed up the build considerably.
 
 With a minimum setup, our image will use an initial cluster located in the
 `DATADIR` environment variable. If you want to use persistence, mount these
-locations into your volume/host. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
+locations into your `volume/host`. By default, `DATADIR` will point to `/var/lib/postgresql/{major-version}`.
 You can instead mount the parent location like this:
 
-* `-v data-volume:/var/lib/postgresql`
+```bash
+-v data-volume:/var/lib/postgresql
+```
 
 This default cluster will be initialized with default locale settings `C.UTF-8`.
 If, for instance, you want to create a new cluster with your own settings (not using the default cluster).
@@ -186,7 +191,7 @@ You need to specify different empty directory, like this
 ```
 
 The containers will use above parameters to initialize a new db cluster in the
-specified directory. If the directory is not empty, then initialization parameter will be ignored.
+specified directory. If the directory is not empty, then the initialization parameter will be ignored.
 
 These are some initialization parameters that will only be used to initialize a new cluster.
 If the container uses an existing cluster, it is ignored (for example, when the container restarts).
@@ -197,7 +202,12 @@ If the container uses an existing cluster, it is ignored (for example, when the 
 * `WAL_SEGSIZE`: WAL segsize option
 * `PASSWORD_AUTHENTICATION` : PASSWORD AUTHENTICATION
 * `INITDB_EXTRA_ARGS`: extra parameter that will be passed down to `initdb` command
-* `POSTGRES_INITDB_WALDIR`: parameter to tell postgres about the initial waldir location. Note that you must always mount persistent volume to this location. Postgres will expect that the directory will always be available, even though it doesn't need the environment variable anymore. If you didn't persist this location, postgres will not be able to find the `pg_wal` directory and consider the instance to be broken.
+* `POSTGRES_INITDB_WALDIR`: parameter to tell Postgres about the initial waldir location. 
+**Note:** You must always mount persistent volume to this location. 
+Postgres will expect that the directory will always be available, 
+even though it doesn't need the environment variable anymore. 
+If you didn't persist this location, Postgres will not be able to 
+find the `pg_wal` directory and consider the instance to be broken.
 
 In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force database reinitializations.
 If this parameter is specified as `TRUE` it will act as explicit consent to delete `DATADIR` and create
@@ -239,7 +249,7 @@ delete the current cluster and create a new one. Make sure to remove parameter
 
 See [the postgres documentation about encoding](https://www.postgresql.org/docs/11/multibyte.html) for more information.
 
-### PostgreSQL extensions
+#### PostgreSQL extensions
 
 The container ships with some default extensions i.e. `postgis,hstore,postgis_topology,postgis_raster,pgrouting`
 
@@ -255,7 +265,7 @@ they will cause the container to exit. Users should also consult documentation
 relating to that specific extension i.e. [timescaledb](https://github.com/timescale/timescaledb),
 [pg_cron](https://github.com/citusdata/pg_cron), [pgrouting](https://pgrouting.org/)
 
-### Shared preload libraries
+#### Shared preload libraries
 Some PostgreSQL extensions require shared_preload_libraries to be specified in the conf files.
 Using the environment variable `SHARED_PRELOAD_LIBRARIES` you can pass comma separated values that correspond to the extensions defined
 using the environment variable `POSTGRES_MULTIPLE_EXTENSIONS`.
@@ -291,7 +301,7 @@ need to escape it ie `$$`
 
 Specifies whether extensions will also be installed in template1 database.
 
-### Schema Initialisation
+#### Schema Initialisation
 
 * `-e SCHEMA_NAME=<PGSCHEMA>`
 You can pass a comma separated value of schema names which will be created when the
@@ -378,11 +388,11 @@ To create a running container do:
 docker run --name "postgis" -p 25432:5432 -d -t kartoza/postgis
 ```
 
-**Note** If you do not pass the env variable `POSTGRES_PASS` a random password
+**Note:** If you do not pass the env variable `POSTGRES_PASS` a random password
 will be generated and will be visible from the logs or within the container in 
 `/tmp/PGPASSWORD.txt`
 
-## Convenience docker-compose.yml
+### Convenience docker-compose.yml
 
 For convenience, we  provide a ``docker-compose.yml`` that will run a
 copy of the database image and also our related database backup image (see
@@ -410,23 +420,26 @@ host / client):
 psql -h localhost -U docker -p 25432 -l
 ```
 
-**Note:** Default postgresql user is 'docker' with password 'docker'.
+**Note:** Default postgresql user is 'docker'. The password can be sourced withing 
+the running container if you did not pass any env variable to explicitly set it.
 
 You can then go on to use any normal postgresql commands against the container.
 
-Under ubuntu 16.04 the postgresql client can be installed like this:
+Under ubuntu LTS the postgresql client can be installed like this:
 
 ```shell
-sudo apt-get install postgresql-client-12
+sudo apt-get install postgresql-client-${POSTGRES_MAJOR_VERSION}
 ```
+Where `POSTGRES_MAJOR_VERSION` corresponds to a specific
+PostgreSQL version i.e 12
 
 ## Running SQL scripts on container startup.
 
 In some instances users want to run some SQL scripts to populate the
-database. The environment variable POSTGRES_DB allows
+database. The environment variable `POSTGRES_DB` allows
 us to specify multiple database that can be created on startup.
 When running scripts they will only be executed against the
-first database ie POSTGRES_DB=gis,data,sample
+first database ie `POSTGRES_DB=gis,data,sample`
 The SQL script will be executed against the `gis` database. Additionally, a lock file is generated in
 `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
 container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
@@ -564,9 +577,20 @@ psql "dbname=gis port=5432 user=docker host=localhost sslmode=verify-full  sslce
 ## Postgres Replication Setup
 
 The image supports replication out of the box. By default, replication is turned off.
-The two mains replication methods allowed are
+The two main replication methods allowed are
 * Streaming replication
 * Logical replication
+
+
+### Database permissions and password authentication
+Replication  uses a dedicated user `REPLICATION_USER`. The role ${REPLICATION_USER}
+uses the default group role `pg_read_all_data`. You can read more about this
+from the [PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
+
+**Note:** When setting up replication you need to specify the password using the 
+environment variable `REPLICATION_PASS`. If you do not specify it a random strong
+password will be generated. This is visible in the startup logs as well
+as a text file within the container in `/tmp/REPLPASSWORD.txt`.
 
 ### Streaming replication
 
@@ -581,10 +605,6 @@ replicant is read-only.
 docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:13.0
 ```
 
-**Note** If you do not pass the env variable `REPLICATION_PASS` a random password
-will be generated and will be visible from the logs or within the container in 
-`/tmp/REPLPASSWORD.txt`
-
 ![qgis](https://user-images.githubusercontent.com/178003/37755610-dd3b774a-2dae-11e8-9fa1-4877e2034675.gif)
 
 This image is provided with replication abilities. We can
@@ -594,15 +614,6 @@ database write. A `replicant` instance means that a particular container will
 mirror database content from a designated master. This replication scheme allows
 us to sync databases. However, a `replicant` is only for read-only transaction, thus
 we can't write new data to it. The whole database cluster will be replicated.
-
-#### Database permissions
-
-The role ${REPLICATION_USER} uses the default group role `pg_read_all_data`.
-You can read more about this from the [PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
-
-**Note:** If you do not pass the env variable `-e REPLICATION_PASS` a random strong
-password will be generated. This is visible in the startup logs as well
-as a text file within the container in `/tmp`.
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
 sample. There are several environment variables that you can set, such as:
@@ -695,7 +706,7 @@ into slave environment and set `DESTROY_DATABASE_ON_RESTART: 'False'`.
 
 After this, you can make changes to your replicant, but master and replicant will not
 be in sync anymore. This is useful if the replicant needs to take over a failover master.
-However it is recommended to take additional action, such as creating a backup from the
+However, it is recommended to take additional action, such as creating a backup from the
 slave so a dedicated master can be created again.
 
 #### Preventing replicant database destroy on restart
@@ -705,7 +716,7 @@ to prevent the database from being destroyed on restart. With this setting you c
 shut down your replicant and restart it later and it will continue to sync using the existing
 database (as long as there are no consistencies conflicts).
 
-However, you should note that this option doesn't mean anything if you didn't
+However, you should note that this option doesn't mean anything if you did not
 persist your database volume. Because if it is not persisted, then it will be lost
 on restart because docker will recreate the container.
 
@@ -716,12 +727,12 @@ To activate the following you need to use the environment variable
 `WAL_LEVEL=logical` to get a running instance like
 
 ```shell
-docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:13.0
+docker run --name "logical-replication" -e REPLICATION=true -e WAL_LEVEL=logical -d  kartoza/postgis:14-3.1
 ```
 
 For a detailed example see the docker-compose in the folder `sample/logical_replication`.
 
-### Docker image versions
+## Docker image versions
 
 All instructions mentioned in the README are valid for the latest running image.
 Other docker images might have a few missing features than the ones in the 
@@ -731,10 +742,10 @@ in the latest tagged version of the image are essential for the previous image
 you can cherry-pick the changes against that specific branch and we will 
 test and merge.
 
-### Support
+## Support
 
 If you require more substantial assistance from [kartoza](https://kartoza.com)  (because our work and interaction on docker-postgis is pro bono),
-please consider taking out a [Support Level Agreeement](https://kartoza.com/en/shop/product/support)
+please consider taking out a [Support Level Agreement](https://kartoza.com/en/shop/product/support)
 
 ## Credits
 
