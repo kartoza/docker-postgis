@@ -91,6 +91,29 @@ if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
 
 fi
 
+# Timescale default tuning
+if [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]];then
+  if [[ -f ${ROOT_CONF}/postgis.conf ]];then
+    sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/logical_replication.conf ]];then
+    sed -i '/logical_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/logical_replication.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/streaming_replication.conf ]];then
+    sed -i '/streaming_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/streaming_replication.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/extra.conf ]];then
+    sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  echo -e "\e[1;31m Time scale config tuning values below"
+  timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/postgresql.conf
+  echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/postgresql.conf"
+fi
+
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
 echo "kernel.shmmax=543252480" >> /etc/sysctl.conf

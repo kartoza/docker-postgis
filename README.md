@@ -298,6 +298,18 @@ need to escape it ie `$$`
 * `-e DEFAULT_CTYPE="en_US.UTF-8"`
 
 * `-e POSTGRES_TEMPLATE_EXTENSIONS=true`
+* `-e ACCEPT_TIMESCALE_TUNING=TRUE` Useful to tune PostgreSQL conf based on 
+[timescaledb-tune](https://github.com/timescale/timescaledb-tune). Defaults to FALSE.
+* `-e TIMESCALE_TUNING_PARAMS` Useful to configure none default settings to use when
+running `ACCEPT_TIMESCALE_TUNING=TRUE`. This defaults to empty so that we can use the
+default settings provided by the `timescaledb-tune`. Example
+
+    ```bash
+    docker run -it --name timescale  -e ACCEPT_TIMESCALE_TUNING=TRUE -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb -e TIMESCALE_TUNING_PARAMS="-cpus=4" kartoza/postgis:14-3.1
+    ```
+
+**Note:** `ACCEPT_TIMESCALE_TUNING` environment variable will overwrite all configurations based
+on the timescale configurations
 
 Specifies whether extensions will also be installed in template1 database.
 
