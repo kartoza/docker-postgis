@@ -16,6 +16,10 @@ on:
 #        default: slim
   workflow_dispatch:
     inputs:
+      cache-invalidation-number:
+        description: Temporarily increase this number to invalidate caches for current build
+        required: true
+        default: 1
       no-cache:
         description: Do not use cache when building the image
         required: true
@@ -73,10 +77,10 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
-          cache-to: type=gha,scope=test
+            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
+            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
           target: postgis-test
 
       - name: Run scenario test ${{ matrix.scenario }}
@@ -144,8 +148,8 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
-          cache-to: type=gha,scope=test
+            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
+            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
           target: postgis-test
