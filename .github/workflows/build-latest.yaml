@@ -66,10 +66,10 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-#          cache-from: |
-#            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
-#            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
-#            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-from: |
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
 
@@ -124,7 +124,6 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          no-cache: ${{ github.event.inputs.no-cache }}
           push: true
           tags: |
             ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
@@ -137,9 +136,9 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-#          cache-from: |
-#            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
-#            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
-#            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-from: |
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
