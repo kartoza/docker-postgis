@@ -6,6 +6,10 @@ ARG IMAGE_VERSION=bullseye
 ARG IMAGE_VARIANT=slim
 FROM $DISTRO:$IMAGE_VERSION-$IMAGE_VARIANT AS postgis-base
 LABEL maintainer="Tim Sutton<tim@kartoza.com>"
+# Cache invalidation number is used to invalidate a cache.
+# Simply increment the number by 1 to reset the cache in local and GitHub Action
+# This is added because we can't purge GitHub Action cache manually
+LABEL cache.invalidation.number="1"
 
 # Reset ARG for version
 ARG IMAGE_VERSION
