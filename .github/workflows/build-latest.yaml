@@ -15,16 +15,6 @@ on:
 #        required: true
 #        default: slim
   workflow_dispatch:
-    inputs:
-      cache-invalidation-number:
-        description: Temporarily increase this number to invalidate caches for current build
-        required: true
-        default: 1
-      no-cache:
-        description: Do not use cache when building the image
-        required: true
-        type: boolean
-        default: false
   pull_request:
     branches:
       - develop
@@ -64,7 +54,6 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          no-cache: ${{ github.event.inputs.no-cache }}
           push: false
           load: true
           tags: kartoza/postgis:manual-build
@@ -81,7 +70,7 @@ jobs:
 #            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
 #            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
 #            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
-          cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-to: type=gha,scope=test
           target: postgis-test
 
       - name: Run scenario test ${{ matrix.scenario }}
@@ -152,5 +141,5 @@ jobs:
 #            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
 #            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
 #            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
-          cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+          cache-to: type=gha,scope=test
           target: postgis-test
