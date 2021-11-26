@@ -23,6 +23,7 @@ on:
       no-cache:
         description: Do not use cache when building the image
         required: true
+        type: boolean
         default: false
   pull_request:
     branches:
