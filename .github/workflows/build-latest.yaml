@@ -15,6 +15,11 @@ on:
 #        required: true
 #        default: slim
   workflow_dispatch:
+    inputs:
+      no-cache:
+        description: Do not use cache when building the image
+        required: true
+        default: false
   pull_request:
     branches:
       - develop
@@ -54,6 +59,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
+          no-cache: ${{ github.event.inputs }}
           push: false
           load: true
           tags: kartoza/postgis:manual-build
@@ -124,6 +130,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
+          no-cache: ${{ github.event.inputs }}
           push: true
           tags: |
             ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
