@@ -10,6 +10,7 @@ LABEL maintainer="Tim Sutton<tim@kartoza.com>"
 # Simply increment the number by 1 to reset the cache in local and GitHub Action
 # This is added because we can't purge GitHub Action cache manually
 LABEL cache.invalidation.number="1"
+ARG CACHE_INVALIDATION_NUMBER=1
 
 # Reset ARG for version
 ARG IMAGE_VERSION
