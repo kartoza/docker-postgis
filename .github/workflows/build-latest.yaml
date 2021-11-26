@@ -59,7 +59,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          no-cache: ${{ github.event.inputs }}
+          no-cache: ${{ github.event.inputs.no-cache }}
           push: false
           load: true
           tags: kartoza/postgis:manual-build
@@ -130,7 +130,7 @@ jobs:
         with:
           context: .
           file: Dockerfile
-          no-cache: ${{ github.event.inputs }}
+          no-cache: ${{ github.event.inputs.no-cache }}
           push: true
           tags: |
             ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
