@@ -77,10 +77,10 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: |
-            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
-            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
-            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+#          cache-from: |
+#            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+#            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
+#            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
           cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
           target: postgis-test
 
@@ -148,9 +148,9 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
-          cache-from: |
-            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
-            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
-            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
+#          cache-from: |
+#            type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
+#            type=gha,scope=prod-${{ github.event.inputs.cache-invalidation-number }}-
+#            type=gha,scope=base-${{ github.event.inputs.cache-invalidation-number }}-
           cache-to: type=gha,scope=test-${{ github.event.inputs.cache-invalidation-number }}-
           target: postgis-test
