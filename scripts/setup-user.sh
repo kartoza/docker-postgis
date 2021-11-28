@@ -32,4 +32,4 @@ if [ -z "$RESULT_REPLICATION" ]; then
   COMMANDS="CREATE"
 fi
 su - postgres -c "psql postgres -c \"$COMMANDS USER $REPLICATION_USER WITH REPLICATION ENCRYPTED PASSWORD '$REPLICATION_PASS';\""
-
+su - postgres -c "psql postgres -c \"GRANT pg_read_all_data TO $REPLICATION_USER;\""
