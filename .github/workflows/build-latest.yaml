@@ -18,6 +18,9 @@ on:
   pull_request:
     branches:
       - 13.0
+  push:
+    branches:
+      - 13.0
 jobs:
   run-scenario-tests:
     runs-on: ubuntu-latest
@@ -64,9 +67,9 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
 
@@ -134,8 +137,8 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
