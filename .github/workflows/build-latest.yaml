@@ -67,9 +67,9 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
 
@@ -137,8 +137,8 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
           cache-from: |
-            type=gha,scope=test
-            type=gha,scope=prod
-            type=gha,scope=base
+           type=gha,scope=test
+           type=gha,scope=prod
+           type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
