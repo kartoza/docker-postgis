@@ -92,6 +92,7 @@ if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
 fi
 
 # Timescale default tuning
+# TODO If timescale DB accepts reading from include directory then refactor code to remove line 97 - 112 (https://github.com/timescale/timescaledb-tune/issues/80)
 if [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]];then
   if [[ -f ${ROOT_CONF}/postgis.conf ]];then
     sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
@@ -110,6 +111,7 @@ if [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]];then
     cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
   fi
   echo -e "\e[1;31m Time scale config tuning values below"
+  # TODO Add logic to find defaults memory, CPUS as these can vary from defaults on host machine and in docker container
   timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/postgresql.conf
   echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/postgresql.conf"
 fi
