@@ -37,8 +37,8 @@ ENV LANG=en_US.UTF-8 \
     LANGUAGE=en_US:en \
     LC_ALL=en_US.UTF-8
 
-COPY base_build/scripts/locale.gen /etc/all.locale.gen
-COPY base_build/scripts/locale-filter.sh /etc/locale-filter.sh
+COPY ./base_build/scripts/locale.gen /etc/all.locale.gen
+COPY ./base_build/scripts/locale-filter.sh /etc/locale-filter.sh
 RUN if [ -z "${GENERATE_ALL_LOCALE}" ] || [ $GENERATE_ALL_LOCALE -eq 0 ]; \
 	then \
 		cat /etc/all.locale.gen | grep "${LANG}" > /etc/locale.gen; \
@@ -123,7 +123,7 @@ RUN apt-get -y --purge autoremove  \
 EXPOSE 5432
 
 # Copy scripts
-ADD scripts /scripts
+ADD ./scripts /scripts
 WORKDIR /scripts
 RUN chmod +x *.sh
 
@@ -142,7 +142,7 @@ ENTRYPOINT /scripts/docker-entrypoint.sh
 ##############################################################################
 FROM postgis-prod AS postgis-test
 
-COPY scenario_tests/utils/requirements.txt /lib/utils/requirements.txt
+COPY ./scenario_tests/utils/requirements.txt /lib/utils/requirements.txt
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
