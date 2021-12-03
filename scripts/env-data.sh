@@ -335,6 +335,7 @@ function restart_postgres {
 
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
+
 function entry_point_script {
   SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
@@ -343,12 +344,26 @@ function entry_point_script {
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}
           case "$f" in
-              *.sql)    echo "$0: running $f"; psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true ;;
-              *.sql.gz) echo "$0: running $f"; gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true ;;
-              *.sh)     echo "$0: running $f"; . $f || true;;
-              *)        echo "$0: ignoring $f" ;;
-          esac
-          echo
+                *.sql)    echo "$0: running $f";
+                  if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+                      psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                  else
+                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+                        psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      done
+                  fi;;
+                *.sql.gz) echo "$0: running $f";
+                  if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+                      gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                  else
+                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+                        gunzip < "$f" | psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      done
+                  fi;;
+                *.sh)     echo "$0: running $f"; . $f || true;;
+                *)        echo "$0: ignoring $f" ;;
+            esac
+            echo
           done
           # Put lock file to make sure entry point scripts were run
           touch ${SETUP_LOCKFILE}
