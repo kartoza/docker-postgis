@@ -276,6 +276,14 @@ if [ -z "${FORCE_SSL}" ]; then
   FORCE_SSL=FALSE
 fi
 
+if [ -z "${ACCEPT_TIMESCALE_TUNING}" ]; then
+  ACCEPT_TIMESCALE_TUNING=FALSE
+fi
+
+if [ -z "${TIMESCALE_TUNING_PARAMS}" ]; then
+  TIMESCALE_TUNING_PARAMS=
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then
