@@ -31,7 +31,7 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 1
+          - 2
         scenario:
           - datadir_init
           - streaming_replication
@@ -92,7 +92,7 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 1
+          - 2
         include:
           - distro: debian
             imageVersion: bullseye
