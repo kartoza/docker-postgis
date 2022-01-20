@@ -93,7 +93,7 @@ fi
 
 # Timescale default tuning
 # TODO If timescale DB accepts reading from include directory then refactor code to remove line 97 - 112 (https://github.com/timescale/timescaledb-tune/issues/80)
-if [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]];then
+if [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] && -f /usr/lib/postgresql/14/lib/timescaledb.so   ]];then
   if [[ -f ${ROOT_CONF}/postgis.conf ]];then
     sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
     cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
