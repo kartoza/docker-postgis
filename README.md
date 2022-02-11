@@ -270,7 +270,8 @@ Some PostgreSQL extensions require shared_preload_libraries to be specified in t
 Using the environment variable `SHARED_PRELOAD_LIBRARIES` you can pass comma separated values that correspond to the extensions defined
 using the environment variable `POSTGRES_MULTIPLE_EXTENSIONS`.
 
-The default libraries that are loaded are `pg_cron,timescaledb`
+The default libraries that are loaded are `pg_cron,timescaledb` if the image is bulilt
+with timescale support otherwise only `pg_cron` is loaded.
 You can pass the env variable
 ```bash
   -e SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
