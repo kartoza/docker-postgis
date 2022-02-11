@@ -6,3 +6,5 @@ if [[ ! -f .env ]]; then
 fi
 
 docker-compose -f docker-compose.build.yml build postgis-prod
+
+#docker-compose -f docker-compose.build-timescale.yml build postgis-prod

@@ -1,0 +1,34 @@
+# Used solely for docker-compose build
+version: '3.9'
+services:
+  postgis-base:
+    image: kartoza/postgis:base-${DISTRO}-${IMAGE_VERSION}-${IMAGE_VARIANT}
+    build:
+      context: .
+      # Use yaml anchor for reusability
+      args: &build-args-anchor
+        DISTRO: ${DISTRO}
+        IMAGE_VERSION: ${IMAGE_VERSION}
+        IMAGE_VARIANT: ${IMAGE_VARIANT}
+        GENERATE_ALL_LOCALE: ${GENERATE_ALL_LOCALE}
+        POSTGRES_MAJOR_VERSION: ${POSTGRES_MAJOR_VERSION}
+        POSTGIS_MAJOR_VERSION: ${POSTGIS_MAJOR_VERSION}
+        POSTGIS_MINOR_RELEASE: ${POSTGIS_MINOR_RELEASE}
+        BUILD_TIMESCALE:  ${BUILD_TIMESCALE}
+      target: postgis-base
+
+  postgis-prod:
+    image: kartoza/postgis:${POSTGRES_MAJOR_VERSION}-${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_RELEASE}-timescale
+    build:
+      context: .
+      args:
+        <<: *build-args-anchor
+      target: postgis-prod
+
+  postgis-test:
+    image: kartoza/postgis:manual-build
+    build:
+      context: .
+      args:
+        <<: *build-args-anchor
+      target: postgis-test

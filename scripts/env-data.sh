@@ -217,7 +217,11 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-  POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb'
+    else
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+    fi
 fi
 
 
@@ -261,7 +265,11 @@ if [ -z "$EXTRA_CONF" ]; then
 fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
+    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
+        SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
+    else
+        SHARED_PRELOAD_LIBRARIES='pg_cron'
+    fi
 fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
