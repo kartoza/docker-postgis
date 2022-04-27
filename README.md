@@ -370,12 +370,35 @@ You can alternatively mount an extra  config file into the setting's folder i.e
 ```shell
 docker run --name "postgis" -v /data/extra.conf:/settings/extra.conf -p 25432:5432 -d -t kartoza/postgis
 ```
+The `/setting` folder stores the extra configuration and is copied to the proper directory
+ on runtime. The environment variable `EXTRA_CONF_DIR` controls the location of the mounted
+ folder.
+
+Then proceed to run the following:
+
+```shell
+ docker run --name "postgis" -e EXTRA_CONF_DIR=/etc/conf_settings -v /data:/etc/conf_settings -p 25432:5432 -d -t kartoza/postgis
+```
 
 If you want to reinitialize the data directory from scratch, you need to do:
 
 1. Do backup, move data, etc. Any preparations before deleting your data directory.
 2. Set environment variables `RECREATE_DATADIR=TRUE`. Restart the service
 3. The service will delete your `DATADIR` directory and start reinitializing your data directory from scratch.
+
+### Lockfile
+
+ During container startup, some lockfile are generated which prevent reinitialisation of some
+ settings. These lockfile are by default stored in the `/settings` folder, but a user can control
+ where to store these files using the environment variable `CONF_LOCKFILE_DIR` Example
+
+ ```
+ -e /opt/conf_lockfiles \
+ -v /data/lock_files:/opt/conf_lockfiles 
+ ```
+
+ **Note** If you change the environment variable to point to another location when you restart the container
+ the settings are reinitialized again.
 
 ## Docker secrets
 
@@ -457,6 +480,14 @@ first database ie `POSTGRES_DB=gis,data,sample`
 The SQL script will be executed against the `gis` database. Additionally, a lock file is generated in
 `/docker-entrypoint-initdb.d`, which will prevent the scripts from getting executed after the first 
 container startup. Provide `IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
+
+By default, the lockfile is generated in `/docker-entrypoint-initdb.d` but it can be overwritten by
+ passing the environment variable `SCRIPTS_LOCKFILE_DIR` which can point to another location i.e
+
+ ```shell 
+ -e SCRIPTS_LOCKFILE_DIR=/data/ \
+ -v /data:/data
+ ```
 
 Currently, you can pass `.sql`, `.sql.gz` and `.sh` files as mounted volumes.
 

@@ -92,7 +92,7 @@ echo "postgres ready"
 source /scripts/setup-user.sh
 
 # enable extensions in template1 if env variable set to true
-if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" == TRUE ]] ; then
+if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
     for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
         echo "Enabling \"${ext}\" in the database template1"
         su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' template1"
@@ -110,11 +110,10 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
+            su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling \"${ext}\" in the database ${db}"
-                if [[ ${ext} = 'pg_cron' ]]; then
-                  echo " pg_cron doesn't need to be installed"
-                else
+                if [[ ${ext} != 'pg_cron' ]]; then
                   su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' $db"
                 fi
             done
@@ -143,13 +142,6 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
       fi
     done
 done
-
-
-CRON_LOCKFILE="${ROOT_CONF}/.cron_ext.lock"
-if [ ! -f "${CRON_LOCKFILE}" ]; then
-	su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
-	touch ${CRON_LOCKFILE}
-fi
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l 2>&1"
