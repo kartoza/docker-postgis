@@ -433,8 +433,9 @@ host / client):
 psql -h localhost -U docker -p 25432 -l
 ```
 
-**Note:** Default postgresql user is 'docker'. The password can be sourced withing 
-the running container if you did not pass any env variable to explicitly set it.
+**Note:** Default postgresql user is 'docker'. If you do not pass
+the env variable `POSTGRES_PASS` a random strong password will be generated
+and can be accessed within the startup logs.
 
 You can then go on to use any normal postgresql commands against the container.
 
@@ -618,6 +619,10 @@ replicant is read-only.
 docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:13.0
 ```
 
+**Note** If you do not pass the env variable `REPLICATION_PASS` a random password
+will be generated and will be visible from the logs or within the container in 
+`/tmp/REPLPASSWORD.txt`
+
 ![qgis](https://user-images.githubusercontent.com/178003/37755610-dd3b774a-2dae-11e8-9fa1-4877e2034675.gif)
 
 This image is provided with replication abilities. We can
@@ -627,6 +632,20 @@ database write. A `replicant` instance means that a particular container will
 mirror database content from a designated master. This replication scheme allows
 us to sync databases. However, a `replicant` is only for read-only transaction, thus
 we can't write new data to it. The whole database cluster will be replicated.
+
+#### Database permissions
+
+Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all
+the tables in a particular schema. So if a user adds another schema called `data`
+to the database `gis` he also has to update the permission for the user
+with the following SQL assuming the ${REPLICATION_USER} is called replicator
+
+```sql
+ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
+```
+
+**NB** You need to set up a strong password for replication otherwise the
+default password for ${REPLICATION_USER} will default to `replicator`
 
 To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
 sample. There are several environment variables that you can set, such as:
@@ -719,7 +738,7 @@ into slave environment and set `DESTROY_DATABASE_ON_RESTART: 'False'`.
 
 After this, you can make changes to your replicant, but master and replicant will not
 be in sync anymore. This is useful if the replicant needs to take over a failover master.
-However, it is recommended to take additional action, such as creating a backup from the
+However it is recommended to take additional action, such as creating a backup from the
 slave so a dedicated master can be created again.
 
 #### Preventing replicant database destroy on restart
@@ -729,7 +748,7 @@ to prevent the database from being destroyed on restart. With this setting you c
 shut down your replicant and restart it later and it will continue to sync using the existing
 database (as long as there are no consistencies conflicts).
 
-However, you should note that this option doesn't mean anything if you did not
+However, you should note that this option doesn't mean anything if you didn't
 persist your database volume. Because if it is not persisted, then it will be lost
 on restart because docker will recreate the container.
 
@@ -740,12 +759,12 @@ To activate the following you need to use the environment variable
 `WAL_LEVEL=logical` to get a running instance like
 
 ```shell
-docker run --name "logical-replication" -e REPLICATION=true -e WAL_LEVEL=logical -d  kartoza/postgis:14-3.1
+docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:13.0
 ```
 
 For a detailed example see the docker-compose in the folder `sample/logical_replication`.
 
-## Docker image versions
+### Docker image versions
 
 All instructions mentioned in the README are valid for the latest running image.
 Other docker images might have a few missing features than the ones in the 
@@ -755,10 +774,10 @@ in the latest tagged version of the image are essential for the previous image
 you can cherry-pick the changes against that specific branch and we will 
 test and merge.
 
-## Support
+### Support
 
 If you require more substantial assistance from [kartoza](https://kartoza.com)  (because our work and interaction on docker-postgis is pro bono),
-please consider taking out a [Support Level Agreement](https://kartoza.com/en/shop/product/support)
+please consider taking out a [Support Level Agreeement](https://kartoza.com/en/shop/product/support)
 
 ## Credits
 

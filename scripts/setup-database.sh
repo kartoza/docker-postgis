@@ -2,7 +2,6 @@
 
 source /scripts/env-data.sh
 
-POSTGRES_PASS=$(cat /tmp/PGPASSWORD.txt)
 INITDB_WALDIR_FLAG=""
 
 # Check POSTGRES_INITDB_WALDIR value

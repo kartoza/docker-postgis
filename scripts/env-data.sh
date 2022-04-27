@@ -72,10 +72,24 @@ then
 fi
 }
 
+function generate_random_string() {
+  STRING_LENGTH=$1
+  random_pass_string=$(openssl rand -base64 ${STRING_LENGTH})
+  if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
+    echo ${random_pass_string} > /scripts/.pass_${STRING_LENGTH}.txt
+  fi
+  export RAND=$(cat /scripts/.pass_${STRING_LENGTH}.txt)
+}
 
 # Make sure we have a user set up
 if [ -z "${POSTGRES_USER}" ]; then
 	POSTGRES_USER=docker
+fi
+
+
+if [ -z "${POSTGRES_PASS}" ]; then
+  generate_random_string 20
+	POSTGRES_PASS=${RAND}
 fi
 
 
@@ -255,6 +269,10 @@ if [ -z "${REPLICATION_USER}" ]; then
   REPLICATION_USER=replicator
 fi
 
+if [ -z "${REPLICATION_PASS}" ]; then
+  generate_random_string 22
+	REPLICATION_PASS=${RAND}
+fi
 
 if [ -z "$IGNORE_INIT_HOOK_LOCKFILE" ]; then
     IGNORE_INIT_HOOK_LOCKFILE=false
@@ -336,7 +354,7 @@ function restart_postgres {
   kill_postgres
 
   # Brought postgres back up again
-  source /env-data.sh
+  source  /scripts/env-data.sh
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up
@@ -411,27 +429,4 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 
 }
 
-function pg_password() {
-  SETUP_LOCKFILE="/settings/.pgpasspass.lock"
-  if [ -z "${POSTGRES_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
-	  POSTGRES_PASS=$(openssl rand -base64 15)
-	  touch ${SETUP_LOCKFILE}
-	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
-	else
-	  echo "$POSTGRES_PASS" > /tmp/PGPASSWORD.txt
-  fi
-
-}
-
-function replication_password() {
-  SETUP_LOCKFILE="/settings/.replicationpass.lock"
-  if [ -z "${REPLICATION_PASS}"  ] && [ ! -f ${SETUP_LOCKFILE} ]; then
-	  REPLICATION_PASS=$(openssl rand -base64 15)
-	  touch ${SETUP_LOCKFILE}
-	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
-	else
-	  echo "$REPLICATION_PASS" > /tmp/REPLPASSWORD.txt
-  fi
-
-}
 
