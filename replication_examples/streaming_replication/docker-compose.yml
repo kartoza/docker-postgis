@@ -43,7 +43,6 @@ services:
     # runtime
     volumes:
       - pg-node-data-dir:/var/lib/postgresql
-      - ./tests:/tests
 
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
