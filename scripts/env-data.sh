@@ -17,7 +17,7 @@ SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGI
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
 PG_BASEBACKUP="/usr/bin/pg_basebackup"
-PROMOTE_FILE="/tmp/pg_promote_master"
+NODE_PROMOTION="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_ctl"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 

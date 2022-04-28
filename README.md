@@ -597,7 +597,7 @@ The two main replication methods allowed are
 
 
 ### Database permissions and password authentication
-Replication  uses a dedicated user `REPLICATION_USER`. The role ${REPLICATION_USER}
+Replication  uses a dedicated user `REPLICATION_USER`. The role `${REPLICATION_USER}`
 uses the default group role `pg_read_all_data`. You can read more about this
 from the [PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
 
@@ -616,7 +616,7 @@ layer are saved, they are automatically propagated to the replicant. Note also t
 replicant is read-only.
 
 ```shell
-docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:13.0
+docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432  kartoza/postgis:14.3.2
 ```
 
 **Note** If you do not pass the env variable `REPLICATION_PASS` a random password
@@ -635,20 +635,20 @@ we can't write new data to it. The whole database cluster will be replicated.
 
 #### Database permissions
 
-Since we are using a role ${REPLICATION_USER}, we need to ensure that it has access to all
+Since we are using a role `${REPLICATION_USER}`, we need to ensure that it has access to all
 the tables in a particular schema. So if a user adds another schema called `data`
 to the database `gis` he also has to update the permission for the user
-with the following SQL assuming the ${REPLICATION_USER} is called replicator
+with the following SQL assuming the `${REPLICATION_USER}` is called replicator
 
 ```sql
 ALTER DEFAULT PRIVILEGES IN SCHEMA data GRANT SELECT ON TABLES TO replicator;
 ```
 
-**NB** You need to set up a strong password for replication otherwise the
-default password for ${REPLICATION_USER} will default to `replicator`
+**Note** You need to set up a strong password for replication otherwise the
+default password for `${REPLICATION_USER}` will default to random generated string
 
-To experiment with the replication abilities, you can see a [docker-compose.yml](sample/replication/docker-compose.yml)
-sample. There are several environment variables that you can set, such as:
+To experiment with the streaming replication abilities, you can see a [docker-compose.yml](replication_examples/replication/docker-compose.yml).
+There are several environment variables that you can set, such as:
 
 Master settings:
 - **ALLOW_IP_RANGE**: A `pg_hba.conf` domain format which will allow specified host(s)
@@ -676,7 +676,7 @@ Slave settings:
 - **REPLICATION_USER** User to initiate streaming replication
 - **REPLICATION_PASS** Password for a user with streaming replication role
 
-To run the sample replication, follow these instructions:
+To run the example streaming_replication, follow these instructions:
 
 Do a manual image build by executing the `build.sh` script
 
@@ -684,7 +684,7 @@ Do a manual image build by executing the `build.sh` script
 ./build.sh
 ```
 
-Go into the `sample/replication` directory and experiment with the following Make
+Go into the `replication_examples/streaming_replication` directory and experiment with the following Make
 command to run both master and slave services.
 
 ```shell
@@ -701,7 +701,7 @@ To view logs for master and slave respectively, use the following command:
 
 ```shell
 make master-log
-make slave-log
+make node-log
 ```
 
 You can try experiment with several scenarios to see how replication works
@@ -709,15 +709,15 @@ You can try experiment with several scenarios to see how replication works
 #### Sync changes from master to replicant
 
 You can use any postgres database tools to create new tables in master, by
-connecting using POSTGRES_USER and POSTGRES_PASS credentials using exposed port.
-In the sample, the master database was exposed on port 7777.
+connecting using `POSTGRES_USER` and `POSTGRES_PASS` credentials using exposed port.
+In the streaming_replication example, the master database was exposed on port 7777.
 Or you can do it via command line, by entering the shell:
 
 ```shell
 make master-shell
 ```
 
-Then made any database changes using psql.
+Then make any database changes using psql.
 
 After that, you can see that the replicant follows the changes by inspecting the
 slave database. You can, again, use database management tools using connection
@@ -725,7 +725,7 @@ credentials, hostname, and ports for replicant. Or you can do it via command lin
 by entering the shell:
 
 ```shell
-make slave-shell
+make node-shell
 ```
 
 Then view your changes using psql.
@@ -738,14 +738,14 @@ into slave environment and set `DESTROY_DATABASE_ON_RESTART: 'False'`.
 
 After this, you can make changes to your replicant, but master and replicant will not
 be in sync anymore. This is useful if the replicant needs to take over a failover master.
-However it is recommended to take additional action, such as creating a backup from the
+However, it is recommended to take additional action, such as creating a backup from the
 slave so a dedicated master can be created again.
 
 #### Preventing replicant database destroy on restart
 
 You can optionally set `DESTROY_DATABASE_ON_RESTART: 'False'` after successful sync
 to prevent the database from being destroyed on restart. With this setting you can
-shut down your replicant and restart it later and it will continue to sync using the existing
+shut down your replicant and restart it later ,and it will continue to sync using the existing
 database (as long as there are no consistencies conflicts).
 
 However, you should note that this option doesn't mean anything if you didn't
@@ -762,7 +762,7 @@ To activate the following you need to use the environment variable
 docker run --name "logical-replication" -e WAL_LEVEL=logical -d  kartoza/postgis:13.0
 ```
 
-For a detailed example see the docker-compose in the folder `sample/logical_replication`.
+For a detailed example see the docker-compose in the folder `replication_examples/logical_replication`.
 
 ### Docker image versions
 
@@ -786,4 +786,4 @@ please consider taking out a [Support Level Agreeement](https://kartoza.com/en/s
 - Rizky Maulana (rizky@kartoza.com)
 - Admire Nyakudya (admire@kartoza.com)
 
-March 2021
+April 2022

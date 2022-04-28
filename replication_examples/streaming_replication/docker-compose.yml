@@ -1,20 +1,20 @@
 
-version: '2.1'
+version: '3.9'
 
 volumes:
   pg-master-data-dir:
-  pg-slave-data-dir:
+  pg-node-data-dir:
 
 
 services:
   pg-master:
-    image: kartoza/postgis:14-3.1
+    image: kartoza/postgis:14-3.2
     restart: 'always'
     # You can optionally mount to volume, to play with the persistence and
     # observe how the slave will behave after restarts.
     volumes:
       - pg-master-data-dir:/var/lib/postgresql
-      - ./tests:/tests
+      - ./scripts/setup-master.sql:/docker-entrypoint-initdb.d/setup-master.sql
     environment:
       # ALLOW_IP_RANGE option is used to specify additionals allowed domains
       # in pg_hba.
@@ -34,15 +34,15 @@ services:
     healthcheck:
       test: "exit 0"
 
-  pg-slave:
-    image: kartoza/postgis:14-3.1
+  pg-node:
+    image: kartoza/postgis:14-3.2
     restart: 'always'
     # You can optionally mount to volume, but we're not able to scale it
     # in that case.
     # The slave will always destroy its database and copy from master at
     # runtime
     volumes:
-      - pg-slave-data-dir:/var/lib/postgresql
+      - pg-node-data-dir:/var/lib/postgresql
       - ./tests:/tests
 
     environment:
@@ -77,7 +77,7 @@ services:
       # If specified with any value, then it will convert current slave into
       # a writable state. Useful if master is down and the current slave needs
       # to be promoted until manual recovery.
-#      PROMOTE_MASTER: 'True'
+      #PROMOTE_MASTER: 'True'
 
       # For now we don't support different credentials for replication
       # so we use the same credentials as master's superuser, or anything that
