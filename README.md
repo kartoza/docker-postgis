@@ -745,7 +745,7 @@ slave so a dedicated master can be created again.
 
 You can optionally set `DESTROY_DATABASE_ON_RESTART: 'False'` after successful sync
 to prevent the database from being destroyed on restart. With this setting you can
-shut down your replicant and restart it later ,and it will continue to sync using the existing
+shut down your replicant and restart it later, and it will continue to sync using the existing
 database (as long as there are no consistencies conflicts).
 
 However, you should note that this option doesn't mean anything if you didn't
