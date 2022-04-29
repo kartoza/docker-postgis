@@ -393,7 +393,7 @@ If you want to reinitialize the data directory from scratch, you need to do:
  where to store these files using the environment variable `CONF_LOCKFILE_DIR` Example
 
  ```
- -e /opt/conf_lockfiles \
+ -e CONF_LOCKFILE_DIR=/opt/conf_lockfiles \
  -v /data/lock_files:/opt/conf_lockfiles 
  ```
 
