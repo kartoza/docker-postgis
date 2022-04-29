@@ -6,10 +6,13 @@ DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 # Commented for documentation. You can specify the location of
 # pg_wal directory/volume using the following environment variable:
 # POSTGRES_INITDB_WALDIR (default value is unset)
+DEFAULT_SCRIPTS_LOCKFILE_DIR="/docker-entrypoint.initdb.d"
+DEFAULT_CONF_LOCKFILE_DIR="/settings"
+DEFAULT_EXTRA_CONF_DIR="/settings"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
-WAL_ARCHIVE="/opt/archivedir"
+DEFAULT_WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
@@ -111,6 +114,22 @@ else
 fi
 if [ -z "${SSL_DIR}" ]; then
   SSL_DIR="/ssl_certificates"
+fi
+
+if [ -z "${WAL_ARCHIVE}" ]; then
+   WAL_ARCHIVE=${DEFAULT_WAL_ARCHIVE}
+fi
+
+if [ -z "${SCRIPTS_LOCKFILE_DIR}" ]; then
+   SCRIPTS_LOCKFILE_DIR=${DEFAULT_SCRIPTS_LOCKFILE_DIR}
+fi
+
+if [ -z "${CONF_LOCKFILE_DIR}" ]; then
+   CONF_LOCKFILE_DIR=${DEFAULT_CONF_LOCKFILE_DIR}
+fi
+
+if [ -z "${EXTRA_CONF_DIR}" ]; then
+   EXTRA_CONF_DIR=${DEFAULT_EXTRA_CONF_DIR}
 fi
 
 # SSL mode
@@ -371,9 +390,9 @@ function restart_postgres {
 # Useful for people who extends the image.
 
 function entry_point_script {
-  SETUP_LOCKFILE="/docker-entrypoint-initdb.d/.entry_point.lock"
+  SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
-  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" == true ]; then
+  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}

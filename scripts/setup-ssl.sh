@@ -2,7 +2,7 @@
 
 source /scripts/env-data.sh
 
-SETUP_LOCKFILE="${ROOT_CONF}/.ssl.conf.lock"
+SETUP_LOCKFILE="${CONF_LOCKFILE_DIR}/.ssl.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then
 	return 0
 fi
