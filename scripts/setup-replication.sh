@@ -35,7 +35,7 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
  fi
  # Promote to master if desired
 if [[ ! -z "${PROMOTE_MASTER}" ]]; then
-	touch ${PROMOTE_FILE}
+  su - postgres -c "${NODE_PROMOTION} promote -D ${DATADIR}"
 fi
 
 fi

@@ -1,5 +1,5 @@
 # docker-compose build
-version: '2.1'
+version: '3.9'
 volumes:
   dbbackups:
   postgis-data:
@@ -7,7 +7,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:14-3.1
+    image: kartoza/postgis:14-3.2
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -20,13 +20,13 @@ services:
       # Add extensions you need to be enabled by default in the DB. Default are the five specified below
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
     ports:
-      - 25432:5432
+      - "25432:5432"
     restart: on-failure
     healthcheck:
       test: "exit 0"
 
   dbbackups:
-    image: kartoza/pg-backup:14-3.1
+    image: kartoza/pg-backup:14-3.2
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
@@ -36,7 +36,6 @@ services:
       - POSTGRES_PASS=docker
       - POSTGRES_PORT=5432
       - POSTGRES_HOST=db
-      - POSTGRES_DBNAME=gis
     restart: on-failure
     depends_on:
       db:
