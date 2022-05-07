@@ -62,10 +62,6 @@ if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; the
 
 cat > ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
-archive_mode = ${ARCHIVE_MODE}
-archive_command = '${ARCHIVE_COMMAND}'
-restore_command = '${RESTORE_COMMAND}'
-archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
 wal_keep_size = ${PG_WAL_KEEP_SIZE}
 min_wal_size = ${MIN_WAL_SIZE}
@@ -77,6 +73,14 @@ recovery_target_timeline=${TARGET_TIMELINE}
 recovery_target_action=${TARGET_ACTION}
 promote_trigger_file = '${PROMOTE_FILE}'
 EOF
+if [[ ${ARCHIVE_MODE} =~ [Oo][Nn] ]];then
+cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
+archive_mode = ${ARCHIVE_MODE}
+archive_command = '${ARCHIVE_COMMAND}'
+restore_command = '${RESTORE_COMMAND}'
+archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
+EOF
+fi
 echo "include 'streaming_replication.conf'" >> $CONF
 fi
 
