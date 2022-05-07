@@ -134,9 +134,21 @@ if [ -z "${EXTRA_CONF_DIR}" ]; then
 fi
 
 # SSL mode
-if [ -z "${PGSSLMODE}" ]; then
-	PGSSLMODE=require
-fi
+function postgres_ssl_setup() {
+  if [ -z "${PGSSLMODE}" ]; then
+	   PGSSLMODE=require
+  fi
+  if [[ ${PGSSLMODE} == 'verify-ca' || ${PGSSLMODE} == 'verify-full' ]]; then
+        if [[ -z ${SSL_CERT_FILE} || -z ${SSL_KEY_FILE} || -z ${SSL_CA_FILE} ]]; then
+                exit 0
+        else
+          export PARAMS="sslmode=${PGSSLMODE}&sslcert=${SSL_CERT_FILE}&sslkey=${SSL_KEY_FILE}&sslrootcert=${SSL_CA_FILE}"
+        fi
+  elif [[ ${PGSSLMODE} == 'disable' || ${PGSSLMODE} == 'allow' || ${PGSSLMODE} == 'prefer' || ${PGSSLMODE} == 'require' ]]; then
+       export PARAMS="sslmode=${PGSSLMODE}"
+  fi
+
+}
 # Enable hstore and topology by default
 if [ -z "${HSTORE}" ]; then
 	HSTORE=true

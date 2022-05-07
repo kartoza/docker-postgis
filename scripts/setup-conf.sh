@@ -59,7 +59,7 @@ fi
 
 # Create a config for streaming replication
 if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] &&  "$WAL_LEVEL" == 'replica' ]]; then
-
+  postgres_ssl_setup
 cat > ${ROOT_CONF}/streaming_replication.conf <<EOF
 wal_level = ${WAL_LEVEL}
 max_wal_senders = ${PG_MAX_WAL_SENDERS}
@@ -68,7 +68,7 @@ min_wal_size = ${MIN_WAL_SIZE}
 max_wal_size = ${WAL_SIZE}
 hot_standby = on
 checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
-primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} sslmode=${PGSSLMODE}'
+primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} ${PARAMS}'
 recovery_target_timeline=${TARGET_TIMELINE}
 recovery_target_action=${TARGET_ACTION}
 promote_trigger_file = '${PROMOTE_FILE}'
