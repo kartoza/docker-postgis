@@ -133,22 +133,6 @@ if [ -z "${EXTRA_CONF_DIR}" ]; then
    EXTRA_CONF_DIR=${DEFAULT_EXTRA_CONF_DIR}
 fi
 
-# SSL mode
-function postgres_ssl_setup() {
-  if [ -z "${PGSSLMODE}" ]; then
-	   PGSSLMODE=require
-  fi
-  if [[ ${PGSSLMODE} == 'verify-ca' || ${PGSSLMODE} == 'verify-full' ]]; then
-        if [[ -z ${SSL_CERT_FILE} || -z ${SSL_KEY_FILE} || -z ${SSL_CA_FILE} ]]; then
-                exit 0
-        else
-          export PARAMS="sslmode=${PGSSLMODE}&sslcert=${SSL_CERT_FILE}&sslkey=${SSL_KEY_FILE}&sslrootcert=${SSL_CA_FILE}"
-        fi
-  elif [[ ${PGSSLMODE} == 'disable' || ${PGSSLMODE} == 'allow' || ${PGSSLMODE} == 'prefer' || ${PGSSLMODE} == 'require' ]]; then
-       export PARAMS="sslmode=${PGSSLMODE}"
-  fi
-
-}
 # Enable hstore and topology by default
 if [ -z "${HSTORE}" ]; then
 	HSTORE=true
@@ -261,6 +245,19 @@ fi
 if [ -z "${SSL_KEY_FILE}" ]; then
 	SSL_KEY_FILE='/etc/ssl/private/ssl-cert-snakeoil.key'
 fi
+
+# SSL mode
+function postgres_ssl_setup() {
+  if [ -z "${PGSSLMODE}" ]; then
+	   PGSSLMODE=require
+  fi
+  if [[ ${PGSSLMODE} == 'verify-ca' || ${PGSSLMODE} == 'verify-full' ]]; then
+      export PARAMS="sslmode=${PGSSLMODE}&sslcert=${SSL_CERT_FILE}&sslkey=${SSL_KEY_FILE}&sslrootcert=${SSL_CA_FILE}"
+  elif [[ ${PGSSLMODE} == 'disable' || ${PGSSLMODE} == 'allow' || ${PGSSLMODE} == 'prefer' || ${PGSSLMODE} == 'require' ]]; then
+       export PARAMS="sslmode=${PGSSLMODE}"
+  fi
+
+}
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
