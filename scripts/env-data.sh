@@ -185,14 +185,30 @@ if [ -z "${ARCHIVE_MODE}" ]; then
   ARCHIVE_MODE=off
 fi
 
+if [ -z "${ARCHIVE_COMPRESSION}" ]; then
+  ARCHIVE_COMPRESSION=gzip
+fi
+
+if [ -z "${ARCHIVE_DECOMPRESSION}" ]; then
+  ARCHIVE_DECOMPRESSION=gunzip
+fi
+
 if [ -z "${ARCHIVE_COMMAND}" ]; then
-  # https://www.postgresql.org/docs/12/continuous-archiving.html#BACKUP-ARCHIVING-WAL
-  ARCHIVE_COMMAND="test ! -f ${WAL_ARCHIVE}/%f && cp %p ${WAL_ARCHIVE}/%f"
+  # https://www.postgresql.org/docs/14/continuous-archiving.html#BACKUP-ARCHIVING-
+  if [[ ${ARCHIVE_COMPRESSION} == 'gzip' ]];then
+      ARCHIVE_COMMAND="test ! -f ${WAL_ARCHIVE}/%f && gzip  %p > ${WAL_ARCHIVE}/%f.gz "
+  else
+      ARCHIVE_COMMAND="test ! -f ${WAL_ARCHIVE}/%f && cp %p ${WAL_ARCHIVE}/%f"
+  fi
 fi
 
 if [ -z "${RESTORE_COMMAND}" ]; then
-  # https://www.postgresql.org/docs/12/runtime-config-wal.html
-  RESTORE_COMMAND="cp ${WAL_ARCHIVE}/%f \"%p\""
+  # https://www.postgresql.org/docs/14/runtime-config-wal.html
+  if [[ "${ARCHIVE_DECOMPRESSION}" == 'gunzip' ]];then
+    RESTORE_COMMAND="gunzip < ${WAL_ARCHIVE}/%f.gz > %p"
+  else
+    RESTORE_COMMAND="cp ${WAL_ARCHIVE}/%f \"%p\""
+  fi
 fi
 
 if [ -z "${ARCHIVE_CLEANUP_COMMAND}" ]; then
