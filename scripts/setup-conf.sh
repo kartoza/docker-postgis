@@ -77,7 +77,6 @@ if [[ ${ARCHIVE_MODE} =~ [Oo][Nn] ]];then
 cat >> ${ROOT_CONF}/streaming_replication.conf <<EOF
 archive_mode = ${ARCHIVE_MODE}
 archive_command = '${ARCHIVE_COMMAND}'
-restore_command = '${RESTORE_COMMAND}'
 archive_cleanup_command = '${ARCHIVE_CLEANUP_COMMAND}'
 EOF
 fi
