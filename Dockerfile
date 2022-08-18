@@ -71,7 +71,7 @@ ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=14
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=2
-ARG TIMESCALE_VERSION=2-2.5.0
+ARG TIMESCALE_VERSION=2-2.7.2
 ARG BUILD_TIMESCALE=false
 
 
@@ -104,8 +104,8 @@ RUN set -eux \
         postgresql-server-dev-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-cron \
         postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw
 
-
-RUN if [ "${BUILD_TIMESCALE}" =~ [Tt][Rr][Uu][Ee] ]; then \
+# TODO a case insensitive match would be more robust
+RUN if [ "${BUILD_TIMESCALE}" = "true" ]; then \
         export DEBIAN_FRONTEND=noninteractive && \
         sh -c "echo \"deb [signed-by=/usr/share/keyrings/timescale.keyring] https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main\" > /etc/apt/sources.list.d/timescaledb.list" && \
         wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey |  gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
