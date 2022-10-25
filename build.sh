@@ -5,6 +5,6 @@ if [[ ! -f .env ]]; then
     cp .example.env .env
 fi
 
-docker-compose -f docker-compose.build.yml build postgis-prod
+docker compose -f docker-compose.build.yml build postgis-prod
 
-#docker-compose -f docker-compose.build-timescale.yml build postgis-prod
+#docker compose -f docker-compose.build-timescale.yml build postgis-prod
