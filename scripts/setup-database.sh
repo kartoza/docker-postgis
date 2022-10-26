@@ -110,7 +110,7 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
-            su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
+            #su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
                 echo "Enabling \"${ext}\" in the database ${db}"
                 if [[ ${ext} != 'pg_cron' ]]; then

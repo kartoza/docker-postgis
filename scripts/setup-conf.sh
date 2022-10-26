@@ -101,27 +101,19 @@ fi
 # Timescale default tuning
 # TODO If timescale DB accepts reading from include directory then refactor code to remove line 97 - 112 (https://github.com/timescale/timescaledb-tune/issues/80)
 if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]] && [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee]    ]] ;then
-  if [[ -f ${ROOT_CONF}/postgis.conf ]];then
-    sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/logical_replication.conf ]];then
-    sed -i '/logical_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/logical_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/streaming_replication.conf ]];then
-    sed -i '/streaming_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/streaming_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/extra.conf ]];then
-    sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
+  over_write_conf
   echo -e "\e[1;31m Time scale config tuning values below"
   # TODO Add logic to find defaults memory, CPUS as these can vary from defaults on host machine and in docker container
   timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/postgresql.conf
   echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/postgresql.conf"
+elif [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]]; then
+
+  echo -e "\e[1;31m Time scale config tuning values below"
+  timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/time_scale_tuning.conf
+  echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/time_scale_tuning.conf"
+
 fi
+
 
 # Optimise PostgreSQL shared memory for PostGIS
 # shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB

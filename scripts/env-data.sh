@@ -329,9 +329,9 @@ fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
-    else
-        SHARED_PRELOAD_LIBRARIES='pg_cron'
+        SHARED_PRELOAD_LIBRARIES='timescaledb'
+    #else
+        #SHARED_PRELOAD_LIBRARIES='pg_cron'cron
     fi
 fi
 
@@ -474,4 +474,23 @@ until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REP
 
 }
 
+function over_write_conf() {
+  if [[ -f ${ROOT_CONF}/postgis.conf ]];then
+    sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/logical_replication.conf ]];then
+    sed -i '/logical_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/logical_replication.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/streaming_replication.conf ]];then
+    sed -i '/streaming_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/streaming_replication.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+  if [[ -f ${ROOT_CONF}/extra.conf ]];then
+    sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
+    cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
+  fi
+
+}
 
