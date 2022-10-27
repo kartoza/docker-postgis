@@ -5,6 +5,14 @@ if [[ ! -f .env ]]; then
     cp .example.env .env
 fi
 
-docker-compose -f docker-compose.build.yml build postgis-prod
+if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
+  docker-compose -f docker-compose.build.yml build postgis-prod
+else
+  docker compose -f docker-compose.build.yml build postgis-prod
+fi
 
-#docker-compose -f docker-compose.build-timescale.yml build postgis-prod
+#if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
+  #docker-compose -f docker-compose.build-timescale.yml build postgis-prod
+#else
+  #docker compose -f docker-compose.build-timescale.yml build postgis-prod
+#fi
