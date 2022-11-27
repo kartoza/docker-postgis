@@ -418,7 +418,7 @@ function restart_postgres {
 function entry_point_script {
   SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
   # If lockfile doesn't exists, proceed.
-  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]; then
+  if [[ ! -f "${SETUP_LOCKFILE}" ]] || [[ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
           export PGPASSWORD=${POSTGRES_PASS}

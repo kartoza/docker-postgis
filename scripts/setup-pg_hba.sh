@@ -81,4 +81,6 @@ if [[ -z "$REPLICATE_FROM" ]]; then
 fi
 
 # Put lock file to make sure conf was not reinitialized
+export PASSWORD_AUTHENTICATION
+envsubst < $ROOT_CONF/pg_hba.conf > /tmp/pg_hba.conf && mv /tmp/pg_hba.conf $ROOT_CONF/pg_hba.conf
 touch ${SETUP_LOCKFILE}
