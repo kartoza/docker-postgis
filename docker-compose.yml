@@ -23,7 +23,7 @@ services:
       - "5432"
     restart: on-failure
     healthcheck:
-      test: "PGPASSWORD=${POSTGRES_PASS} pg_isready -h 127.0.0.1 -U ${POSTGRES_USER} -d ${POSTGRES_DB}"
+      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
 
   dbbackups:
     image: kartoza/pg-backup:15-3.3
