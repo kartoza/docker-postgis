@@ -102,7 +102,7 @@ RUN set -eux \
         netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \
         postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
-        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}  \
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}  postgresql-${POSTGRES_MAJOR_VERSION}-cron \
         postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw
 
 # TODO a case insensitive match would be more robust
