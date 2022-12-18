@@ -112,9 +112,22 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
             su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-                echo "Enabling \"${ext}\" in the database ${db}"
-                if [[ ${ext} != 'pg_cron' ]]; then
-                  su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' $db"
+
+                IFS=':'
+                read -a strarr <<< "$ext"
+                EXTENSION_NAME=${strarr[0]}
+                EXTENSION_VERSION=${strarr[1]}
+                if [[ -z ${EXTENSION_VERSION} ]];then
+                  if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+                    echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${db} \033[0m"
+                    su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;' $db"
+                  fi
+                else
+                  echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${db} \033[0m"
+                  if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+                    EXPRESSION="CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade"
+                    su - postgres -c 'psql -c "$EXPRESSION;" $db'
+                  fi
                 fi
             done
             echo "Loading legacy sql"
