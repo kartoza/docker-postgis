@@ -120,25 +120,24 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
                 if [[ -z ${EXTENSION_VERSION} ]];then
                   if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
                     echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${db} \033[0m"
-                    su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;' $db"
+                    PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
                   fi
                 else
                   echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${db} \033[0m"
                   if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-                    EXPRESSION="CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade"
-                    su - postgres -c 'psql -c "$EXPRESSION;" $db'
+                    PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
                   fi
                 fi
             done
             echo "Loading legacy sql"
-            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
-            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
+            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
+            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
             if [[ "$WAL_LEVEL" == 'logical' ]];then
               PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
             fi
 
         else
-         echo "${db} db already exists"
+          echo -e "\e[32m [Entrypoint] Database \e[1;31m ${db} \e[32m already exists \033[0m"
         fi
 done
 
