@@ -262,6 +262,15 @@ they will cause the container to exit. Users should also consult documentation
 relating to that specific extension i.e. [timescaledb](https://github.com/timescale/timescaledb),
 [pg_cron](https://github.com/citusdata/pg_cron), [pgrouting](https://pgrouting.org/)
 
+You can also install tagged version of extensions i.e 
+
+```bash
+POSTGRES_MULTIPLE_EXTENSIONS=postgis,pgrouting:3.4.0
+```
+
+where `pgrouting:3.4.0` The extension name is fixed with the version name with the delimiter being a
+colon.
+
 #### Shared preload libraries
 
 Some PostgreSQL extensions require shared_preload_libraries to be specified in the conf files.
