@@ -92,10 +92,25 @@ echo "postgres ready"
 source /scripts/setup-user.sh
 
 # enable extensions in template1 if env variable set to true
+export PGPASSWORD=${POSTGRES_PASS}
 if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
     for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-        echo "Enabling \"${ext}\" in the database template1"
-        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' template1"
+        IFS=':'
+        read -a strarr <<< "$ext"
+        EXTENSION_NAME=${strarr[0]}
+        EXTENSION_VERSION=${strarr[1]}
+        if [[ -z ${EXTENSION_VERSION} ]];then
+          if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+            echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m template1 \033[0m"
+            psql template1 -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
+          fi
+        else
+          if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+            echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m template1 \033[0m"
+            psql template1 -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
+          fi
+        fi
+
     done
 fi
 
@@ -109,10 +124,10 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
 
         if [[  ${RESULT} -eq 0 ]]; then
             echo "Create db ${db}"
-            su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
-            su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
+            DB_CREATE=$(createdb -h localhost -p 5432 -U ${POSTGRES_USER} ${db})
+            eval ${DB_CREATE}
+            psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-
                 IFS=':'
                 read -a strarr <<< "$ext"
                 EXTENSION_NAME=${strarr[0]}
@@ -120,20 +135,20 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
                 if [[ -z ${EXTENSION_VERSION} ]];then
                   if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
                     echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${db} \033[0m"
-                    PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
+                    psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
                   fi
                 else
                   echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${db} \033[0m"
                   if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-                    PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
+                    psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
                   fi
                 fi
             done
             echo "Loading legacy sql"
-            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
-            PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
-            if [[ "$WAL_LEVEL" == 'logical' ]];then
-              PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
+            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
+            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
+            if [[ "$WAL_LEVEL" =~ [Ll][Oo][Gg][Ii][Cc][Aa][Ll]  ]];then
+              psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
             fi
 
         else
@@ -144,13 +159,13 @@ done
 # Create schemas in the DB
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
     for schema in $(echo ${SCHEMA_NAME} | tr ',' ' '); do
-      SCHEMA_RESULT=`PGPASSWORD=${POSTGRES_PASS} psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';"`
+      SCHEMA_RESULT=$(psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';")
      if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-          echo "Creating schema ${schema} in database ${SINGLE_DB}"
-          PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${SINGLE_DB} \033[0m"
+          psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       elif [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
-          echo "Creating schema ${schema} in database ${db}"
-          PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${db} \033[0m"
+          psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       fi
     done
 done

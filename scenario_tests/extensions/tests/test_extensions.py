@@ -3,8 +3,19 @@ import os
 from utils.utils import DBConnection
 from pprint import pprint
 
+
 class TestExtensionsBase(unittest.TestCase):
-    SPECIFIED_EXT = os.getenv('POSTGRES_MULTIPLE_EXTENSIONS').split(',')
+    if os.getenv('POSTGRES_MULTIPLE_EXTENSIONS').find(':') != -1:
+        SPECIFIED_EXT = []
+        PG_EXT = os.getenv('POSTGRES_MULTIPLE_EXTENSIONS').split(',')
+        for versions in PG_EXT:
+            if versions.find(':') != -1:
+                ext_name = versions.split(":")[0]
+                SPECIFIED_EXT.append(ext_name)
+            else:
+                SPECIFIED_EXT.append(versions)
+    else:
+        SPECIFIED_EXT = os.getenv('POSTGRES_MULTIPLE_EXTENSIONS').split(',')
     DEFAULT_EXT = ['plpgsql', 'pg_cron']  # get installed in any case
 
     def setUp(self):
