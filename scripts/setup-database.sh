@@ -36,13 +36,12 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][Rr]
     # Only attempt reinitializations if ${RECREATE_DATADIR} is true
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
-    echo "Initializing Postgres Database at ${DATADIR}"
+    echo -e "\e[32m [Entrypoint] Initializing Postgres Database at  \e[1;31m ${DATADIR}  \033[0m"
     create_dir "${DATADIR}"
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres "${DATADIR}"
-    echo "Initializing with command:"
     command="$INITDB -U postgres --pwfile=<(echo "$POSTGRES_PASS") -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
-    echo "$command"
+    echo -e "\e[32m [Entrypoint] Initializing Cluster with the following commands Postgres Database at  \e[1;31m $command  \033[0m"
     su - postgres -c "$command"
 else
     # If using existing datadir:
@@ -91,60 +90,27 @@ echo "postgres ready"
 # Setup user
 source /scripts/setup-user.sh
 
-# enable extensions in template1 if env variable set to true
-export PGPASSWORD=${POSTGRES_PASS}
-if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-        IFS=':'
-        read -a strarr <<< "$ext"
-        EXTENSION_NAME=${strarr[0]}
-        EXTENSION_VERSION=${strarr[1]}
-        if [[ -z ${EXTENSION_VERSION} ]];then
-          if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-            echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m template1 \033[0m"
-            psql template1 -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
-          fi
-        else
-          if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-            echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m template1 \033[0m"
-            psql template1 -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
-          fi
-        fi
 
-    done
-fi
+export PGPASSWORD=${POSTGRES_PASS}
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
-
-
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
-
         if [[  ${RESULT} -eq 0 ]]; then
-            echo "Create db ${db}"
+            echo -e "\e[32m [Entrypoint] Create database \e[1;31m ${db}  \033[0m"
             DB_CREATE=$(createdb -h localhost -p 5432 -U ${POSTGRES_USER} ${db})
             eval ${DB_CREATE}
             psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-                IFS=':'
-                read -a strarr <<< "$ext"
-                EXTENSION_NAME=${strarr[0]}
-                EXTENSION_VERSION=${strarr[1]}
-                if [[ -z ${EXTENSION_VERSION} ]];then
-                  if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-                    echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${db} \033[0m"
-                    psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
-                  fi
-                else
-                  echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${db} \033[0m"
-                  if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-                    psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
-                  fi
+                extension_install ${db}
+                # enable extensions in template1 if env variable set to true
+                if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
+                  extension_install template1
                 fi
             done
-            echo "Loading legacy sql"
+            echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
             psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
             psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
             if [[ "$WAL_LEVEL" =~ [Ll][Oo][Gg][Ii][Cc][Aa][Ll]  ]];then
@@ -153,8 +119,11 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
 
         else
           echo -e "\e[32m [Entrypoint] Database \e[1;31m ${db} \e[32m already exists \033[0m"
+
         fi
 done
+
+
 
 # Create schemas in the DB
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
@@ -169,6 +138,8 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
       fi
     done
 done
+
+
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l 2>&1"
