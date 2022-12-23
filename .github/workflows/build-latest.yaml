@@ -38,6 +38,7 @@ jobs:
           - collations
           - extensions
           - logical_replication
+          - init_scripts
         include:
           - distro: debian
             imageVersion: bullseye

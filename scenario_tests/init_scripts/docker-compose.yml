@@ -1,0 +1,59 @@
+version: '2.1'
+volumes:
+  default-pg-data-dir-md5:
+  new-pg-data-dir:
+  default-pg-data-dir-scram:
+  
+services:
+  pg-default-md5:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    volumes:
+      # By default persisted volumes should be in /var/lib/postgresql
+      - default-pg-data-dir-md5:/var/lib/postgresql
+      - ./tests/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./tests:/tests
+      - ../utils:/lib/utils
+    environment:
+      POSTGRES_PASS: 'docker'
+      PASSWORD_AUTHENTICATION: md5
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
+
+  pg-new-md5:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    volumes:
+      # Mount to new locations where there are no initial data
+      - new-pg-data-dir:/opt/mypostgis/data
+      - ./tests/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./tests:/tests
+      - ../utils:/lib/utils
+    environment:
+      DATADIR: /opt/mypostgis/data
+      POSTGRES_PASS: 'docker'
+      PASSWORD_AUTHENTICATION: md5
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
+
+  pg-default-scram:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    volumes:
+      # By default persisted volumes should be in /var/lib/postgresql
+      - default-pg-data-dir-scram:/var/lib/postgresql
+      - ./tests/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./tests:/tests
+      - ../utils:/lib/utils
+    environment:
+      POSTGRES_PASS: 'docker'
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
+
+  

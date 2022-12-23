@@ -78,7 +78,7 @@ fi
 
 function generate_random_string() {
   STRING_LENGTH=$1
-  random_pass_string=$(openssl rand -base64 ${STRING_LENGTH})
+  random_pass_string=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c "${STRING_LENGTH}")
   if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
     echo ${random_pass_string} > /scripts/.pass_${STRING_LENGTH}.txt
   fi
