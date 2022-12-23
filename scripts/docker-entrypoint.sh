@@ -21,15 +21,13 @@ figlet -t "Kartoza Docker PostGIS"
 if [[ -f /scripts/.pass_20.txt ]]; then
   USER_CREDENTIAL_PASS=$(cat /scripts/.pass_20.txt)
   cp /scripts/.pass_20.txt /tmp/PGPASSWORD.txt
-  echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS"
-  echo -e "\033[0m PGPASSWORD Generated above: "
+  echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS \033[0m"
 fi
 
 if [[ -f /scripts/.pass_22.txt ]]; then
   USER_CREDENTIAL_PASS=$(cat /scripts/.pass_22.txt)
   cp /scripts/.pass_22.txt /tmp/REPLPASSWORD.txt
-  echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;34m $USER_CREDENTIAL_PASS"
-  echo -e "\033[0m Replication password Generated above: "
+  echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;34m $USER_CREDENTIAL_PASS \033[0m"
 fi
 
 
@@ -46,11 +44,11 @@ else
 fi
 
 
+
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]];
 then
-    echo "Postgres initialisation process completed .... restarting in foreground"
-
+    echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground \033[0m"
     su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
 fi
 

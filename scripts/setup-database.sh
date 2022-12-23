@@ -36,13 +36,12 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][Rr]
     # Only attempt reinitializations if ${RECREATE_DATADIR} is true
     # No Replicate From settings. Assume that this is a master database.
     # Initialise db
-    echo "Initializing Postgres Database at ${DATADIR}"
+    echo -e "\e[32m [Entrypoint] Initializing Postgres Database at  \e[1;31m ${DATADIR}  \033[0m"
     create_dir "${DATADIR}"
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres "${DATADIR}"
-    echo "Initializing with command:"
     command="$INITDB -U postgres --pwfile=<(echo "$POSTGRES_PASS") -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
-    echo "$command"
+    echo -e "\e[32m [Entrypoint] Initializing Cluster with the following commands Postgres Database at  \e[1;31m $command  \033[0m"
     su - postgres -c "$command"
 else
     # If using existing datadir:
@@ -91,57 +90,56 @@ echo "postgres ready"
 # Setup user
 source /scripts/setup-user.sh
 
-# enable extensions in template1 if env variable set to true
-if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-        echo "Enabling \"${ext}\" in the database template1"
-        su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' template1"
-    done
-fi
+
+export PGPASSWORD=${POSTGRES_PASS}
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
-
-
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
-
         if [[  ${RESULT} -eq 0 ]]; then
-            echo "Create db ${db}"
-            su - postgres -c "createdb -O ${POSTGRES_USER} ${db}"
-            su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;' ${SINGLE_DB}"
+            echo -e "\e[32m [Entrypoint] Create database \e[1;31m ${db}  \033[0m"
+            DB_CREATE=$(createdb -h localhost -p 5432 -U ${POSTGRES_USER} ${db})
+            eval ${DB_CREATE}
+            psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
             for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-                echo "Enabling \"${ext}\" in the database ${db}"
-                if [[ ${ext} != 'pg_cron' ]]; then
-                  su - postgres -c "psql -c 'CREATE EXTENSION IF NOT EXISTS \"${ext}\" cascade;' $db"
+                extension_install ${db}
+                # enable extensions in template1 if env variable set to true
+                if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
+                  extension_install template1
                 fi
             done
-            echo "Loading legacy sql"
-            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_minimal.sql" || true
-            su - postgres -c "psql ${db} -f ${SQLDIR}/legacy_gist.sql" || true
-            if [[ "$WAL_LEVEL" == 'logical' ]];then
-              PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
+            echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
+            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
+            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
+            if [[ "$WAL_LEVEL" =~ [Ll][Oo][Gg][Ii][Cc][Aa][Ll]  ]];then
+              psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
             fi
 
         else
-         echo "${db} db already exists"
+          echo -e "\e[32m [Entrypoint] Database \e[1;31m ${db} \e[32m already exists \033[0m"
+
         fi
 done
+
+
 
 # Create schemas in the DB
 for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
     for schema in $(echo ${SCHEMA_NAME} | tr ',' ' '); do
-      SCHEMA_RESULT=`PGPASSWORD=${POSTGRES_PASS} psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';"`
+      SCHEMA_RESULT=$(psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';")
      if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-          echo "Creating schema ${schema} in database ${SINGLE_DB}"
-          PGPASSWORD=${POSTGRES_PASS} psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${SINGLE_DB} \033[0m"
+          psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       elif [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
-          echo "Creating schema ${schema} in database ${db}"
-          PGPASSWORD=${POSTGRES_PASS} psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${db} \033[0m"
+          psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       fi
     done
 done
+
+
 
 # This should show up in docker logs afterwards
 su - postgres -c "psql -l 2>&1"

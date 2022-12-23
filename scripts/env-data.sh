@@ -494,3 +494,22 @@ function over_write_conf() {
 
 }
 
+function extension_install() {
+  DATABASE=$1
+  IFS=':'
+  read -a strarr <<< "$ext"
+  EXTENSION_NAME=${strarr[0]}
+  EXTENSION_VERSION=${strarr[1]}
+  if [[ -z ${EXTENSION_VERSION} ]];then
+    if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+      echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
+      psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
+    fi
+  else
+    echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
+    if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
+      psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
+    fi
+  fi
+
+}
