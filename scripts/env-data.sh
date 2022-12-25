@@ -355,6 +355,10 @@ if [ -z "${TIMESCALE_TUNING_PARAMS}" ]; then
   TIMESCALE_TUNING_PARAMS=
 fi
 
+if [ -z "${RUN_AS_ROOT}" ]; then
+  RUN_AS_ROOT=true
+fi
+
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
 if [ -n "${POSTGRES_PASSWORD}" ]; then
@@ -513,3 +517,27 @@ function extension_install() {
   fi
 
 }
+function directory_checker() {
+  DATA_PATH=$1
+  if [ -d $DATA_PATH ];then
+    echo "$DATA_PATH exists"
+    chown -R ${USER}:${GROUP} ${DATA_PATH}
+  fi
+
+}
+function non_root_permission() {
+  USER="$1"
+  GROUP="$2"
+  if [ -z "${POSTGRES_INITDB_WALDIR}" ];then
+    echo "none"
+  else
+    directory_checker "${POSTGRES_INITDB_WALDIR}"
+  fi
+  directory_checker "${DATADIR}"
+  directory_checker /usr/lib/postgresql/
+  directory_checker /etc/
+  directory_checker "${WAL_ARCHIVE}"
+  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+
+}
+
