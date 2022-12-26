@@ -82,8 +82,16 @@ fi
 # This will make sure entrypoint will always be executed
 if [[ "${1:0:1}" = '-' ]]; then
     # append postgres into the arguments
-    set -- postgres "$@"
+    if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
+      set -- postgres "$@"
+    else
+      set -- gosu $USER_NAME "$@"
+    fi
 fi
 
 echo "The actual command running is "$@""
-exec su - "$@"
+if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
+  exec su - "$@"
+else
+  exec gosu $USER_NAME - "$@"
+fi

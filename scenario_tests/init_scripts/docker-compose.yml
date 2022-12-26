@@ -16,6 +16,7 @@ services:
     environment:
       POSTGRES_PASS: 'docker'
       PASSWORD_AUTHENTICATION: md5
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -27,13 +28,14 @@ services:
     volumes:
       # Mount to new locations where there are no initial data
       - new-pg-data-dir:/opt/mypostgis/data
-      - ./tests/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./tests/init.sh:/docker-entrypoint-initdb.d/init.sh
       - ./tests:/tests
       - ../utils:/lib/utils
     environment:
       DATADIR: /opt/mypostgis/data
       POSTGRES_PASS: 'docker'
       PASSWORD_AUTHENTICATION: md5
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -50,6 +52,7 @@ services:
       - ../utils:/lib/utils
     environment:
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s

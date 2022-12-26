@@ -22,6 +22,7 @@ services:
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
       WAL_LEVEL: 'logical'
+      RUN_AS_ROOT: true
     ports:
       - "7777:5432"
     healthcheck:
@@ -48,6 +49,7 @@ services:
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
+      RUN_AS_ROOT: true
     depends_on:
         - pg-publisher
     # You can expose the port to observe it in your local machine

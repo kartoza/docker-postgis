@@ -520,7 +520,6 @@ function extension_install() {
 function directory_checker() {
   DATA_PATH=$1
   if [ -d $DATA_PATH ];then
-    echo "$DATA_PATH exists"
     chown -R ${USER}:${GROUP} ${DATA_PATH}
   fi
 
@@ -529,14 +528,23 @@ function non_root_permission() {
   USER="$1"
   GROUP="$2"
   if [ -z "${POSTGRES_INITDB_WALDIR}" ];then
-    echo "none"
+    echo "PG Wal Dir is not set, skipping changing permissions"
   else
     directory_checker "${POSTGRES_INITDB_WALDIR}"
   fi
+  #TODO Dry the function below
   directory_checker "${DATADIR}"
-  directory_checker /usr/lib/postgresql/
-  directory_checker /etc/
+  directory_checker "/usr/lib/postgresql/"
+  directory_checker "/etc/"
   directory_checker "${WAL_ARCHIVE}"
+  directory_checker "${SCRIPTS_LOCKFILE_DIR}"
+  directory_checker "${CONF_LOCKFILE_DIR}"
+  directory_checker "${EXTRA_CONF_DIR}"
+  directory_checker "${SSL_DIR}"
+  directory_checker "/var/run/"
+  directory_checker "/usr/bin"
+  directory_checker "/tmp"
+  directory_checker "/scripts"
   chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 
 }

@@ -18,6 +18,7 @@ services:
       # Default usage, no datadir location defined
       TEST_CLASS: TestDefault
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -36,6 +37,7 @@ services:
       TEST_CLASS: TestNew
       DATADIR: /opt/mypostgis/data
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -56,6 +58,7 @@ services:
       DEFAULT_COLLATION: ${DEFAULT_COLLATION:-id_ID.utf8}
       DEFAULT_CTYPE: ${DEFAULT_COLLATION:-id_ID.utf8}
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -76,6 +79,7 @@ services:
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/mypostgis/data/waldir
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -96,6 +100,7 @@ services:
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/mypostgis/waldir
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -116,6 +121,7 @@ services:
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/waldir
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -136,6 +142,7 @@ services:
       DATADIR: /opt/mypostgis/data
       POSTGRES_INITDB_WALDIR: /opt/waldir
       POSTGRES_PASS: 'docker'
+      RUN_AS_ROOT: true
     healthcheck:
       interval: 60s
       timeout: 30s
