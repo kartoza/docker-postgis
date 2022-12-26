@@ -20,7 +20,7 @@ fi
 
 sleep 30
 
-services=("pg" "pg-new")
+services=("pg" "pg-new" "pg-gosu" "pg-new-gosu")
 
 for service in "${services[@]}"; do
 

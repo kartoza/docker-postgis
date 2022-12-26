@@ -13,7 +13,7 @@ fi
 
 
 # Run service
-${VERSION} up -d pg-default-md5 pg-new-md5 pg-default-scram
+${VERSION} up -d pg-default-md5 pg-new-md5 pg-default-scram pg-default-md5-gosu pg-new-md5-gosu pg-default-scram-gosu
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
@@ -21,7 +21,7 @@ fi
 
 sleep 60
 
-services=("pg-default-md5" "pg-new-md5" "pg-default-scram")
+services=("pg-default-md5" "pg-new-md5" "pg-default-scram" "pg-default-md5-gosu" "pg-new-md5-gosu" "pg-default-scram-gosu")
 
 for service in "${services[@]}"; do
 
