@@ -57,6 +57,7 @@ if [[ -z "$REPLICATE_FROM" ]]; then
 else
     # This means this is a slave/replication instance.
     echo "Setup slave database"
+    non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
     source /scripts/setup-replication.sh
 fi
 
