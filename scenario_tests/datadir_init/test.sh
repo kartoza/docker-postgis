@@ -65,6 +65,6 @@ for service in "${services[@]}"; do
 done
 
 # special meta test to check the setup
-bash ./test_custom_waldir-gs.sh
+bash ./test_custom_waldir_gs.sh
 
 ${VERSION} -f docker-compose-gs.yml down -v
