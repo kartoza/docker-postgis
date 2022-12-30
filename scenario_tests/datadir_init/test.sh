@@ -42,3 +42,29 @@ ${VERSION} down -v
 
 # Run service for none root user
 
+${VERSION} -f docker-compose-gs.yml up -d pg-default pg-new pg-recreate
+
+if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+  ${VERSION} -f docker-compose-gs.yml logs -f &
+fi
+
+sleep 60
+
+services=("pg-default" "pg-new" "pg-recreate")
+
+for service in "${services[@]}"; do
+
+  # Execute tests
+  until ${VERSION} -f docker-compose-gs.yml exec -T $service pg_isready; do
+    sleep 5
+    echo "Wait service to be ready"
+  done;
+  echo "Execute test for $service"
+  ${VERSION} -f docker-compose-gs.yml exec -T $service /bin/bash /tests/test.sh
+
+done
+
+# special meta test to check the setup
+bash ./test_custom_waldir-gs.sh
+
+${VERSION} -f docker-compose-gs.yml down -v
