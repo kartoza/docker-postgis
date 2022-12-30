@@ -12,7 +12,7 @@ if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
 fi
 
 # Run service
-${VERSION} up -d pg-default pg-new pg-recreate
+${VERSION} up -d pg-default pg-new pg-recreate pg-default-gosu pg-new-gosu pg-recreate-gosu
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
@@ -20,7 +20,7 @@ fi
 
 sleep 60
 
-services=("pg-default" "pg-new" "pg-recreate")
+services=("pg-default" "pg-new" "pg-recreate" "pg-default-gosu" "pg-new-gosu" "pg-recreate-gosu")
 
 for service in "${services[@]}"; do
 

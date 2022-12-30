@@ -27,3 +27,18 @@ services:
       test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
 
 
+  dbbackups:
+    image: kartoza/pg-backup:15-3.3
+    hostname: pg-backups
+    volumes:
+      - dbbackups:/backups
+    environment:
+      - DUMPPREFIX=PG_db
+      - POSTGRES_USER=docker
+      - POSTGRES_PASS=docker
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=db
+    restart: on-failure
+    depends_on:
+      db:
+        condition: service_healthy
