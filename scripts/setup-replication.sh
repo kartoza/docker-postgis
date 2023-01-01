@@ -16,16 +16,6 @@ else
 fi
 
 create_dir ${WAL_ARCHIVE}
-if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-  chown -R "${USER_NAME}":"${DB_GROUP_NAME}" ${DATADIR} ${WAL_ARCHIVE}
-  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
-else
-  chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
-  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
-fi
-
-
-
 
 if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   # No content yet - but this is a slave database

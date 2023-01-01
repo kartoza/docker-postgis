@@ -71,7 +71,12 @@ else
     # This means this is a slave/replication instance.
     echo -e "[Entrypoint] Setup replicant database \033[0m"
     create_dir ${WAL_ARCHIVE}
-    non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+      non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+    else
+      chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
+      chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+    fi
     source /scripts/setup-replication.sh
 fi
 
