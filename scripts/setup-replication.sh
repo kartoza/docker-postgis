@@ -43,7 +43,6 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
     echo -e "[Entrypoint] \e[1;31m Get initial database from master \033[0m"
     configure_replication_permissions
-    cat /home/"${USER_NAME}"/.pgpass
     if [ -f "${DATADIR}/backup_label.old" ]; then
       echo -e "[Entrypoint] \e[1;31m PG Basebackup already exists so proceed to start the DB \033[0m"
     else
