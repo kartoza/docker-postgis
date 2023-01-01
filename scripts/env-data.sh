@@ -458,23 +458,34 @@ function entry_point_script {
 
 function configure_replication_permissions {
 
-    echo "Setup data permissions"
-    echo "----------------------"
-    chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
-        su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
-        su - postgres -c "chmod 0600 ~/.pgpass"
+    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+      echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
+      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" $(getent passwd postgres | cut -d: -f6)
+      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > /home/"${USER_NAME}"/.pgpass
+      chmod 600 /home/"${USER_NAME}"/.pgpass
+      chown -R "${USER_NAME}":"${DB_GROUP_NAME}"  /home/"${USER_NAME}"/.pgpass
+      non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+
+    else
+      chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
+      chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+      echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as root user \033[0m"
+      chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
+      su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
+      su - postgres -c "chmod 0600 ~/.pgpass"
+    fi
 }
 
 function streaming_replication {
-until su - postgres -c "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
-	do
-		echo "Waiting for master to connect..."
-		sleep 1s
-		if [[ "$(ls -A ${DATADIR})" ]]; then
-			echo "Need empty folder. Cleaning directory..."
-			rm -rf ${DATADIR}/*
-		fi
-	done
+  until ${START_COMMAND} "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} -R -vP -w --label=gis_pg_custer"
+    do
+      echo -e "[Entrypoint] \e[1;31m Waiting for master to connect... \033[0m"
+      sleep 1s
+      if [[ "$(ls -A ${DATADIR})" ]]; then
+        echo -e "[Entrypoint] \e[1;31m Need empty folder. Cleaning directory... \033[0m"
+        rm -rf ${DATADIR}/*
+      fi
+    done
 
 }
 
@@ -528,7 +539,7 @@ function non_root_permission() {
   USER="$1"
   GROUP="$2"
   if [ -z "${POSTGRES_INITDB_WALDIR}" ];then
-    echo "PG Wal Dir is not set, skipping changing permissions"
+    echo -e "[Entrypoint] \e[1;31m PG Wal Dir is not set, skipping changing permissions \033[0m"
   else
     directory_checker "${POSTGRES_INITDB_WALDIR}"
   fi

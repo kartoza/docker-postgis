@@ -6,10 +6,25 @@ source /scripts/env-data.sh
 
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
+if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+  echo "gosu ${USER_NAME}:${DB_GROUP_NAME} bash -c" > /tmp/gosu_subs.txt
+  envsubst < /tmp/gosu_subs.txt > /tmp/gosu_command.txt
+  START_COMMAND=$(cat /tmp/gosu_command.txt)
+  rm /tmp/gosu_subs.txt /tmp/gosu_command.txt
+else
+  START_COMMAND='su - postgres -c'
+fi
 
 create_dir ${WAL_ARCHIVE}
-chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
-chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+  chown -R "${USER_NAME}":"${DB_GROUP_NAME}" ${DATADIR} ${WAL_ARCHIVE}
+  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+else
+  chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
+  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+fi
+
+
 
 
 if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
@@ -17,26 +32,29 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   if [ -z "${REPLICATE_FROM}" ]; then
     echo "You have not set REPLICATE_FROM variable."
     echo "Specify the master address/hostname in REPLICATE_FROM and REPLICATE_PORT variable."
+    exit 1
   fi
 
-  until su - postgres -c "pg_isready -h ${REPLICATE_FROM} -p ${REPLICATE_PORT}"
+  until ${START_COMMAND}  "/usr/bin/pg_isready -h ${REPLICATE_FROM} -p ${REPLICATE_PORT}"
   do
-    echo "Waiting for master to ping..."
+    echo -e "[Entrypoint] \e[1;31m Waiting for master to ping... \033[0m"
     sleep 1s
   done
   if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
-    echo "Get initial database from master"
+    echo -e "[Entrypoint] \e[1;31m Get initial database from master \033[0m"
     configure_replication_permissions
+    cat /home/"${USER_NAME}"/.pgpass
     if [ -f "${DATADIR}/backup_label.old" ]; then
-      echo "PG Basebackup already exists so proceed to start the DB"
+      echo -e "[Entrypoint] \e[1;31m PG Basebackup already exists so proceed to start the DB \033[0m"
     else
       streaming_replication
+
     fi
  fi
- # Promote to master if desired
-if [[ ! -z "${PROMOTE_MASTER}" ]]; then
-  su - postgres -c "${NODE_PROMOTION} promote -D ${DATADIR}"
-fi
+  # Promote to master if desired
+  if [[ ! -z "${PROMOTE_MASTER}" ]]; then
+    ${START_COMMAND} "${NODE_PROMOTION} promote -D ${DATADIR}"
+  fi
 
 fi
 

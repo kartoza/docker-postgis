@@ -18,21 +18,34 @@ source /scripts/setup-pg_hba.sh
 figlet -t "Kartoza Docker PostGIS"
 
 # Gosu preparations
-USER_ID=${POSTGRES_UID:-1000}
-GROUP_ID=${POSTGRES_GID:-1000}
-USER_NAME=${USER:-postgresuser}
-DB_GROUP_NAME=${GROUP_NAME:-postgresusers}
+if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+  USER_ID=${POSTGRES_UID:-1000}
+  GROUP_ID=${POSTGRES_GID:-1000}
+  USER_NAME=${USER:-postgresuser}
+  DB_GROUP_NAME=${GROUP_NAME:-postgresusers}
 
-# Add group
-if [ ! $(getent group "${DB_GROUP_NAME}") ]; then
-  groupadd -r "${DB_GROUP_NAME}" -g ${GROUP_ID}
-fi
+  export USER_NAME=${USER_NAME}
+  export DB_GROUP_NAME=${DB_GROUP_NAME}
 
-# Add user to system
-if id "${USER_NAME}" &>/dev/null; then
-    echo ' skipping user creation'
-else
-    useradd -l -m -d /home/"${USER_NAME}"/ -u "${USER_ID}" --gid "${GROUP_ID}" -s /bin/bash -G "${DB_GROUP_NAME}" "${USER_NAME}"
+  # Add group
+  if [ ! $(getent group "${DB_GROUP_NAME}") ]; then
+    groupadd -r "${DB_GROUP_NAME}" -g ${GROUP_ID}
+  fi
+
+  # Add user to system
+  if id "${USER_NAME}" &>/dev/null; then
+      echo ' skipping user creation'
+  else
+      useradd -l -m -d /home/"${USER_NAME}"/ -u "${USER_ID}" --gid "${GROUP_ID}" -s /bin/bash -G "${DB_GROUP_NAME}" "${USER_NAME}"
+  fi
+
+  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
+    echo "/home/"${USER_NAME}"/.pgpass" > /tmp/pg_subs.txt
+    envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
+    PGPASSFILE=$(cat /tmp/pass_command.txt)
+    rm /tmp/pg_subs.txt /tmp/pass_command.txt
+  fi
+
 fi
 
 if [[ -f /scripts/.pass_20.txt ]]; then
@@ -50,14 +63,15 @@ fi
 
 if [[ -z "$REPLICATE_FROM" ]]; then
     # This means this is a master instance. We check that database exists
-    echo "Setup master database"
+    echo -e "[Entrypoint] Setup master database \033[0m"
     source /scripts/setup-database.sh
     entry_point_script
     kill_postgres
 else
     # This means this is a slave/replication instance.
-    echo "Setup slave database"
-
+    echo -e "[Entrypoint] Setup replicant database \033[0m"
+    create_dir ${WAL_ARCHIVE}
+    non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
     source /scripts/setup-replication.sh
 fi
 
@@ -68,7 +82,6 @@ fi
 if [[ $# -eq 0 ]];then
   if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
     echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground \033[0m"
-    echo "su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF""
     su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
   else
     echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground with gosu \033[0m"
