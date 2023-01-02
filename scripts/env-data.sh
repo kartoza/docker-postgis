@@ -553,6 +553,7 @@ function non_root_permission() {
   directory_checker "${EXTRA_CONF_DIR}"
   directory_checker "${SSL_DIR}"
   directory_checker "/var/run/"
+  directory_checker "/var/lib/"
   directory_checker "/usr/bin"
   directory_checker "/tmp"
   directory_checker "/scripts"

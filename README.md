@@ -444,11 +444,12 @@ to pass user id and group id into the container.
 ```bash
 POSTGRES_UID=1000
 POSTGRES_GID=1000
+USER=postgresuser
+GROUP_NAME=postgresusers
 ```
 
 If you do not pass the UID and GID, the container will use the defaults specified in the container.
-**NOTE** Some entrypoint scripts `bash or .sh` that installs packages will not execute when running as 
-a normal user.
+
 ### Using the terminal
 
 To create a running container do:

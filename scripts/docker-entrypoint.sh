@@ -87,6 +87,7 @@ fi
 if [[ $# -eq 0 ]];then
   if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
     echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground \033[0m"
+    non_root_permission postgres postgres
     su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
   else
     echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground with gosu \033[0m"
