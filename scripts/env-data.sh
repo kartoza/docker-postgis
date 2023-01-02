@@ -538,25 +538,16 @@ function directory_checker() {
 function non_root_permission() {
   USER="$1"
   GROUP="$2"
-  if [ -z "${POSTGRES_INITDB_WALDIR}" ];then
-    echo -e "[Entrypoint] \e[1;31m PG Wal Dir is not set, skipping changing permissions \033[0m"
-  else
-    directory_checker "${POSTGRES_INITDB_WALDIR}"
-  fi
-  #TODO Dry the function below
-  directory_checker "${DATADIR}"
-  directory_checker "/usr/lib/postgresql/"
-  directory_checker "/etc/"
-  directory_checker "${WAL_ARCHIVE}"
-  directory_checker "${SCRIPTS_LOCKFILE_DIR}"
-  directory_checker "${CONF_LOCKFILE_DIR}"
-  directory_checker "${EXTRA_CONF_DIR}"
-  directory_checker "${SSL_DIR}"
-  directory_checker "/var/run/"
-  directory_checker "/var/lib/"
-  directory_checker "/usr/bin"
-  directory_checker "/tmp"
-  directory_checker "/scripts"
+  path_envs=("${DATADIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "${SSL_DIR}" "${POSTGRES_INITDB_WALDIR}")
+  for dir_names in "${path_envs[@]}";do
+    if [ ! -z "${dir_names}" ];then
+      directory_checker "${dir_names}"
+    fi
+  done
+  services=("/usr/lib/postgresql/" "/etc/" "/var/run/" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
+  for paths in "${services[@]}"; do
+    directory_checker $paths
+  done
   chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 
 }

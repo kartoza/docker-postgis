@@ -58,7 +58,7 @@ while true; do
     sleep 5
 done;
 
-${VERSION} down
+${VERSION} -f docker-compose-gs.yml down
 
 # Check that the correct custom initdb waldir works, twice after container restart.
 echo "### Checking custom POSTGRES_INITDB_WALDIR should work"

@@ -19,7 +19,7 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 60
+sleep 30
 
 services=("pg-default" "pg-new" "pg-recreate")
 
@@ -48,7 +48,7 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} -f docker-compose-gs.yml logs -f &
 fi
 
-sleep 60
+sleep 30
 
 services=("pg-default" "pg-new" "pg-recreate")
 
@@ -65,6 +65,6 @@ for service in "${services[@]}"; do
 done
 
 # special meta test to check the setup
-#bash ./test_custom_waldir_gs.sh
+bash ./test_custom_waldir_gs.sh
 
 ${VERSION} -f docker-compose-gs.yml down -v
