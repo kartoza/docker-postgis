@@ -329,7 +329,7 @@ fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        SHARED_PRELOAD_LIBRARIES='timescaledb'
+        SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
     else
         SHARED_PRELOAD_LIBRARIES='pg_cron'
     fi
