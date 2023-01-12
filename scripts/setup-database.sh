@@ -95,7 +95,6 @@ echo "postgres ready"
 # Setup user
 source /scripts/setup-user.sh
 
-
 export PGPASSWORD=${POSTGRES_PASS}
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
@@ -108,12 +107,15 @@ for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
             DB_CREATE=$(createdb -h localhost -p 5432 -U ${POSTGRES_USER} ${db})
             eval ${DB_CREATE}
             psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
-            for ext in $(echo ${POSTGRES_MULTIPLE_EXTENSIONS} | tr ',' ' '); do
-                extension_install ${db}
-                # enable extensions in template1 if env variable set to true
-                if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
-                  extension_install template1
-                fi
+            # Loop through extensions
+            IFS=','
+            read -a strarr <<< "$POSTGRES_MULTIPLE_EXTENSIONS"
+            for ext in "${strarr[@]}";do
+              extension_install ${db}
+              # enable extensions in template1 if env variable set to true
+              if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
+                extension_install template1
+              fi
             done
             echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
             psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
