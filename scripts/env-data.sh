@@ -376,6 +376,21 @@ list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
 arr=(${list})
 SINGLE_DB=${arr[0]}
 
+pass_list=(`echo ${POSTGRES_PASS} | tr ',' ' '`)
+pass_arr=(${pass_list})
+SINGLE_PASS=${pass_arr[0]}
+
+user_list=(`echo ${POSTGRES_USER} | tr ',' ' '`)
+arr_val=(${user_list})
+SINGLE_USER=${arr_val[0]}
+
+function env_array() {
+  ENV_NAME=$1
+  IFS=','
+  read -a strarr <<< "$ENV_NAME"
+
+}
+
 if [ -z "${TIMEZONE}" ]; then
   TIMEZONE='Etc/UTC'
 fi
@@ -421,22 +436,24 @@ function entry_point_script {
   if [[ ! -f "${SETUP_LOCKFILE}" ]] || [[ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
-          export PGPASSWORD=${POSTGRES_PASS}
+          export PGPASSWORD=${SINGLE_PASS}
           case "$f" in
                 *.sql)    echo "$0: running $f";
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      psql ${SINGLE_DB} -U ${SINGLE_USER} -p 5432 -h localhost  -f ${f} || true
                   else
-                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                        psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      env_array ${POSTGRES_DBNAME}
+                      for db in "${strarr[@]}";do
+                        psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost  -f ${f} || true
                       done
                   fi;;
                 *.sql.gz) echo "$0: running $f";
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      gunzip < "$f" | psql ${SINGLE_DB} -U ${SINGLE_USER} -p 5432 -h localhost || true
                   else
-                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                        gunzip < "$f" | psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      env_array ${POSTGRES_DBNAME}
+                      for db in "${strarr[@]}";do
+                        gunzip < "$f" | psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost || true
                       done
                   fi;;
                 *.sh)     echo "$0: running $f"; . $f || true;;
@@ -494,21 +511,24 @@ function over_write_conf() {
 
 }
 
+
+
 function extension_install() {
   DATABASE=$1
+  DB_EXTENSION=$2
   IFS=':'
-  read -a strarr <<< "$ext"
+  read -a strarr <<< "${DB_EXTENSION}"
   EXTENSION_NAME=${strarr[0]}
   EXTENSION_VERSION=${strarr[1]}
   if [[ -z ${EXTENSION_VERSION} ]];then
     if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
       echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
-      psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
+      psql ${DATABASE} -U ${SINGLE_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
     fi
   else
     echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
     if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
-      psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
+      psql ${DATABASE} -U ${SINGLE_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
     fi
   fi
 

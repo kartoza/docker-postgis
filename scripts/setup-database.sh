@@ -40,7 +40,7 @@ if [[ -z "$(ls -A ${DATADIR} 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][Rr]
     create_dir "${DATADIR}"
     rm -rf ${DATADIR}/*
     chown -R postgres:postgres "${DATADIR}"
-    command="$INITDB -U postgres --pwfile=<(echo "$POSTGRES_PASS") -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres --pwfile=<(echo "$SINGLE_PASS") -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
     echo -e "\e[32m [Entrypoint] Initializing Cluster with the following commands Postgres Database at  \e[1;31m $command  \033[0m"
     su - postgres -c "$command"
 else
@@ -90,33 +90,35 @@ echo "postgres ready"
 # Setup user
 source /scripts/setup-user.sh
 
-export PGPASSWORD=${POSTGRES_PASS}
+export PGPASSWORD=${SINGLE_PASS}
 
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
-for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
+IFS=','
+read -a dbarr <<< "$POSTGRES_DBNAME"
+for db in "${dbarr[@]}";do
         RESULT=`su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\""`
         if [[  ${RESULT} -eq 0 ]]; then
             echo -e "\e[32m [Entrypoint] Create database \e[1;31m ${db}  \033[0m"
-            DB_CREATE=$(createdb -h localhost -p 5432 -U ${POSTGRES_USER} ${db})
+            DB_CREATE=$(createdb -h localhost -p 5432 -U ${SINGLE_USER} ${db})
             eval ${DB_CREATE}
-            psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
+            psql ${SINGLE_DB} -U ${SINGLE_USER} -p 5432 -h localhost -c 'CREATE EXTENSION IF NOT EXISTS pg_cron cascade;'
             # Loop through extensions
             IFS=','
             read -a strarr <<< "$POSTGRES_MULTIPLE_EXTENSIONS"
             for ext in "${strarr[@]}";do
-              extension_install ${db}
+              extension_install ${db} ${ext}
               # enable extensions in template1 if env variable set to true
               if [[ "$(boolean ${POSTGRES_TEMPLATE_EXTENSIONS})" =~ [Tt][Rr][Uu][Ee] ]] ; then
                 extension_install template1
               fi
             done
             echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
-            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
-            psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
+            psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_minimal.sql || true
+            psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost -f ${SQLDIR}/legacy_gist.sql || true
             if [[ "$WAL_LEVEL" =~ [Ll][Oo][Gg][Ii][Cc][Aa][Ll]  ]];then
-              psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
+              psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
             fi
 
         else
@@ -128,15 +130,20 @@ done
 
 
 # Create schemas in the DB
-for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-    for schema in $(echo ${SCHEMA_NAME} | tr ',' ' '); do
-      SCHEMA_RESULT=$(psql -t ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schemas}' and catalog_name = '${db}';")
+
+IFS=','
+read -a dbarr <<< "$POSTGRES_DBNAME"
+for db in "${dbarr[@]}";do
+    IFS=','
+    read -a schemaarr <<< "$SCHEMA_NAME"
+    for schema in "${schemaarr[@]}";do
+      SCHEMA_RESULT=$(psql -t ${db} -U ${SINGLE_USER} -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schema}' and catalog_name = '${db}';")
      if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
           echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${SINGLE_DB} \033[0m"
-          psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          psql ${SINGLE_DB} -U ${SINGLE_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       elif [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Tt][Rr][Uu][Ee] ]]; then
           echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${db} \033[0m"
-          psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
+          psql ${db} -U ${SINGLE_USER} -p 5432 -h localhost -c " CREATE SCHEMA IF NOT EXISTS ${schema};"
       fi
     done
 done
