@@ -301,7 +301,7 @@ You can also pass a comma separated values of the env variable to define multipl
 
 ```bash
 POSTGRES_USER=docker,gis
-POSTGRES_PASS=gis.data
+POSTGRES_PASS=gis,data
 ```
 The number of passwords and users will need to match otherwise the container will hang. Also try to 
 pass username and passwords with commas as we use a comma as a separator for the loop.
