@@ -533,3 +533,14 @@ function extension_install() {
   fi
 
 }
+
+function role_check() {
+  ROLE_NAME=$1
+
+  RESULT=$(su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$ROLE_NAME'\"")
+  COMMAND="ALTER"
+  if [ -z "$RESULT" ]; then
+    COMMAND="CREATE"
+  fi
+
+}

@@ -61,6 +61,7 @@ differentiates itself by:
     it runs with e.g. `QGIS`
 * Streaming replication and logical replication support included (turned off by default)
 * Ability to create multiple database when starting the container.
+* Ability to define multiple super users.
 * Ability to create multiple schemas when starting the container.  
 * Enable multiple extensions in the database when setting it up.
 * `Gdal` drivers automatically registered for pg raster.
@@ -296,7 +297,16 @@ database name(or multiple databases comma separated).
 * `-e POSTGRES_USER=<PGUSER>`
 * `-e POSTGRES_PASS=<PGPASSWORD>`
 
-  **Note:** You should use a strong passwords. If you are using docker-compose make sure docker can
+You can also pass a comma separated values of the env variable to define multiple super users i.e
+
+```bash
+POSTGRES_USER=docker,gis
+POSTGRES_PASS=gis.data
+```
+The number of passwords and users will need to match otherwise the container will hang. Also try to 
+pass username and passwords with commas as we use a comma as a separator for the loop.
+
+**Note:** You should use a strong passwords. If you are using docker-compose make sure docker can
   interpolate the password. Example using a password with a `$` you will need to escape it ie `$$`
 
 * `-e POSTGRES_DBNAME=<PGDBNAME>`
