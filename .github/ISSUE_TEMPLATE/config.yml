@@ -1,0 +1,13 @@
+blank_issues_enabled: false
+
+contact_links:
+
+  - name: Question
+    url: https://gis.stackexchange.com/
+    about: >
+      Questions should go to the postgres-user mailing list at https://www.postgresql.org/list/
+      or other support forums such as https://gis.stackexchange.com/.
+      GitHub issues are for bug reports and suggestions for new features.
+
+
+      
