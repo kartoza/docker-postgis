@@ -27,7 +27,9 @@ RUN set -eux \
     && dpkg-divert --local --rename --add /sbin/initctl
 
 RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin \
-    figlet toilet
+    figlet toilet gosu; \
+    # verify that the binary works
+	gosu nobody true
 
 # Generating locales takes a long time. Utilize caching by runnig it by itself
 # early in the build process.
@@ -144,9 +146,9 @@ RUN chmod +x *.sh
 RUN set -eux \
     && /scripts/setup.sh;rm /scripts/.pass_*
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
-VOLUME /var/lib/postgresql
 
-ENTRYPOINT /scripts/docker-entrypoint.sh
+
+ENTRYPOINT ["/bin/bash", "/scripts/docker-entrypoint.sh"]
 
 
 ##############################################################################
@@ -159,7 +161,7 @@ COPY ./scenario_tests/utils/requirements.txt /lib/utils/requirements.txt
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && apt-get -y --no-install-recommends install python3-pip \
+    && apt-get -y --no-install-recommends install python3-pip procps \
     && apt-get -y --purge autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*

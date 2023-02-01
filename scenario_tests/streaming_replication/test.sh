@@ -5,29 +5,63 @@ set -e
 
 source ../test-env.sh
 
-# Run service
-docker-compose up -d
+if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
+    VERSION='docker-compose'
+  else
+    VERSION='docker compose'
+fi
+
+
+# Run service as root user
+${VERSION} up -d
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  docker-compose logs -f &
+  ${VERSION} logs -f &
 fi
 
 sleep 30
 
 # Preparing master cluster
-until docker-compose exec -T pg-master pg_isready; do
+until ${VERSION} exec -T pg-master pg_isready; do
   sleep 30
 done;
 
 # Execute tests
-docker-compose exec -T pg-master /bin/bash /tests/test_master.sh
+${VERSION} exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-until docker-compose exec -T pg-node pg_isready; do
+until ${VERSION} exec -T pg-node pg_isready; do
   sleep 30
 done;
 
 # Execute tests
-docker-compose exec -T pg-node /bin/bash /tests/test_node.sh
+${VERSION} exec -T pg-node /bin/bash /tests/test_node.sh
 
-docker-compose down -v
+${VERSION} down -v
+
+# Run service as none root
+${VERSION} -f docker-compose-gs.yml up -d
+
+if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+  ${VERSION} -f docker-compose-gs.yml logs -f &
+fi
+
+sleep 30
+
+# Preparing master cluster
+until ${VERSION} -f docker-compose-gs.yml exec -T pg-master pg_isready; do
+  sleep 30
+done;
+
+# Execute tests
+${VERSION} -f docker-compose-gs.yml exec -T pg-master /bin/bash /tests/test_master.sh
+
+# Preparing node cluster
+until ${VERSION} -f docker-compose-gs.yml exec -T pg-node pg_isready; do
+  sleep 30
+done;
+
+# Execute tests
+${VERSION} -f docker-compose-gs.yml exec -T pg-node /bin/bash /tests/test_node.sh
+
+${VERSION} -f docker-compose-gs.yml down -v

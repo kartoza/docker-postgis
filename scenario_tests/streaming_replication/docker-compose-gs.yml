@@ -26,7 +26,7 @@ services:
       REPLICATION_USER: 'replicator'
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
-      RUN_AS_ROOT: true
+      RUN_AS_ROOT: false
       # Setup master replication variables
       #PG_MAX_WAL_SENDERS: 8
       #PG_WAL_KEEP_SEGMENTS: 100
@@ -66,7 +66,7 @@ services:
       POSTGRES_PASS: 'docker'
       REPLICATE_FROM: 'pg-master'
       REPLICATION: 'true'
-      RUN_AS_ROOT: true
+      RUN_AS_ROOT: false
 
       # REPLICATE_PORT will default to 5432 if not specified.
       # REPLICATE_PORT: '5432'

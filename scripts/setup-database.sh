@@ -2,6 +2,9 @@
 
 source /scripts/env-data.sh
 
+
+
+
 INITDB_WALDIR_FLAG=""
 
 # Check POSTGRES_INITDB_WALDIR value
@@ -29,6 +32,9 @@ EOF
     # Set the --waldir flag for postgres initialization
     INITDB_WALDIR_FLAG="--waldir ${POSTGRES_INITDB_WALDIR}"
 fi
+
+create_dir "${WAL_ARCHIVE}"
+non_root_permission postgres postgres
 
 # test if DATADIR has content
 # Do initialization if DATADIR directory is empty, or RECREATE_DATADIR is true
@@ -70,7 +76,6 @@ fi;
 
 # Set proper permissions
 # needs to be done as root:
-create_dir "${WAL_ARCHIVE}"
 chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
 chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
 

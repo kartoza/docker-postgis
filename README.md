@@ -25,6 +25,7 @@
     - [Lockfile](#lockfile)
   - [Docker secrets](#docker-secrets)
   - [Running the container](#running-the-container)
+    - [Rootless mode](#rootless-mode)
     - [Using the terminal](#using-the-terminal)
     - [Convenience docker-compose.yml](#convenience-docker-composeyml)
   - [Connect via psql](#connect-via-psql)
@@ -430,6 +431,24 @@ Currently, `POSTGRES_PASS`, `POSTGRES_USER`, `POSTGRES_DB`, `SSL_CERT_FILE`,
 `SSL_KEY_FILE`, `SSL_CA_FILE` are supported.
 
 ## Running the container
+
+## Rootless mode
+
+You can run the container in rootless mode. This can be achieved by setting the env variable
+`RUN_AS_ROOT=false`. By default, this setting is set to `true` to allow the container to run as root for backward 
+compatibility with older images.
+
+With `RUN_AS_ROOT=false` you can additionally set the following environment variables to enable you 
+to pass user id and group id into the container.
+
+```bash
+POSTGRES_UID=1000
+POSTGRES_GID=1000
+USER=postgresuser
+GROUP_NAME=postgresusers
+```
+
+If you do not pass the UID and GID, the container will use the defaults specified in the container.
 
 ### Using the terminal
 
