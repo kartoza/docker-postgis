@@ -355,6 +355,10 @@ if [ -z "${TIMESCALE_TUNING_PARAMS}" ]; then
   TIMESCALE_TUNING_PARAMS=
 fi
 
+if [ -z "${TIMESCALE_TUNING_CONFIG}" ]; then
+  TIMESCALE_TUNING_CONFIG=time_scale_tuning.conf
+fi
+
 if [ -z "${RUN_AS_ROOT}" ]; then
   RUN_AS_ROOT=true
 fi
@@ -506,6 +510,7 @@ function over_write_conf() {
     sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
     cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
   fi
+
 
 }
 
