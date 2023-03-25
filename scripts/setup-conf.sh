@@ -98,20 +98,22 @@ if [[ ! -f ${ROOT_CONF}/extra.conf ]]; then
 
 fi
 
+
+
 # Timescale default tuning
 # TODO If timescale DB accepts reading from include directory then refactor code to remove line 97 - 112 (https://github.com/timescale/timescaledb-tune/issues/80)
 if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]] && [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee]    ]] ;then
+  # copy default conf as a backup
+  cp "${ROOT_CONF}"/postgresql.conf "${ROOT_CONF}"/postgresql_orig.conf
   over_write_conf
   echo -e "\e[1;31m Time scale config tuning values below"
   # TODO Add logic to find defaults memory, CPUS as these can vary from defaults on host machine and in docker container
-  timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/postgresql.conf
-  echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/postgresql.conf"
-elif [[ ${ACCEPT_TIMESCALE_TUNING} =~ [Tt][Rr][Uu][Ee] ]]; then
-
-  echo -e "\e[1;31m Time scale config tuning values below"
-  timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}" --conf-path="${ROOT_CONF}"/time_scale_tuning.conf
-  echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/time_scale_tuning.conf"
-
+  timescaledb-tune  -yes -quiet "${TIMESCALE_TUNING_PARAMS}"  --dry-run >"${ROOT_CONF}"/${TIMESCALE_TUNING_CONFIG}
+  if [[ -f "${ROOT_CONF}"/${TIMESCALE_TUNING_CONFIG} ]]; then
+    mv "${ROOT_CONF}"/postgresql_orig.conf $CONF
+    echo "include '${TIMESCALE_TUNING_CONFIG}'" >> $CONF
+  fi
+  echo -e "\033[0m Time scale config tuning values set in ${ROOT_CONF}/${TIMESCALE_TUNING_CONFIG}"
 fi
 
 
