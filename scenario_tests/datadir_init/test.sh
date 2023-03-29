@@ -70,4 +70,3 @@ done
 #bash ./test_custom_waldir_gs.sh
 
 ${VERSION} -f docker-compose-gs.yml down -v
-rm -rf default-pg-data-dir
