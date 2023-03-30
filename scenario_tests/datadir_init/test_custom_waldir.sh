@@ -23,11 +23,11 @@ fi
 # Try to make sure that container recreation is successful
 echo "### Checking Container Recreation"
 ${VERSION} down
-${VERSION} up -d pg-default pg-new pg-recreate
+${VERSION} up -d pg-local pg-default pg-new pg-recreate
 
 sleep 60
 
-services=("pg-default" "pg-new" "pg-recreate")
+services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 

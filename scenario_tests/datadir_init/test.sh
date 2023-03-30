@@ -13,7 +13,7 @@ fi
 
 
 # Run service for root user
-${VERSION} up -d pg-default pg-new pg-recreate
+${VERSION} up -d pg-local pg-default pg-new pg-recreate
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
@@ -21,7 +21,7 @@ fi
 
 sleep 30
 
-services=("pg-default" "pg-new" "pg-recreate")
+services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
@@ -40,9 +40,11 @@ bash ./test_custom_waldir.sh
 
 ${VERSION} down -v
 
-# Run service for none root user
 
-${VERSION} -f docker-compose-gs.yml up -d pg-default pg-new pg-recreate
+# Run service for none root user
+mkdir default-pg-data-dir
+
+${VERSION} -f docker-compose-gs.yml up -d pg-local pg-default pg-new pg-recreate
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} -f docker-compose-gs.yml logs -f &
@@ -50,7 +52,7 @@ fi
 
 sleep 30
 
-services=("pg-default" "pg-new" "pg-recreate")
+services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
