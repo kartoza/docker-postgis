@@ -549,7 +549,7 @@ function non_root_permission() {
       directory_checker "${dir_names}"
     fi
   done
-  services=("/usr/lib/postgresql/" "/etc/" "/var/run/" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
+  services=("/usr/lib/postgresql/" "/etc/" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
   for paths in "${services[@]}"; do
     directory_checker $paths
   done
