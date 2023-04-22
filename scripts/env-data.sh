@@ -536,7 +536,11 @@ function extension_install() {
 function directory_checker() {
   DATA_PATH=$1
   if [ -d $DATA_PATH ];then
-    chown -R ${USER}:${GROUP} ${DATA_PATH}
+    DB_USER_PERM=$(stat -c '%U' ${DATA_PATH})
+    DB_GRP_PERM=$(stat -c '%G' ${DATA_PATH})
+    if [[ ${DB_USER_PERM} != "${USER}" ]] &&  [[ ${DB_GRP_PERM} != "${GROUP}"  ]];then
+      chown -R ${USER}:${GROUP} ${DATA_PATH}
+    fi
   fi
 
 }
