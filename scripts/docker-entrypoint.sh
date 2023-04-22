@@ -19,25 +19,6 @@ figlet -t "Kartoza Docker PostGIS"
 
 # Gosu preparations
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-  USER_ID=${POSTGRES_UID:-1000}
-  GROUP_ID=${POSTGRES_GID:-1000}
-  USER_NAME=${USER:-postgresuser}
-  DB_GROUP_NAME=${GROUP_NAME:-postgresusers}
-
-  export USER_NAME=${USER_NAME}
-  export DB_GROUP_NAME=${DB_GROUP_NAME}
-
-  # Add group
-  if [ ! $(getent group "${DB_GROUP_NAME}") ]; then
-    groupadd -r "${DB_GROUP_NAME}" -g ${GROUP_ID}
-  fi
-
-  # Add user to system
-  if id "${USER_NAME}" &>/dev/null; then
-      echo ' skipping user creation'
-  else
-      useradd -l -m -d /home/"${USER_NAME}"/ -u "${USER_ID}" --gid "${GROUP_ID}" -s /bin/bash -G "${DB_GROUP_NAME}" "${USER_NAME}"
-  fi
 
   if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
     echo "/home/"${USER_NAME}"/.pgpass" > /tmp/pg_subs.txt
@@ -48,15 +29,15 @@ if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
 
 fi
 
-if [[ -f /scripts/.pass_20.txt ]]; then
-  USER_CREDENTIAL_PASS=$(cat /scripts/.pass_20.txt)
-  cp /scripts/.pass_20.txt /tmp/PGPASSWORD.txt
+if [[ -f /home/"${USER_NAME}"//.pass_20.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /home/"${USER_NAME}"//.pass_20.txt)
+  cp /home/"${USER_NAME}"//.pass_20.txt /tmp/PGPASSWORD.txt
   echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS \033[0m"
 fi
 
-if [[ -f /scripts/.pass_22.txt ]]; then
-  USER_CREDENTIAL_PASS=$(cat /scripts/.pass_22.txt)
-  cp /scripts/.pass_22.txt /tmp/REPLPASSWORD.txt
+if [[ -f /home/"${USER_NAME}"//.pass_22.txt ]]; then
+  USER_CREDENTIAL_PASS=$(cat /home/"${USER_NAME}"//.pass_22.txt)
+  cp /home/"${USER_NAME}"//.pass_22.txt /tmp/REPLPASSWORD.txt
   echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;34m $USER_CREDENTIAL_PASS \033[0m"
 fi
 

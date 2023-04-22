@@ -144,7 +144,7 @@ RUN chmod +x *.sh
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 RUN set -eux \
-    && /scripts/setup.sh;rm /scripts/.pass_*
+    && /scripts/setup.sh;rm /home/postgresuser/.pass_*
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 

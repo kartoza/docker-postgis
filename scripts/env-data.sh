@@ -1,4 +1,43 @@
 #!/usr/bin/env bash
+
+if [ -z "${POSTGRES_UID}" ]; then
+  POSTGRES_UID=1000
+fi
+if [ -z "${POSTGRES_GID}" ]; then
+  POSTGRES_GID=1000
+fi
+if [ -z "${USER}" ]; then
+  USER=postgresuser
+fi
+if [ -z "${GROUP_NAME}" ]; then
+  GROUP_NAME=postgresusers
+fi
+
+export USER_ID=${POSTGRES_UID}
+export GROUP_ID=${POSTGRES_GID}
+export USER_NAME=${USER}
+export DB_GROUP_NAME=${GROUP_NAME}
+
+function create_local_user() {
+  local group_name="$1"
+  local group_id="$2"
+  local user_name="$3"
+  local user_id="$4"
+
+  # Add group if not exists
+  if ! getent group "${group_name}" >/dev/null; then
+    groupadd -r "${group_name}" -g "${group_id}"
+  fi
+
+  # Add user if not exists
+  if ! id "${user_name}" >/dev/null 2>&1; then
+    useradd -l -m -d "/home/${user_name}" -u "${user_id}" \
+      --gid "${group_id}" -s /bin/bash -G "${group_name}" "${user_name}"
+  fi
+}
+
+create_local_user "${DB_GROUP_NAME}" "${GROUP_ID}" "${USER_NAME}" "${USER_ID}"
+
 POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
 POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
 POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
@@ -6,13 +45,13 @@ DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 # Commented for documentation. You can specify the location of
 # pg_wal directory/volume using the following environment variable:
 # POSTGRES_INITDB_WALDIR (default value is unset)
-DEFAULT_SCRIPTS_LOCKFILE_DIR="/docker-entrypoint.initdb.d"
-DEFAULT_CONF_LOCKFILE_DIR="/settings"
-DEFAULT_EXTRA_CONF_DIR="/settings"
+DEFAULT_SCRIPTS_LOCKFILE_DIR="/home/"${USER_NAME}"/docker-entrypoint.initdb.d"
+DEFAULT_CONF_LOCKFILE_DIR="/home/"${USER_NAME}"/settings"
+DEFAULT_EXTRA_CONF_DIR="/home/"${USER_NAME}"/settings"
 ROOT_CONF="/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 PG_ENV="$ROOT_CONF/environment"
 CONF="$ROOT_CONF/postgresql.conf"
-DEFAULT_WAL_ARCHIVE="/opt/archivedir"
+DEFAULT_WAL_ARCHIVE="/home/"${USER_NAME}"/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
@@ -33,7 +72,7 @@ PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
 # (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
 #  "$XYZ_DB_PASSWORD" from a file, especially for Docker's secrets feature)
-function file_env {
+function file_env() {
 	local var="$1"
 	local fileVar="${var}_FILE"
 	local def="${2:-}"
@@ -64,7 +103,7 @@ function boolean() {
 
 file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
-file_env 'POSTGRES_DBNAME'
+
 
 function create_dir() {
 DATA_PATH=$1
@@ -79,10 +118,10 @@ fi
 function generate_random_string() {
   STRING_LENGTH=$1
   random_pass_string=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c "${STRING_LENGTH}")
-  if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
-    echo ${random_pass_string} > /scripts/.pass_${STRING_LENGTH}.txt
+  if [[ ! -f /home/"${USER_NAME}"/scripts/.pass_${STRING_LENGTH}.txt ]]; then
+    echo ${random_pass_string} > /home/"${USER_NAME}"/.pass_${STRING_LENGTH}.txt
   fi
-  export RAND=$(cat /scripts/.pass_${STRING_LENGTH}.txt)
+  export RAND=$(cat /home/"${USER_NAME}"/.pass_${STRING_LENGTH}.txt)
 }
 
 # Make sure we have a user set up
@@ -114,7 +153,7 @@ else
   RECREATE_DATADIR=$(boolean ${RECREATE_DATADIR})
 fi
 if [ -z "${SSL_DIR}" ]; then
-  SSL_DIR="/ssl_certificates"
+  SSL_DIR="/home/"${USER_NAME}"/ssl_certificates"
 fi
 
 if [ -z "${WAL_ARCHIVE}" ]; then
