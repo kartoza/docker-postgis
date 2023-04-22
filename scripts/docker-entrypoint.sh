@@ -29,15 +29,15 @@ if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
 
 fi
 
-if [[ -f /home/"${USER_NAME}"//.pass_20.txt ]]; then
+if [[ -f /home/"${USER_NAME}"/.pass_20.txt ]]; then
   USER_CREDENTIAL_PASS=$(cat /home/"${USER_NAME}"//.pass_20.txt)
-  cp /home/"${USER_NAME}"//.pass_20.txt /tmp/PGPASSWORD.txt
+  cp /home/"${USER_NAME}"/.pass_20.txt /tmp/PGPASSWORD.txt
   echo -e "[Entrypoint] GENERATED Postgres  PASSWORD: \e[1;31m $USER_CREDENTIAL_PASS \033[0m"
 fi
 
-if [[ -f /home/"${USER_NAME}"//.pass_22.txt ]]; then
+if [[ -f /home/"${USER_NAME}"/.pass_22.txt ]]; then
   USER_CREDENTIAL_PASS=$(cat /home/"${USER_NAME}"//.pass_22.txt)
-  cp /home/"${USER_NAME}"//.pass_22.txt /tmp/REPLPASSWORD.txt
+  cp /home/"${USER_NAME}"/.pass_22.txt /tmp/REPLPASSWORD.txt
   echo -e "[Entrypoint] GENERATED Replication  PASSWORD: \e[1;34m $USER_CREDENTIAL_PASS \033[0m"
 fi
 
