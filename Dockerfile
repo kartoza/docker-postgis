@@ -56,6 +56,17 @@ RUN if [ -z "${GENERATE_ALL_LOCALE}" ] || [ $GENERATE_ALL_LOCALE -eq 0 ]; \
 	&& /usr/sbin/locale-gen
 
 RUN update-locale ${LANG}
+
+# install pgxn client and update cmake to > 3.20 for h3 extension library
+RUN apt-get -y install pgxnclient
+RUN wget https://github.com/Kitware/CMake/releases/download/v3.24.1/cmake-3.24.1-Linux-x86_64.sh \
+      -q -O /tmp/cmake-install.sh \
+      && chmod u+x /tmp/cmake-install.sh \
+      && mkdir /opt/cmake-3.24.1 \
+      && /tmp/cmake-install.sh --skip-license --prefix=/opt/cmake-3.24.1 \
+      && rm /tmp/cmake-install.sh \
+      && ln -s /opt/cmake-3.24.1/bin/* /usr/local/bin
+
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
     && apt-get clean \
@@ -127,6 +138,9 @@ RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | 
 cd pointcloud-master && \
 ./autogen.sh && ./configure && make -j 4 && make install && \
 cd .. && rm -Rf pointcloud-master
+
+# install h3 library
+RUN pgxn install h3
 
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
