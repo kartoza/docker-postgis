@@ -277,9 +277,9 @@ function postgres_ssl_setup() {
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb'
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,h3,h3_postgis,timescaledb'
     else
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,h3,h3_postgis'
     fi
 fi
 
