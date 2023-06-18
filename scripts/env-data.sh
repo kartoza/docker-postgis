@@ -531,9 +531,9 @@ function extension_install() {
       pattern="${EXTENSION_NAME}--"
       last_numbers=()
       for file in "$EXTDIR"/${pattern}*; do
-        filename=$(basename "$file")
-        if [[ $filename == $pattern* ]]; then
-          last_number=$(echo "$filename" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | tail -1)
+        filename=$(basename "$file" .sql)
+        if [[ "$filename" == *"--"* ]]; then
+          last_number=$(echo "$filename" | awk -F '--' '{print $NF}')
           if [[ ! " ${last_numbers[@]} " =~ " $last_number " ]]; then
     	      last_numbers+=("$last_number")
           fi
