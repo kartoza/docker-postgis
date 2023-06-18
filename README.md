@@ -272,6 +272,13 @@ POSTGRES_MULTIPLE_EXTENSIONS=postgis,pgrouting:3.4.0
 where `pgrouting:3.4.0` The extension name is fixed with the version name with the delimiter being a
 colon.
 
+**Note** In some cases, some versions of extensions might not be available for
+install. To enable them you can do the following inside the container:
+```bash
+wget --directory-prefix /usr/share/postgresql/15/extension/ https://raw.githubusercontent.com/postgres/postgres/master/contrib/hstore/hstore--1.1--1.2.sql
+```
+Then proceed to install it the normal way.
+
 #### Shared preload libraries
 
 Some PostgreSQL extensions require shared_preload_libraries to be specified in the conf files.
