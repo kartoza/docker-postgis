@@ -51,7 +51,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build image for testing
         id: docker_build_testing_image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: Dockerfile
@@ -121,7 +121,7 @@ jobs:
 
       - name: Build image for testing
         id: docker_build_testing_image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: Dockerfile
