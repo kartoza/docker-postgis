@@ -21,7 +21,7 @@ services:
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
       - RUN_AS_ROOT=true
     ports:
-      - "5432"
+      - "25432:5432"
     restart: on-failure
     healthcheck:
       test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
