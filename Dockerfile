@@ -2,7 +2,7 @@
 # Base stage                                                                 #
 ##############################################################################
 ARG DISTRO=debian
-ARG IMAGE_VERSION=bullseye
+ARG IMAGE_VERSION=bookworm
 ARG IMAGE_VARIANT=slim
 FROM $DISTRO:$IMAGE_VERSION-$IMAGE_VARIANT AS postgis-base
 LABEL maintainer="Tim Sutton<tim@kartoza.com>"
@@ -26,7 +26,7 @@ RUN set -eux \
         apt-transport-https curl gettext \
     && dpkg-divert --local --rename --add /sbin/initctl
 
-RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat gdal-bin \
+RUN apt-get -y update; apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
     figlet toilet gosu; \
     # verify that the binary works
 	gosu nobody true
@@ -94,14 +94,14 @@ RUN set -eux \
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
-#TODO add postgresql-${POSTGRES_MAJOR_VERSION}-cron back when it's available
+
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     &&  apt-get update \
     && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
         postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
-        netcat postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
+        postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \
         postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
         postgresql-server-dev-${POSTGRES_MAJOR_VERSION}  postgresql-${POSTGRES_MAJOR_VERSION}-cron \
