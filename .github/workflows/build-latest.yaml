@@ -9,7 +9,7 @@ on:
 #      imageVersion:
 #        description: Base distro image version/release
 #        required: true
-#        default: bullseye
+#        default: bookworm
 #      imageVariant:
 #        description: Base image variant
 #        required: true
@@ -41,7 +41,7 @@ jobs:
           - init_scripts
         include:
           - distro: debian
-            imageVersion: bullseye
+            imageVersion: bookworm
             imageVariant: slim
     steps:
       - uses: actions/checkout@v3
@@ -96,7 +96,7 @@ jobs:
           - 3
         include:
           - distro: debian
-            imageVersion: bullseye
+            imageVersion: bookworm
             imageVariant: slim
     steps:
       - uses: actions/checkout@v3
