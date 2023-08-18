@@ -74,7 +74,7 @@ FROM postgis-base AS postgis-prod
 ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=15
 ARG POSTGIS_MAJOR_VERSION=3
-ARG POSTGIS_MINOR_RELEASE=3
+ARG POSTGIS_MINOR_RELEASE=4
 ARG TIMESCALE_VERSION=2-2.9.1
 ARG BUILD_TIMESCALE=false
 
@@ -119,9 +119,8 @@ RUN if [ "${BUILD_TIMESCALE}" = "true" ]; then \
         apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
     fi;
 
-RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt
-RUN  echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt
-RUN  echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
+RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
+     echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
 # Compile pointcloud extension
@@ -130,8 +129,6 @@ RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | 
 cd pointcloud-master && \
 ./autogen.sh && ./configure && make -j 4 && make install && \
 cd .. && rm -Rf pointcloud-master
-
-
 
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \

@@ -33,7 +33,7 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 3
+          - 4
         include:
           - distro: debian
             imageVersion: bookworm
