@@ -515,6 +515,7 @@ function over_write_conf() {
 
 }
 
+
 function extension_install() {
   DATABASE=$1
   IFS=':'
@@ -550,6 +551,7 @@ function extension_install() {
   fi
 
 }
+
 function directory_checker() {
   DATA_PATH=$1
   if [ -d $DATA_PATH ];then
@@ -578,3 +580,13 @@ function non_root_permission() {
 
 }
 
+function role_check() {
+  ROLE_NAME=$1
+  echo "Creating user $1"
+  RESULT=$(su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$ROLE_NAME'\"")
+  COMMAND="ALTER"
+  if [ -z "$RESULT" ]; then
+    export COMMAND="CREATE"
+  fi
+
+}

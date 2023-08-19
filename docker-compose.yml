@@ -7,7 +7,7 @@ volumes:
 services:
 
   db:
-    image: kartoza/postgis:15-3.3
+    image: kartoza/postgis:${POSTGRES_MAJOR_VERSION}-${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_RELEASE}
     volumes:
       - postgis-data:/var/lib/postgresql
       - dbbackups:/backups
@@ -28,7 +28,7 @@ services:
 
 
   dbbackups:
-    image: kartoza/pg-backup:15-3.3
+    image: kartoza/pg-backup:${POSTGRES_MAJOR_VERSION}-${POSTGIS_MAJOR_VERSION}.${POSTGIS_MINOR_RELEASE}
     hostname: pg-backups
     volumes:
       - dbbackups:/backups
