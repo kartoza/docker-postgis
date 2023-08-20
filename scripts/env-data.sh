@@ -72,8 +72,8 @@ DATA_PATH=$1
 
 if [[ ! -d ${DATA_PATH} ]];
 then
-    echo "Creating" ${DATA_PATH}  "directory"
-    mkdir -p ${DATA_PATH}
+    echo "Creating" "${DATA_PATH}"  "directory"
+    mkdir -p "${DATA_PATH}"
 fi
 }
 
@@ -81,9 +81,10 @@ function generate_random_string() {
   STRING_LENGTH=$1
   random_pass_string=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c "${STRING_LENGTH}")
   if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
-    echo ${random_pass_string} > /scripts/.pass_${STRING_LENGTH}.txt
+    echo "${random_pass_string}" > /scripts/.pass_"${STRING_LENGTH}".txt
   fi
-  export RAND=$(cat /scripts/.pass_${STRING_LENGTH}.txt)
+  RAND=$(cat /scripts/.pass_"${STRING_LENGTH}".txt)
+  export RAND
 }
 
 # Make sure we have a user set up
@@ -328,11 +329,21 @@ if [ -z "$EXTRA_CONF" ]; then
     EXTRA_CONF=""
 fi
 
+if [ -z "$ACTIVATE_CRON" ]; then
+    ACTIVATE_CRON=TRUE
+fi
+
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
+        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
+          SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
+        else
+          SHARED_PRELOAD_LIBRARIES='timescaledb'
+        fi
     else
-        SHARED_PRELOAD_LIBRARIES='pg_cron'
+        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
+          SHARED_PRELOAD_LIBRARIES='pg_cron'
+        fi
     fi
 fi
 
@@ -381,8 +392,8 @@ if [ -n "${POSTGRES_INITDB_ARGS}" ]; then
   INITDB_EXTRA_ARGS=${POSTGRES_INITDB_ARGS}
 fi
 
-list=(`echo ${POSTGRES_DBNAME} | tr ',' ' '`)
-arr=(${list})
+list=$(echo "${POSTGRES_DBNAME}" | tr ',' ' ')
+arr=("${list}")
 SINGLE_DB=${arr[0]}
 
 if [ -z "${TIMEZONE}" ]; then
@@ -391,12 +402,12 @@ fi
 
 # usable function definitions
 function kill_postgres {
-  PID=`cat ${PG_PID}`
-  kill -TERM ${PID}
+  PID=$(cat "${PG_PID}")
+  kill -TERM "${PID}"
 
   # Wait for background postgres main process to exit
   # wait until PID file gets deleted
-  while ls -A ${PG_PID} 2> /dev/null; do
+  while ls -A "${PG_PID}" 2> /dev/null; do
     sleep 1
   done
 
@@ -434,21 +445,21 @@ function entry_point_script {
           case "$f" in
                 *.sql)    echo "$0: running $f";
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
                   else
-                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                        psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost  -f ${f} || true
+                      for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+                        psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
                       done
                   fi;;
                 *.sql.gz) echo "$0: running $f";
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      gunzip < "$f" | psql ${SINGLE_DB} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      gunzip < "$f" | psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
                   else
-                      for db in $(echo ${POSTGRES_DBNAME} | tr ',' ' '); do
-                        gunzip < "$f" | psql ${db} -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                      for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+                        gunzip < "$f" | psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
                       done
                   fi;;
-                *.sh)     echo "$0: running $f"; . $f || true;;
+                *.sh)     echo "$0: running $f"; . "$f" || true;;
                 *)        echo "$0: ignoring $f" ;;
             esac
             echo
@@ -472,8 +483,8 @@ function configure_replication_permissions {
       non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
 
     else
-      chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
-      chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+      chown -R postgres:postgres "${DATADIR}" ${WAL_ARCHIVE}
+      chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
       echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as root user \033[0m"
       chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
       su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
@@ -486,9 +497,9 @@ function streaming_replication {
     do
       echo -e "[Entrypoint] \e[1;31m Waiting for master to connect... \033[0m"
       sleep 1s
-      if [[ "$(ls -A ${DATADIR})" ]]; then
+      if [[ "$(ls -A "${DATADIR}")" ]]; then
         echo -e "[Entrypoint] \e[1;31m Need empty folder. Cleaning directory... \033[0m"
-        rm -rf ${DATADIR}/*
+        rm -rf "${DATADIR:?}/"*
       fi
     done
 
@@ -518,20 +529,21 @@ function over_write_conf() {
 
 function extension_install() {
   DATABASE=$1
+  DB_EXTENSION=$2
   IFS=':'
-  read -a strarr <<< "$ext"
+  read -a strarr <<< "${DB_EXTENSION}"
   EXTENSION_NAME=${strarr[0]}
   EXTENSION_VERSION=${strarr[1]}
   if [[ -z ${EXTENSION_VERSION} ]];then
     if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
       echo -e "\e[32m [Entrypoint] Enabling extension \e[1;31m ${EXTENSION_NAME} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
-      psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
+      psql "${DATABASE}" -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" cascade;"
     fi
   else
     if [[ ${EXTENSION_NAME} != 'pg_cron' ]]; then
       pattern="${EXTENSION_NAME}--"
       last_numbers=()
-      for file in "$EXTDIR"/${pattern}*; do
+      for file in "$EXTDIR"/"${pattern}"*; do
         filename=$(basename "$file" .sql)
         if [[ "$filename" == *"--"* ]]; then
           last_number=$(echo "$filename" | awk -F '--' '{print $NF}')
@@ -542,7 +554,7 @@ function extension_install() {
       done
       if [[ " ${last_numbers[@]} " =~ " $EXTENSION_VERSION " ]]; then
         echo -e "\e[32m [Entrypoint] Installing extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m in the database : \e[1;31m ${DATABASE} \033[0m"
-        psql ${DATABASE} -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
+        psql "${DATABASE}" -U ${POSTGRES_USER} -p 5432 -h localhost -c "CREATE EXTENSION IF NOT EXISTS \"${EXTENSION_NAME}\" WITH VERSION '${EXTENSION_VERSION}' cascade;"
       else
         echo -e "\e[32m [Entrypoint] Extension \e[1;31m ${EXTENSION_NAME}  \e[32m with version \e[1;31m ${EXTENSION_VERSION} \e[32m is not available for install, available versions to install are \e[1;31m  "${last_numbers[@]}" \033[0m"
       fi
@@ -554,11 +566,11 @@ function extension_install() {
 
 function directory_checker() {
   DATA_PATH=$1
-  if [ -d $DATA_PATH ];then
-    DB_USER_PERM=$(stat -c '%U' ${DATA_PATH})
-    DB_GRP_PERM=$(stat -c '%G' ${DATA_PATH})
+  if [ -d "$DATA_PATH" ];then
+    DB_USER_PERM=$(stat -c '%U' "${DATA_PATH}")
+    DB_GRP_PERM=$(stat -c '%G' "${DATA_PATH}")
     if [[ ${DB_USER_PERM} != "${USER}" ]] &&  [[ ${DB_GRP_PERM} != "${GROUP}"  ]];then
-      chown -R ${USER}:${GROUP} ${DATA_PATH}
+      chown -R "${USER}":"${GROUP}" "${DATA_PATH}"
     fi
   fi
 
@@ -574,9 +586,9 @@ function non_root_permission() {
   done
   services=("/usr/lib/postgresql/" "/etc/" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
   for paths in "${services[@]}"; do
-    directory_checker $paths
+    directory_checker "${paths}"
   done
-  chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+  chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
 
 }
 
