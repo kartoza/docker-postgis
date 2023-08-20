@@ -29,7 +29,7 @@ if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
 
   # Add group
   if [ ! $(getent group "${DB_GROUP_NAME}") ]; then
-    groupadd -r "${DB_GROUP_NAME}" -g ${GROUP_ID}
+    groupadd -r "${DB_GROUP_NAME}" -g "${GROUP_ID}"
   fi
 
   # Add user to system
@@ -40,7 +40,7 @@ if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
   fi
 
   if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    echo "/home/"${USER_NAME}"/.pgpass" > /tmp/pg_subs.txt
+    echo "/home/${USER_NAME}/.pgpass" > /tmp/pg_subs.txt
     envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
     PGPASSFILE=$(cat /tmp/pass_command.txt)
     rm /tmp/pg_subs.txt /tmp/pass_command.txt
@@ -70,12 +70,12 @@ if [[ -z "$REPLICATE_FROM" ]]; then
 else
     # This means this is a slave/replication instance.
     echo -e "[Entrypoint] Setup replicant database \033[0m"
-    create_dir ${WAL_ARCHIVE}
+    create_dir "${WAL_ARCHIVE}"
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
     else
-      chown -R postgres:postgres ${DATADIR} ${WAL_ARCHIVE}
-      chmod -R 750 ${DATADIR} ${WAL_ARCHIVE}
+      chown -R postgres:postgres "${DATADIR}" "${WAL_ARCHIVE}"
+      chmod -R 750 "${DATADIR}" "${WAL_ARCHIVE}"
     fi
     source /scripts/setup-replication.sh
 fi
@@ -92,7 +92,7 @@ if [[ $# -eq 0 ]];then
   else
     echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground with gosu \033[0m"
     non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
-    exec gosu $USER_NAME bash -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
+    exec gosu "${USER_NAME}" bash -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
 
   fi
 
@@ -105,13 +105,13 @@ if [[ "${1:0:1}" = '-' ]]; then
     if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
       set -- postgres "$@"
     else
-      set -- gosu $USER_NAME "$@"
+      set -- gosu "${USER_NAME}" "$@"
     fi
 fi
 
-echo "The actual command running is "$@""
+
 if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
   exec su - "$@"
 else
-  exec gosu $USER_NAME - "$@"
+  exec gosu "${USER_NAME}" - "$@"
 fi

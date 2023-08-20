@@ -15,7 +15,7 @@ else
   START_COMMAND='su - postgres -c'
 fi
 
-create_dir ${WAL_ARCHIVE}
+create_dir "${WAL_ARCHIVE}"
 
 if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
   # No content yet - but this is a slave database
