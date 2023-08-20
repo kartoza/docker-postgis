@@ -9,7 +9,7 @@ on:
 #      imageVersion:
 #        description: Base distro image version/release
 #        required: true
-#        default: bullseye
+#        default: bookworm
 #      imageVariant:
 #        description: Base image variant
 #        required: true
@@ -33,10 +33,10 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 3
+          - 4
         include:
           - distro: debian
-            imageVersion: bullseye
+            imageVersion: bookworm
             imageVariant: slim
     steps:
       - uses: actions/checkout@v3
@@ -61,7 +61,7 @@ jobs:
 
       - name: Build base image
         id: docker_build_base
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -87,7 +87,7 @@ jobs:
 
       - name: Build prod image
         id: docker_build_prod
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           platforms: linux/amd64,linux/arm64

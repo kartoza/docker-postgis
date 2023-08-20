@@ -9,7 +9,7 @@ on:
 #      imageVersion:
 #        description: Base distro image version/release
 #        required: true
-#        default: bullseye
+#        default: bookworm
 #      imageVariant:
 #        description: Base image variant
 #        required: true
@@ -31,7 +31,7 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 3
+          - 4
         scenario:
           - datadir_init
           - streaming_replication
@@ -41,7 +41,7 @@ jobs:
           - init_scripts
         include:
           - distro: debian
-            imageVersion: bullseye
+            imageVersion: bookworm
             imageVariant: slim
     steps:
       - uses: actions/checkout@v3
@@ -51,7 +51,7 @@ jobs:
         uses: docker/setup-buildx-action@v2
       - name: Build image for testing
         id: docker_build_testing_image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: Dockerfile
@@ -93,10 +93,10 @@ jobs:
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 3
+          - 4
         include:
           - distro: debian
-            imageVersion: bullseye
+            imageVersion: bookworm
             imageVariant: slim
     steps:
       - uses: actions/checkout@v3
@@ -111,7 +111,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v4
         with:
           images: ${{ secrets.DOCKERHUB_REPO}}/postgis
           tags: |
@@ -121,7 +121,7 @@ jobs:
 
       - name: Build image for testing
         id: docker_build_testing_image
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v4
         with:
           context: .
           file: Dockerfile
