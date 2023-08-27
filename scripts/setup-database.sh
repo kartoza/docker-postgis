@@ -101,7 +101,10 @@ export PGPASSWORD=${POSTGRES_PASS}
 # Create a default db called 'gis' or $POSTGRES_DBNAME that you can use to get up and running quickly
 # It will be owned by the docker db user
 # Since we now pass a comma separated list in database creation we need to search for all databases as a test
-for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+IFS=','
+read -a dbarr <<< "$POSTGRES_DBNAME"
+
+for db in "${dbarr[@]}";do
         RESULT=$(su - postgres -c "psql -t -c \"SELECT count(1) from pg_database where datname='${db}';\"")
         if [[  ${RESULT} -eq 0 ]]; then
             echo -e "\e[32m [Entrypoint] Create database \e[1;31m ${db}  \033[0m"
@@ -117,16 +120,16 @@ for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
               extension_install "${db}" "${ext}"
               # enable extensions in template1 if env variable set to true
               if [[ "$(boolean "${POSTGRES_TEMPLATE_EXTENSIONS}")" =~ [Tt][Rr][Uu][Ee] ]] ; then
-                extension_install template1
+                extension_install template1 "${ext}"
               fi
             done
             echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
             psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_minimal.sql || true
             psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_gist.sql || true
-            if [[ "$WAL_LEVEL" =~ [Ll][Oo][Gg][Ii][Cc][Aa][Ll]  ]];then
-              psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
-            fi
 
+            if [[ "${WAL_LEVEL,,}" == "logical" ]]; then
+                psql -d "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
+            fi
         else
           echo -e "\e[32m [Entrypoint] Database \e[1;31m ${db} \e[32m already exists \033[0m"
 
@@ -136,7 +139,7 @@ done
 
 
 # Create schemas in the DB
-for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+for db in "${dbarr[@]}";do
     for schema in $(echo "${SCHEMA_NAME}" | tr ',' ' '); do
       SCHEMA_RESULT=$(psql -t "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schema}' and catalog_name = '${db}';")
      if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then

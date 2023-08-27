@@ -392,9 +392,10 @@ if [ -n "${POSTGRES_INITDB_ARGS}" ]; then
   INITDB_EXTRA_ARGS=${POSTGRES_INITDB_ARGS}
 fi
 
-list=$(echo "${POSTGRES_DBNAME}" | tr ',' ' ')
-arr=("${list}")
-SINGLE_DB=${arr[0]}
+IFS=','
+read -a dbarr <<< "$POSTGRES_DBNAME"
+SINGLE_DB=${dbarr[0]}
+export ${SINGLE_DB}
 
 if [ -z "${TIMEZONE}" ]; then
   TIMEZONE='Etc/UTC'
@@ -437,6 +438,8 @@ function restart_postgres {
 
 function entry_point_script {
   SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
+  IFS=','
+  read -a dbarr <<< "$POSTGRES_DBNAME"
   # If lockfile doesn't exists, proceed.
   if [[ ! -f "${SETUP_LOCKFILE}" ]] || [[ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
@@ -447,7 +450,7 @@ function entry_point_script {
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
                       psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
                   else
-                      for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+                      for db in "${dbarr[@]}";do
                         psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
                       done
                   fi;;
@@ -455,7 +458,7 @@ function entry_point_script {
                   if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
                       gunzip < "$f" | psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
                   else
-                      for db in $(echo "${POSTGRES_DBNAME}" | tr ',' ' '); do
+                      for db in "${dbarr[@]}";do
                         gunzip < "$f" | psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
                       done
                   fi;;
