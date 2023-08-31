@@ -39,6 +39,7 @@ jobs:
           - extensions
           - logical_replication
           - init_scripts
+          - multiple_databases
         include:
           - distro: debian
             imageVersion: bookworm
