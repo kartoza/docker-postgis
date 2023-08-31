@@ -7,14 +7,10 @@ source /scripts/env-data.sh
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-  echo "gosu ${USER_NAME}:${DB_GROUP_NAME} bash -c" > /tmp/gosu_subs.txt
-  envsubst < /tmp/gosu_subs.txt > /tmp/gosu_command.txt
-  GOSU_COMMAND=$(cat /tmp/gosu_command.txt)
   function START_COMMAND() {
 	  PARAM=$1
-  	${GOSU_COMMAND} "$1"
+  	gosu ${USER_NAME} bash -c "$1"
   }
-  rm /tmp/gosu_subs.txt /tmp/gosu_command.txt
 else
   function START_COMMAND() {
 	  PARAM=$1
