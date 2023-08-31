@@ -9,10 +9,17 @@ source /scripts/env-data.sh
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
   echo "gosu ${USER_NAME}:${DB_GROUP_NAME} bash -c" > /tmp/gosu_subs.txt
   envsubst < /tmp/gosu_subs.txt > /tmp/gosu_command.txt
-  START_COMMAND=$(cat /tmp/gosu_command.txt)
+  GOSU_COMMAND=$(cat /tmp/gosu_command.txt)
+  function START_COMMAND() {
+	  PARAM=$1
+  	${GOSU_COMMAND} "$1"
+  }
   rm /tmp/gosu_subs.txt /tmp/gosu_command.txt
 else
-  START_COMMAND='su postgres -c'
+  function START_COMMAND() {
+	  PARAM=$1
+  	su postgres -c "$1"
+  }
 fi
 
 create_dir "${WAL_ARCHIVE}"
@@ -25,8 +32,8 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
     exit 1
   fi
   
-  
-  until ${START_COMMAND}  "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_isready -h ${REPLICATE_FROM} -p ${REPLICATE_PORT}"
+
+  until START_COMMAND "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_isready -h ${REPLICATE_FROM} -p ${REPLICATE_PORT}"
   do
     echo -e "[Entrypoint] \e[1;31m Waiting for master to ping... \033[0m"
     sleep 1s
