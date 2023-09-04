@@ -1,0 +1,62 @@
+
+version: '2.1'
+
+volumes:
+  pg-master-data-dir:
+  pg-node-data-dir:
+
+services:
+  pg-master:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    restart: 'always'
+    
+    volumes:
+      - pg-master-data-dir:/var/lib/postgresql
+      - ./tests:/tests
+      - ../utils:/lib/utils
+      - ./scripts/setup-master.sql:/docker-entrypoint-initdb.d/setup-master.sql
+    environment:
+      
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+
+      # We can specify optional credentials
+      POSTGRES_PASS: 'docker'
+      REPLICATION_USER: 'replicator'
+      REPLICATION_PASS: 'replicator'
+      REPLICATION: 'true'
+      RUN_AS_ROOT: false
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"
+
+  pg-node:
+    image: 'kartoza/postgis:${TAG:-manual-build}'
+    restart: 'always'
+    
+    volumes:
+      - pg-node-data-dir:/var/lib/postgresql
+      - ./tests:/tests
+      - ../utils:/lib/utils
+
+    environment:
+      
+      ALLOW_IP_RANGE: '0.0.0.0/0'
+      POSTGRES_PASS: 'docker'
+      REPLICATE_FROM: 'pg-master'
+      REPLICATION: 'true'
+      RUN_AS_ROOT: false
+      PROMOTE_MASTER: false
+      DESTROY_DATABASE_ON_RESTART: 'True'
+      REPLICATION_USER: 'replicator'
+      REPLICATION_PASS: 'replicator'
+    depends_on:
+        pg-master:
+          condition: service_healthy
+    
+    healthcheck:
+      interval: 60s
+      timeout: 30s
+      retries: 3
+      test: "pg_isready"

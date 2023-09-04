@@ -730,7 +730,7 @@ Slave settings:
 - **DESTROY_DATABASE_ON_RESTART**: Default is `True`. Set to 'False' to prevent this behavior. A
   replicant will always destroy its current database on restart, because it will try to sync again
   from `master` and avoid inconsistencies.
-- **PROMOTE_MASTER**: Default none. If set to any value then the current replicant
+- **PROMOTE_MASTER**: Default false. If set to `true` then the current replicant
   will be promoted to master. In some cases when the `master` container has failed, we might want
   to use our `replicant` as `master` for a while. However, the promoted replicant will break
   consistencies and is not able to revert to replicant anymore, unless it is destroyed and

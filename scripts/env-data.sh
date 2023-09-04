@@ -20,9 +20,10 @@ SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGI
 EXTDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/extension/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
-PG_BASEBACKUP="/usr/bin/pg_basebackup"
+PG_BASEBACKUP="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_basebackup"
 PROMOTE_FILE="/tmp/pg_promote_master"
 NODE_PROMOTION="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_ctl"
+DATA_DIR_CONTROL="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_controldata"
 PGSTAT_TMP="/var/run/postgresql/"
 PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 
@@ -34,7 +35,7 @@ PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
 # (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
 #  "$XYZ_DB_PASSWORD" from a file, especially for Docker's secrets feature)
-function file_env {
+function file_env() {
 	local var="$1"
 	local fileVar="${var}_FILE"
 	local def="${2:-}"
@@ -65,7 +66,7 @@ function boolean() {
 
 file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
-file_env 'POSTGRES_DBNAME'
+
 
 function create_dir() {
 DATA_PATH=$1
@@ -211,7 +212,7 @@ fi
 
 if [ -z "${ARCHIVE_CLEANUP_COMMAND}" ]; then
   # https://www.postgresql.org/docs/12/runtime-config-wal.html
-  ARCHIVE_CLEANUP_COMMAND="pg_archivecleanup ${WAL_ARCHIVE} %r"
+  ARCHIVE_CLEANUP_COMMAND="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_archivecleanup ${WAL_ARCHIVE} %r"
 fi
 
 if [ -z "${WAL_LEVEL}" ]; then
@@ -401,6 +402,17 @@ if [ -z "${TIMEZONE}" ]; then
   TIMEZONE='Etc/UTC'
 fi
 
+if [ -z "${KERNEL_SHMMAX}" ]; then
+  KERNEL_SHMMAX=543252480
+fi
+
+if [ -z "${KERNEL_SHMALL}" ]; then
+  KERNEL_SHMALL=2097152
+fi
+
+if [ -z "${PROMOTE_MASTER}" ]; then
+  PROMOTE_MASTER=FALSE
+fi
 # usable function definitions
 function kill_postgres {
   PID=$(cat "${PG_PID}")
@@ -587,7 +599,7 @@ function non_root_permission() {
       directory_checker "${dir_names}"
     fi
   done
-  services=("/usr/lib/postgresql/" "/etc/" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
+  services=("/usr/lib/postgresql/" "/etc/" "/var/log/postgresql" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
   for paths in "${services[@]}"; do
     directory_checker "${paths}"
   done
@@ -605,3 +617,4 @@ function role_check() {
   fi
 
 }
+

@@ -88,7 +88,7 @@ trap "echo \"Sending SIGTERM to postgres\"; killall -s SIGTERM postgres" SIGTERM
 su - postgres -c "${POSTGRES} -D ${DATADIR} -c config_file=${CONF} ${LOCALONLY} &"
 
 # wait for postgres to come up
-until su - postgres -c "pg_isready"; do
+until su - postgres -c "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/pg_isready"; do
   sleep 1
 done
 echo "postgres ready"
