@@ -56,4 +56,27 @@ class TestReplicationNode(unittest.TestCase):
 
             rows = c.fetchall()
             self.assertEqual(len(rows), 1)
+class TestReplicationPromotion(unittest.TestCase):
+
+    def setUp(self):
+        self.db = DBConnection()
+
+    def test_read_data(self):
+        # create new table
+        self.db.conn.autocommit = True
+        with self.db.cursor() as c:
+            c.execute(
+                """
+                INSERT INTO sweets (name ,price) values ('Test', 10);
+                """
+            )
+            c.execute(
+                """
+                SELECT * FROM sweets where name = 'Test';
+                """
+            )
+
+            rows = c.fetchone()
+            self.assertEqual(len(rows), 3)
+
 

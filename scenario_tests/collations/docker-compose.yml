@@ -1,5 +1,5 @@
 
-version: '2.1'
+version: '3.9'
 
 volumes:
   pg-data-dir:
@@ -11,8 +11,6 @@ services:
   pg:
     image: 'kartoza/postgis:${TAG:-manual-build}'
     restart: 'always'
-    # You can optionally mount to volume, to play with the persistence and
-    # observe how the node will behave after restarts.
     volumes:
       - pg-data-dir:/var/lib/postgresql
       - ./tests:/tests
@@ -35,8 +33,6 @@ services:
   pg-new:
     image: 'kartoza/postgis:${TAG:-manual-build}'
     restart: 'always'
-    # You can optionally mount to volume, to play with the persistence and
-    # observe how the node will behave after restarts.
     volumes:
       - new-pg-data-dir:/opt/data/postgis
       - ./tests:/tests
@@ -62,8 +58,6 @@ services:
   pg-gosu:
     image: 'kartoza/postgis:${TAG:-manual-build}'
     restart: 'always'
-    # You can optionally mount to volume, to play with the persistence and
-    # observe how the node will behave after restarts.
     volumes:
       - pg-data-dir-gs:/var/lib/postgresql
       - ./tests:/tests

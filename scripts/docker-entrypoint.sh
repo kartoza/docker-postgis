@@ -74,8 +74,17 @@ else
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
     else
-      chown -R postgres:postgres "${DATADIR}" "${WAL_ARCHIVE}"
-      chmod -R 750 "${DATADIR}" "${WAL_ARCHIVE}"
+      dir_ownership=("${DATADIR}" "${WAL_ARCHIVE}")
+      for directory in "${dir_ownership[@]}"; do
+        if [[ $(stat -c '%U' "${directory}") != "postgres" ]] && [[ $(stat -c '%G' "${directory}") != "postgres" ]];then
+          chown -R postgres:postgres "${directory}"
+        fi
+      done
+      for directory in "${dir_ownership[@]}"; do
+        if [ "$(stat -c %a "$directory")" != "750" ]; then
+            chmod -R 750 "$directory"
+        fi
+      done
     fi
     source /scripts/setup-replication.sh
 fi
