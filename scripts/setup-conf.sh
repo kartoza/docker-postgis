@@ -71,7 +71,6 @@ checkpoint_timeout = ${CHECK_POINT_TIMEOUT}
 primary_conninfo = 'host=${REPLICATE_FROM} port=${REPLICATE_PORT} user=${REPLICATION_USER} password=${REPLICATION_PASS} ${PARAMS}'
 recovery_target_timeline=${TARGET_TIMELINE}
 recovery_target_action=${TARGET_ACTION}
-promote_trigger_file = '${PROMOTE_FILE}'
 EOF
 if [[ ${ARCHIVE_MODE} =~ [Oo][Nn] ]];then
 cat >> "${ROOT_CONF}"/streaming_replication.conf <<EOF

@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         postgresMajorVersion:
-          - 15
+          - 16
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
@@ -90,7 +90,7 @@ jobs:
     strategy:
       matrix:
         postgresMajorVersion:
-          - 15
+          - 16
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
