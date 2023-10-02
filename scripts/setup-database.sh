@@ -140,7 +140,9 @@ done
 
 # Create schemas in the DB
 for db in "${dbarr[@]}";do
-    for schema in $(echo "${SCHEMA_NAME}" | tr ',' ' '); do
+    IFS=','
+    read -a schema_arr <<< "$SCHEMA_NAME"
+    for schema in "${schema_arr[@]}";do
       SCHEMA_RESULT=$(psql -t "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -c "select count(1) from information_schema.schemata where schema_name = '${schema}' and catalog_name = '${db}';")
      if [[ ${SCHEMA_RESULT} -eq 0 ]] && [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
           echo -e "\e[32m [Entrypoint] Creating schema \e[1;31m ${schema} \e[32m in database \e[1;31m ${SINGLE_DB} \033[0m"
