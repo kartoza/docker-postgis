@@ -20,7 +20,7 @@ services:
       POSTGRES_DB: 'gis,data'
       POSTGRES_PASS: 'docker'
       ALL_DATABASES: TRUE
-      SCHEMA_NAME: demo
+      SCHEMA_NAME: 'demo1,demo2'
     healthcheck:
       interval: 60s
       timeout: 30s
@@ -40,7 +40,7 @@ services:
       POSTGRES_DB: 'gis,data'
       POSTGRES_PASS: 'docker'
       ALL_DATABASES: FALSE
-      SCHEMA_NAME: demo
+      SCHEMA_NAME: 'demo1,demo2'
     healthcheck:
       interval: 60s
       timeout: 30s
