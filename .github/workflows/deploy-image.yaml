@@ -32,7 +32,7 @@ jobs:
           - 16
         postgisMajorVersion:
           - 3
-        matrix.postgisMinorRelease:
+        postgisMinorRelease:
           - 4
         include:
           - distro: debian
