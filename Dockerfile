@@ -72,7 +72,7 @@ FROM postgis-base AS postgis-prod
 
 # Reset ARG for version
 ARG IMAGE_VERSION
-ARG POSTGRES_MAJOR_VERSION=15
+ARG POSTGRES_MAJOR_VERSION=16
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=4
 # https://packagecloud.io/timescale/timescaledb

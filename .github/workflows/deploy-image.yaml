@@ -64,7 +64,7 @@ jobs:
             GENERATE_ALL_LOCALE=1
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
           cache-from: |
             type=gha,scope=test
             type=gha,scope=prod
@@ -92,7 +92,7 @@ jobs:
             GENERATE_ALL_LOCALE=1
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
           cache-from: |
             type=gha,scope=test
             type=gha,scope=prod
