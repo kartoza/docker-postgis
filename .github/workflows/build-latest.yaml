@@ -1,19 +1,5 @@
 name: build-latest
 on:
-#  workflow_dispatch:
-#    inputs:
-#      distro:
-#        description: Base image distro
-#        required: true
-#        default: debian
-#      imageVersion:
-#        description: Base distro image version/release
-#        required: true
-#        default: bookworm
-#      imageVariant:
-#        description: Base image variant
-#        required: true
-#        default: slim
   workflow_dispatch:
   pull_request:
     branches:
@@ -32,6 +18,10 @@ jobs:
           - 3
         postgisMinorRelease:
           - 4
+        imageVersion:
+          - imageDistro: debian
+            imageDistroVersion: bookworm
+            imageDistroVariant: slim
         scenario:
           - datadir_init
           - streaming_replication
@@ -40,10 +30,6 @@ jobs:
           - logical_replication
           - init_scripts
           - multiple_databases
-        include:
-          - distro: debian
-            imageVersion: bookworm
-            imageVariant: slim
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -60,9 +46,9 @@ jobs:
           load: true
           tags: kartoza/postgis:manual-build
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            DISTRO=${{ matrix.imageVersion.imageDistro }}
+            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
             LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
@@ -130,9 +116,9 @@ jobs:
           tags: |
             ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            DISTRO=${{ matrix.imageVersion.imageDistro }}
+            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
             LANGS=en_US.UTF-8,id_ID.UTF-8
             GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}

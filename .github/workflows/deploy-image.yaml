@@ -1,19 +1,6 @@
 name: deploy-image
 on:
   workflow_dispatch:
-#    inputs:
-#      distro:
-#        description: Base image distro
-#        required: true
-#        default: debian
-#      imageVersion:
-#        description: Base distro image version/release
-#        required: true
-#        default: bookworm
-#      imageVariant:
-#        description: Base image variant
-#        required: true
-#        default: slim
   workflow_run:
     workflows:
       - build-latest
@@ -34,10 +21,10 @@ jobs:
           - 3
         postgisMinorRelease:
           - 4
-        include:
-          - distro: debian
-            imageVersion: bookworm
-            imageVariant: slim
+        imageVersion:
+          - imageDistro: debian
+            imageDistroVersion: bookworm
+            imageDistroVariant: slim
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -69,15 +56,15 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_REPO }}/postgis:base
-            ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{ matrix.distro }}-${{ matrix.imageVersion }}-${{ matrix.imageVariant }}
+            ${{ secrets.DOCKERHUB_REPO }}/postgis:base-${{  matrix.imageVersion.imageDistro }}-${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            DISTRO=${{ matrix.imageVersion.imageDistro }}
+            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
             GENERATE_ALL_LOCALE=1
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorVersion }}
           cache-from: |
             type=gha,scope=test
             type=gha,scope=prod
@@ -99,13 +86,13 @@ jobs:
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}
           build-args: |
-            DISTRO=${{ matrix.distro }}
-            IMAGE_VERSION=${{ matrix.imageVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVariant }}
+            DISTRO=${{ matrix.imageVersion.imageDistro }}
+            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
+            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
             GENERATE_ALL_LOCALE=1
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgresMinorVersion }}
+            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorVersion }}
           cache-from: |
             type=gha,scope=test
             type=gha,scope=prod
