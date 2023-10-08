@@ -81,10 +81,10 @@ jobs:
           - 3
         postgisMinorRelease:
           - 4
-        include:
-          - distro: debian
-            imageVersion: bookworm
-            imageVariant: slim
+        imageVersion:
+          - imageDistro: debian
+            imageDistroVersion: bookworm
+            imageDistroVariant: slim
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
