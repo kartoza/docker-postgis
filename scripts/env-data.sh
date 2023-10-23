@@ -455,29 +455,30 @@ function entry_point_script {
   if [[ ! -f "${SETUP_LOCKFILE}" ]] || [[ "${IGNORE_INIT_HOOK_LOCKFILE}" =~ [Tt][Rr][Uu][Ee] ]]; then
       if find "/docker-entrypoint-initdb.d" -mindepth 1 -print -quit 2>/dev/null | grep -q .; then
           for f in /docker-entrypoint-initdb.d/*; do
-          export PGPASSWORD=${POSTGRES_PASS}
-          case "$f" in
-                *.sql)    echo "$0: running $f";
-                  if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
-                  else
-                      for db in "${dbarr[@]}";do
-                        psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
-                      done
-                  fi;;
-                *.sql.gz) echo "$0: running $f";
-                  if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-                      gunzip < "$f" | psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
-                  else
-                      for db in "${dbarr[@]}";do
-                        gunzip < "$f" | psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
-                      done
-                  fi;;
-                *.sh)     echo "$0: running $f"; . "$f" || true;;
-                *)        echo "$0: ignoring $f" ;;
-            esac
-            echo
-          done
+            export PGPASSWORD=${POSTGRES_PASS}
+            case "$f" in
+                  *.sql)    echo "$0: running $f";
+                    if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+                        psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
+                    else
+                        for db in "${dbarr[@]}";do
+                          psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost  -f "${f}" || true
+                        done
+                    fi;;
+                  *.sql.gz) echo "$0: running $f";
+                    if [[ "${ALL_DATABASES}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+                        gunzip < "$f" | psql "${SINGLE_DB}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                    else
+                        for db in "${dbarr[@]}";do
+                          gunzip < "$f" | psql "${db}" -U ${POSTGRES_USER} -p 5432 -h localhost || true
+                        done
+                    fi;;
+                  *.sh)     echo "$0: running $f"; . "$f" || true;;
+                  *.py)     echo "$0: running $f"; python3 "$f" || true;;
+                  *)        echo "$0: ignoring $f" ;;
+              esac
+              echo
+            done
           # Put lock file to make sure entry point scripts were run
           touch ${SETUP_LOCKFILE}
       fi
