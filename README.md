@@ -526,7 +526,7 @@ By default, the lockfile is generated in `/docker-entrypoint-initdb.d` but it ca
  -v /data:/data
  ```
 
-Currently, you can pass `.sql`, `.sql.gz` and `.sh` files as mounted volumes.
+Currently, you can pass `.sql`, `.sql.gz`, `.py` and `.sh` files as mounted volumes.
 
 ```shell
 docker run -d -v `pwd`/setup-db.sql:/docker-entrypoint-initdb.d/setup-db.sql kartoza/postgis

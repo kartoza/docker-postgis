@@ -474,6 +474,7 @@ function entry_point_script {
                       done
                   fi;;
                 *.sh)     echo "$0: running $f"; . "$f" || true;;
+                *.py)     echo "$0: running $f"; python3 "$f" || true;;
                 *)        echo "$0: ignoring $f" ;;
             esac
             echo
