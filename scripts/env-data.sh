@@ -174,8 +174,8 @@ if [ -z "${IP_LIST}" ]; then
 	IP_LIST='*'
 fi
 
-if [ -z "${MAINTAINANCE_WORKERS}" ]; then
-	MAINTAINANCE_WORKERS=2
+if [ -z "${MAINTENANCE_WORKERS}" ]; then
+	MAINTENANCE_WORKERS=2
 fi
 
 if [ -z "${ARCHIVE_MODE}" ]; then
@@ -251,8 +251,8 @@ if [ -z "${MAX_WORKERS}" ]; then
 	MAX_WORKERS=4
 fi
 
-if [ -z "${MAINTAINANCE_WORK_MEM}" ]; then
-	MAINTAINANCE_WORK_MEM=128MB
+if [ -z "${MAINTENANCE_WORK_MEM}" ]; then
+	MAINTENANCE_WORK_MEM=128MB
 fi
 
 
