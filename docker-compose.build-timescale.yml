@@ -15,6 +15,7 @@ services:
         POSTGIS_MAJOR_VERSION: ${POSTGIS_MAJOR_VERSION}
         POSTGIS_MINOR_RELEASE: ${POSTGIS_MINOR_RELEASE}
         BUILD_TIMESCALE:  ${BUILD_TIMESCALE}
+        TIMESCALE_VERSION: ${TIMESCALE_VERSION}
       target: postgis-base
 
   postgis-prod:
