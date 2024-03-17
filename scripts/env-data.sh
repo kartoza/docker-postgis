@@ -610,6 +610,7 @@ function non_root_permission() {
 function role_check() {
   ROLE_NAME=$1
   echo "Creating user $1"
+  echo -e "\e[32m [Entrypoint] Creating/Updating user \e[1;31m $1  \033[0m"
   RESULT=$(su - postgres -c "psql postgres -t -c \"SELECT 1 FROM pg_roles WHERE rolname = '$ROLE_NAME'\"")
   COMMAND="ALTER"
   if [ -z "$RESULT" ]; then
@@ -618,3 +619,13 @@ function role_check() {
 
 }
 
+function role_creation() {
+  ROLE_NAME=$1
+  ROLE_STATUS=$2
+  ROLE_PASS=$3
+  STATEMENT="$COMMAND USER \"$ROLE_NAME\" WITH ${ROLE_STATUS} ENCRYPTED PASSWORD '$ROLE_PASS';"
+  echo "$STATEMENT" > /tmp/setup_user.sql
+  su - postgres -c "psql postgres -f /tmp/setup_user.sql"
+  rm /tmp/setup_user.sql
+
+}
