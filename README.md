@@ -363,7 +363,7 @@ This image uses the initial PostgreSQL values which disables the archiving optio
 * `-e WAL_SIZE=4GB`
 * `-e MIN_WAL_SIZE=2048MB`
 * `-e WAL_SEGSIZE=1024`
-* `-e MAINTAINANCE_WORK_MEM=128MB`
+* `-e MAINTENANCE_WORK_MEM=128MB`
 
 #### Configure networking
 
