@@ -49,6 +49,7 @@ jobs:
           push: false
           load: true
           tags: kartoza/postgis:manual-build
+          outputs: type=docker,dest=/tmp/postgis.tar
           build-args: |
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
