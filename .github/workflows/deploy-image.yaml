@@ -11,6 +11,8 @@ on:
 jobs:
   deploy-image:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.actor != 'dependabot[bot]'
     env:
       latest-ref: refs/heads/develop
     strategy:
@@ -37,14 +39,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      
+
       - name: Get Current Date
         id: current_date
         shell: python
-        run: |
-          import datetime
-          now = datetime.datetime.utcnow()
-          print(f'::set-output name=formatted::{now:%Y.%m.%d}')
+        run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
 
       - name: Build base image
         id: docker_build_base
