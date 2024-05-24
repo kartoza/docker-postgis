@@ -4,12 +4,24 @@ on:
   pull_request:
     branches:
       - develop
+    paths:
+      - 'Dockerfile'
+      - 'scripts/**'
+      - 'base_build/**'
+      - '.github/workflows/**'
   push:
     branches:
       - develop
+    paths:
+      - 'Dockerfile'
+      - 'scripts/**'
+      - 'build_data/**'
+      - '.github/workflows/**'
 jobs:
-  run-scenario-tests:
+  build-docker-image:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
+    if: github.actor != 'dependabot[bot]'
     strategy:
       matrix:
         postgresMajorVersion:
@@ -22,14 +34,6 @@ jobs:
           - imageDistro: debian
             imageDistroVersion: bookworm
             imageDistroVariant: slim
-        scenario:
-          - datadir_init
-          - streaming_replication
-          - collations
-          - extensions
-          - logical_replication
-          - init_scripts
-          - multiple_databases
     steps:
       - uses: actions/checkout@v4
       - name: Set up QEMU
@@ -45,6 +49,7 @@ jobs:
           push: false
           load: true
           tags: kartoza/postgis:manual-build
+          outputs: type=docker,dest=/tmp/postgis.tar
           build-args: |
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
@@ -55,12 +60,42 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
           cache-from: |
-           type=gha,scope=test
-           type=gha,scope=prod
-           type=gha,scope=base
+            type=gha,scope=test
+            type=gha,scope=prod
+            type=gha,scope=base
           cache-to: type=gha,scope=test
           target: postgis-test
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: kartoza-postgis
+          path: /tmp/postgis.tar
 
+  run-scenario-tests:
+    runs-on: ubuntu-latest
+    needs: [build-docker-image]
+    timeout-minutes: 20
+    if: github.actor != 'dependabot[bot]'
+    strategy:
+      matrix:
+        scenario:
+          - datadir_init
+          - streaming_replication
+          - collations
+          - extensions
+          - logical_replication
+          - init_scripts
+          - multiple_databases
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kartoza-postgis
+          path: /tmp
+      - name: Load image
+        run: |
+          docker load --input /tmp/postgis.tar
       - name: Run scenario test ${{ matrix.scenario }}
         working-directory: scenario_tests/${{ matrix.scenario }}
         env:
@@ -68,29 +103,45 @@ jobs:
           PRINT_TEST_LOGS: 1
         run: |
           bash ./test.sh
-
-  push-internal-pr-images:
-    if: github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url
+  scan_image:
     runs-on: ubuntu-latest
-    needs: [ run-scenario-tests ]
-    strategy:
-      matrix:
-        postgresMajorVersion:
-          - 16
-        postgisMajorVersion:
-          - 3
-        postgisMinorRelease:
-          - 4
-        imageVersion:
-          - imageDistro: debian
-            imageDistroVersion: bookworm
-            imageDistroVariant: slim
+    timeout-minutes: 20
+    if: github.actor != 'dependabot[bot]'
+    needs: [build-docker-image, run-scenario-tests]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kartoza-postgis
+          path: /tmp
+      - name: Load image
+        run: |
+          docker load --input /tmp/postgis.tar
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          format: 'sarif'
+          ignore-unfixed: true
+          image-ref: kartoza/postgis:manual-build
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          vuln-type: 'os,library'
+
+  push-internal-pr-images:
+    if: github.event.pull_request.base.repo.url == github.event.pull_request.head.repo.url && github.actor != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    needs: [ build-docker-image, run-scenario-tests ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: kartoza-postgis
+          path: /tmp
+      - name: Load image
+        run: |
+          docker load --input /tmp/postgis.tar
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
@@ -102,31 +153,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_REPO}}/postgis
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern=\d.\d.\d
             type=ref,event=branch
-            type=ref,event=pr
-
-      - name: Build image for testing
-        id: docker_build_testing_image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          file: Dockerfile
-          push: true
-          tags: |
-            ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
-          build-args: |
-            DISTRO=${{ matrix.imageVersion.imageDistro }}
-            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            LANGS=en_US.UTF-8,id_ID.UTF-8
-            GENERATE_ALL_LOCALE=0
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
-          cache-from: |
-           type=gha,scope=test
-           type=gha,scope=prod
-           type=gha,scope=base
-          cache-to: type=gha,scope=test
-          target: postgis-test
+    
+          
