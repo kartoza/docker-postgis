@@ -162,7 +162,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          tags: ${{ steps.docker_meta.outputs.tags }}-${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
+          tags: ${{ steps.docker_meta.outputs.tags }}
           cache-from: type=gha,scope=test
           push: true
           load: true
