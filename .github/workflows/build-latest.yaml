@@ -153,17 +153,7 @@ jobs:
         with:
           images: ${{ secrets.DOCKERHUB_REPO}}/postgis
           tags: |
-            type=semver,pattern={{version}}
+            type=semver,pattern=\d.\d.\d
             type=ref,event=branch
-            type=ref,event=pr
-
-      - name: Push image for testing
-        id: docker_push_testing_image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          tags: ${{ steps.docker_meta.outputs.tags }}
-          cache-from: type=gha,scope=test
-          push: true
-          load: true
+    
           
