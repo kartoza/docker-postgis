@@ -514,12 +514,14 @@ In some instances users want to run some SQL scripts to populate the database. T
 variable `POSTGRES_DB` allows us to specify multiple database that can be created on startup. When
 running scripts they will only be executed against the first database ie
 `POSTGRES_DB=gis,data,sample`. The SQL script will be executed against the `gis` database.
+
+The database will start accepting connection only after the script will have been executed.
+
 Additionally, a lock file is generated in `/docker-entrypoint-initdb.d`, which will prevent the
 scripts from getting executed after the first container startup. Provide
-`IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start.
-
-By default, the lockfile is generated in `/docker-entrypoint-initdb.d` but it can be overwritten by
- passing the environment variable `SCRIPTS_LOCKFILE_DIR` which can point to another location i.e
+`IGNORE_INIT_HOOK_LOCKFILE=true` to execute the scripts on _every_ container start. By default, the
+lockfile is generated in `/docker-entrypoint-initdb.d` but it can be overwritten by
+passing the environment variable `SCRIPTS_LOCKFILE_DIR` which can point to another location i.e
 
  ```shell
  -e SCRIPTS_LOCKFILE_DIR=/data/ \
