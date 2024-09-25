@@ -22,16 +22,16 @@ RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
-        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common  iputils-ping \
+        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common iputils-ping \
         apt-transport-https curl gettext pgxnclient cmake && \
-    apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
+    apt-get -y install build-essential autoconf libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
     figlet toilet gosu; \
     # verify that the binary works
-	gosu nobody true && \
+    gosu nobody true && \
     dpkg-divert --local --rename --add /sbin/initctl
 
 
-# Generating locales takes a long time. Utilize caching by runnig it by itself
+# Generating locales takes a long time. Utilize caching by running it by itself
 # early in the build process.
 
 # Generate all locale only on deployment mode build
@@ -46,20 +46,20 @@ ENV LANG=en_US.UTF-8 \
 COPY ./base_build/scripts/locale.gen /etc/all.locale.gen
 COPY ./base_build/scripts/locale-filter.sh /etc/locale-filter.sh
 RUN if [ -z "${GENERATE_ALL_LOCALE}" ] || [ $GENERATE_ALL_LOCALE -eq 0 ]; \
-	then \
-		cat /etc/all.locale.gen | grep "${LANG}" > /etc/locale.gen; \
-		/bin/bash /etc/locale-filter.sh; \
-	else \
-		cp -f /etc/all.locale.gen /etc/locale.gen; \
-	fi; \
-	set -eux \
-	&& /usr/sbin/locale-gen
+    then \
+        cat /etc/all.locale.gen | grep "${LANG}" > /etc/locale.gen; \
+        /bin/bash /etc/locale-filter.sh; \
+    else \
+        cp -f /etc/all.locale.gen /etc/locale.gen; \
+    fi; \
+    set -eux \
+    && /usr/sbin/locale-gen
 
 RUN update-locale ${LANG}
 
 
 # Cleanup resources
-RUN apt-get -y --purge autoremove  \
+RUN apt-get -y --purge autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -80,11 +80,10 @@ ARG TIMESCALE_VERSION=2
 ARG BUILD_TIMESCALE=true
 
 
-
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor |  sh -c 'cat > /usr/share/keyrings/postgresql.gpg' > /dev/null \
+    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sh -c 'cat > /usr/share/keyrings/postgresql.gpg' > /dev/null \
     && echo deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main | tee /etc/apt/sources.list.d/pgdg.list 2>/dev/null \
     && apt-get -y --purge autoremove \
     && apt-get clean \
@@ -94,34 +93,36 @@ RUN set -eux \
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
-# We add postgis as well to prevent build errors (that we dont see on local builds)
+# We add postgis as well to prevent build errors (that we don't see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    &&  apt-get update \
+    && apt-get update \
     && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
         postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \
         postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
-        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}  postgresql-${POSTGRES_MAJOR_VERSION}-cron \
-        postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw && \
-        pgxn install h3
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-cron \
+        postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw
+
+# Install H3 extension using pgxnclient
+RUN pgxn install h3
 
 # TODO a case insensitive match would be more robust
 RUN if [ "${BUILD_TIMESCALE}" = "true" ]; then \
         export DEBIAN_FRONTEND=noninteractive && \
         sh -c "echo \"deb [signed-by=/usr/share/keyrings/timescale.keyring] https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main\" > /etc/apt/sources.list.d/timescaledb.list" && \
-        wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey |  gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
+        wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
         apt-get update && \
-        apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
+        apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools; \
     fi;
 
-RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
-     echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
+RUN echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
+    echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
 # Compile pointcloud extension
@@ -132,7 +133,7 @@ cd pointcloud-master && \
 cd .. && rm -Rf pointcloud-master
 
 # Cleanup resources
-RUN apt-get -y --purge autoremove  \
+RUN apt-get -y --purge autoremove \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -147,7 +148,7 @@ RUN chmod +x *.sh
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 RUN set -eux \
-    && /scripts/setup.sh;rm /scripts/.pass_*
+    && /scripts/setup.sh; rm /scripts/.pass_*
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
