@@ -17,6 +17,8 @@ source /scripts/setup-pg_hba.sh
 # Function to add figlet
 figlet -t "Kartoza Docker PostGIS"
 
+service ssh start
+
 # Gosu preparations
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
   USER_ID=${POSTGRES_UID:-1000}

@@ -16,8 +16,6 @@ ARG CACHE_INVALIDATION_NUMBER=1
 # Reset ARG for version
 ARG IMAGE_VERSION
 
-USER root
-
 RUN apt-get -qq update --fix-missing && apt-get -qq --yes upgrade
 
 RUN set -eux \
@@ -81,6 +79,8 @@ ARG POSTGIS_MINOR_RELEASE=4
 ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false
 
+
+
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
@@ -98,21 +98,36 @@ RUN set -eux \
 # on docker hub e.g.
 # The following packages have unmet dependencies:
 
-    RUN set -eux \
+RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
-    && apt-get update \
-    && apt-get -y --no-install-recommends install \
-        postgresql-client-${POSTGRES_MAJOR_VERSION} \
+    &&  apt-get update \
+    && apt-get -y --no-install-recommends install postgresql-client-${POSTGRES_MAJOR_VERSION} \
         postgresql-common postgresql-${POSTGRES_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
         postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
         postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \
         postgresql-plpython3-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
-        postgresql-server-dev-${POSTGRES_MAJOR_VERSION} postgresql-${POSTGRES_MAJOR_VERSION}-cron \
-        postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw \
-        openssh-server  && \  
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION}  postgresql-${POSTGRES_MAJOR_VERSION}-cron \
+        postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw && \
         pgxn install h3
 
+
+# Install OpenSSH server and configure SSH
+RUN set -eux \
+    && apt-get update \
+    && apt-get install -y openssh-server \
+    && mkdir /var/run/sshd
+
+# Configure SSH to allow root login without a password
+RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config \
+    && echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config \
+    && echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config \
+    && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config
+
+# Set the root password to an empty string
+RUN echo 'root:' | chpasswd -e
+
+# Start the SSH service
 RUN service ssh start
 
 # TODO a case insensitive match would be more robust
@@ -142,8 +157,6 @@ RUN apt-get -y --purge autoremove  \
 
 # Open port 5432 so linked containers can see them
 EXPOSE 5432
-
-EXPOSE 22
 
 # Copy scripts
 ADD ./scripts /scripts
