@@ -67,18 +67,29 @@ RUN apt-get -y --purge autoremove \
 ##############################################################################
 # Production Stage                                                           #
 ##############################################################################
+##############################################################################
+# Production Stage                                                           #
+##############################################################################
 FROM postgis-base AS postgis-prod
 
+USER root
 
 # Reset ARG for version
 ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=16
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=4
-# https://packagecloud.io/timescale/timescaledb
 ARG TIMESCALE_VERSION=2
 ARG BUILD_TIMESCALE=true
 
+# Install ssh and ufw
+RUN apt-get update && \
+    apt-get install -y openssh-server ufw && \
+    ufw allow 22 && \
+    echo "y" | ufw enable || true
+
+# Start the SSH service
+RUN service ssh start
 
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
@@ -89,7 +100,6 @@ RUN set -eux \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* \
     && dpkg-divert --local --rename --add /sbin/initctl
-
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
@@ -151,9 +161,7 @@ RUN set -eux \
     && /scripts/setup.sh; rm /scripts/.pass_*
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
-
 ENTRYPOINT ["/bin/bash", "/scripts/docker-entrypoint.sh"]
-
 
 ##############################################################################
 # Testing Stage                                                           #
