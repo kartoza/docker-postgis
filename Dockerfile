@@ -94,6 +94,39 @@ RUN set -eux \
 
 #-------------Application Specific Stuff ----------------------------------------------------
 
+# Use an alternative method to add pgBackRest repository and key
+# If the key fails, try skipping key verification for now
+
+RUN apt-get update
+RUN apt-get install -y  cron
+
+RUN wget -qO- https://pgbackrest.org/pgbackrest.gpg | tee /etc/apt/trusted.gpg.d/pgbackrest.gpg && \
+    echo "deb http://apt.pgbackrest.org bullseye main" > /etc/apt/sources.list.d/pgbackrest.list && \
+    apt-get update && \
+    apt-get install -y pgbackrest && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories for pgBackRest
+RUN mkdir -p /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+
+# Set appropriate permissions for pgBackRest directories
+RUN chown -R postgres:postgres /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+
+# Copy pgBackRest configuration file
+COPY ./pgbackrest/pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
+
+# Add a backup script
+COPY ./pgbackrest/backup-script.sh /usr/local/bin/backup-script.sh
+RUN chmod +x /usr/local/bin/backup-script.sh
+
+# Add the cron job for automated backups
+COPY ./pgbackrest/backup-cron /etc/cron.d/backup-cron
+RUN chmod 0644 /etc/cron.d/backup-cron
+
+# Apply cron job configuration
+RUN crontab /etc/cron.d/backup-cron
+
+
 # We add postgis as well to prevent build errors (that we dont see on local builds)
 # on docker hub e.g.
 # The following packages have unmet dependencies:
@@ -172,7 +205,7 @@ RUN set -eux \
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
-ENTRYPOINT ["/bin/bash", "/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "-c", "/scripts/docker-entrypoint.sh && cron -f"]
 
 
 ##############################################################################
