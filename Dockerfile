@@ -122,7 +122,7 @@ RUN set -eux \
 RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config \
     && echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config \
     && echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config \
-    && echo 'AuthorizedKeysFile /shared-ssh' >> /etc/ssh/sshd_config \
+    && echo 'AuthorizedKeysFile /shared-ssh/authorized_keys' >> /etc/ssh/sshd_config \
     && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config \
     && echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config
 
