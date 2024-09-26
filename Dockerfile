@@ -26,10 +26,10 @@ RUN set -eux \
         gnupg2 \
         wget \
         software-properties-common \
-    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
-    && echo deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main | tee /etc/apt/sources.list.d/pgdg.list 2>/dev/null \
+    && wget -O /usr/share/keyrings/postgresql.gpg https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+    && echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list \
     && echo "deb http://download.osgeo.org/gdal/3.7/ubuntu focal main" | tee /etc/apt/sources.list.d/gdal.list \
-    && wget --quiet -O - http://download.osgeo.org/gdal/3.7/ubuntu/gdal.asc | gpg --dearmor -o /usr/share/keyrings/gdal.gpg \
+    && wget --quiet -O /usr/share/keyrings/gdal.gpg http://download.osgeo.org/gdal/3.7/ubuntu/gdal.asc \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
         postgresql-client-${POSTGRES_MAJOR_VERSION} \
