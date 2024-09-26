@@ -119,12 +119,11 @@ RUN set -eux \
     && mkdir /var/run/sshd
 
 # Configure SSH to allow root login and use public key authentication
-RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config \
+RUN echo 'PermitRootLogin no' >> /etc/ssh/sshd_config \
     && echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config \
     && echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config \
-    && echo 'AuthorizedKeysFile /shared-ssh/authorized_keys' >> /etc/ssh/sshd_config \
     && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config \
-    && echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config
+    && echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
 
 # Set the root password to an empty string
 RUN echo 'root:' | chpasswd -e
