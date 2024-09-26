@@ -118,11 +118,13 @@ RUN set -eux \
     && apt-get install -y openssh-server \
     && mkdir /var/run/sshd
 
-# Configure SSH to allow root login without a password
+# Configure SSH to allow root login and use public key authentication
 RUN echo 'PermitRootLogin yes' >> /etc/ssh/sshd_config \
     && echo 'PasswordAuthentication no' >> /etc/ssh/sshd_config \
-    && echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config \
-    && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config
+    && echo 'PubkeyAuthentication yes' >> /etc/ssh/sshd_config \
+    && echo 'AuthorizedKeysFile /shared-ssh' >> /etc/ssh/sshd_config \
+    && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config \
+    && echo 'PermitEmptyPasswords yes' >> /etc/ssh/sshd_config
 
 # Set the root password to an empty string
 RUN echo 'root:' | chpasswd -e
