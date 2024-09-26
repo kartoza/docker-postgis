@@ -125,9 +125,6 @@ RUN echo 'PermitRootLogin no' >> /etc/ssh/sshd_config \
     && echo 'AllowTcpForwarding yes' >> /etc/ssh/sshd_config \
     && echo 'PermitEmptyPasswords no' >> /etc/ssh/sshd_config
 
-# Set the root password to an empty string
-RUN echo 'root:' | chpasswd -e
-
 # Start the SSH service
 RUN service ssh start
 
@@ -151,6 +148,45 @@ cd pointcloud-master && \
 ./autogen.sh && ./configure && make -j 4 && make install && \
 cd .. && rm -Rf pointcloud-master
 
+
+# Install necessary packages: cron, PostgreSQL client, and gnupg for GPG key management
+RUN apt-get update && \
+    apt-get install -y \
+    cron \
+    wget \
+    gnupg2 \
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
+
+# Use an alternative method to add pgBackRest repository and key
+# If the key fails, try skipping key verification for now
+
+RUN wget -qO- https://pgbackrest.org/pgbackrest.gpg | tee /etc/apt/trusted.gpg.d/pgbackrest.gpg && \
+    echo "deb http://apt.pgbackrest.org bullseye main" > /etc/apt/sources.list.d/pgbackrest.list && \
+    apt-get update && \
+    apt-get install -y pgbackrest && \
+    rm -rf /var/lib/apt/lists/*
+
+# Create necessary directories for pgBackRest
+RUN mkdir -p /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+
+# Set appropriate permissions for pgBackRest directories
+RUN chown -R postgres:postgres /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+
+# Copy pgBackRest configuration file
+COPY ./pgbackrest/pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
+
+# Add a backup script
+COPY ./pgbackrest/backup-script.sh /usr/local/bin/backup-script.sh
+RUN chmod +x /usr/local/bin/backup-script.sh
+
+# Add the cron job for automated backups
+COPY ./pgbackrest/backup-cron /etc/cron.d/backup-cron
+RUN chmod 0644 /etc/cron.d/backup-cron
+
+# Apply cron job configuration
+RUN crontab /etc/cron.d/backup-cron
+
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
     && apt-get clean \
@@ -171,7 +207,7 @@ RUN set -eux \
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
-ENTRYPOINT ["/bin/bash", "/scripts/docker-entrypoint.sh"]
+ENTRYPOINT ["/bin/bash", "/scripts/docker-entrypoint.sh && cron -f"]
 
 
 ##############################################################################

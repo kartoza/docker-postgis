@@ -1,0 +1,2 @@
+# Cron job to backup databases at 2 AM daily
+0 2 * * * root /usr/local/bin/backup-script.sh >> /var/log/pgbackrest/backup.log 2>&1
