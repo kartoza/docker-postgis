@@ -18,10 +18,15 @@ ARG IMAGE_VERSION
 
 RUN apt-get -qq update --fix-missing && apt-get -qq --yes upgrade
 
+# Install essential tools including gpg early
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
-    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sh -c 'cat > /usr/share/keyrings/postgresql.gpg' > /dev/null \
+    && apt-get -y --no-install-recommends install \
+        gnupg2 \
+        wget \
+        software-properties-common \
+    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | tee /usr/share/keyrings/postgresql.gpg > /dev/null \
     && echo deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main | tee /etc/apt/sources.list.d/pgdg.list 2>/dev/null \
     && echo "deb http://download.osgeo.org/gdal/3.7/ubuntu focal main" | tee /etc/apt/sources.list.d/gdal.list \
     && wget --quiet -O - http://download.osgeo.org/gdal/3.7/ubuntu/gdal.asc | gpg --dearmor -o /usr/share/keyrings/gdal.gpg \
