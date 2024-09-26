@@ -20,15 +20,11 @@ create_pgbackrest_dirs() {
     chmod 700 "$dir_path"
 }
 
-# Switch to postgres user to create directories and permissions
-su - postgres -c "
-    create_pgbackrest_dirs '$LOG_DIR'
-    create_pgbackrest_dirs '$TMP_DIR'
-    create_pgbackrest_dirs '$BACKUP_DIR'
-"
+# Create directories as root
+create_pgbackrest_dirs "$LOG_DIR"
+create_pgbackrest_dirs "$TMP_DIR"
+create_pgbackrest_dirs "$BACKUP_DIR"
 
-# Create a pgBackRest stanza as postgres user
+# Switch to postgres user to create pgBackRest stanza and run backup
 su - postgres -c "pgbackrest --stanza=postgres stanza-create"
-
-# Run pgBackRest backup as postgres user
 su - postgres -c "pgbackrest --stanza=postgres backup"

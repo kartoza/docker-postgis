@@ -76,8 +76,8 @@ ARG POSTGRES_MAJOR_VERSION=16
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=4
 # https://packagecloud.io/timescale/timescaledb
-ARG TIMESCALE_VERSION=2-2.11.2
-ARG BUILD_TIMESCALE=false
+ARG TIMESCALE_VERSION=2
+ARG BUILD_TIMESCALE=true
 
 
 
@@ -107,10 +107,13 @@ RUN wget -qO- https://pgbackrest.org/pgbackrest.gpg | tee /etc/apt/trusted.gpg.d
     rm -rf /var/lib/apt/lists/*
 
 # Create necessary directories for pgBackRest
-RUN mkdir -p /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+RUN mkdir -p /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest /tmp/pgbackrest/
 
 # Set appropriate permissions for pgBackRest directories
 RUN chown -R postgres:postgres /etc/pgbackrest /var/log/pgbackrest /var/lib/pgbackrest
+RUN chmod 777 /tmp/pgbackrest/
+RUN touch /var/log/pgbackrest/postgres-stanza-create.log
+RUN chmod 777 /var/log/pgbackrest/postgres-stanza-create.log
 
 # Copy pgBackRest configuration file
 COPY ./pgbackrest/pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
@@ -164,6 +167,14 @@ RUN echo 'root:' | chpasswd -e
 
 # Start the SSH service
 RUN service ssh start
+
+# Enable archive_mode in postgresql.conf
+# Enable archive_mode in postgresql.conf
+RUN set -eux \
+    && echo "archive_mode = on" >> /etc/postgresql/${POSTGRES_MAJOR_VERSION}/main/postgresql.conf \
+    && echo "archive_command = 'pgbackrest --stanza=postgres archive-push %p'" >> /etc/postgresql/${POSTGRES_MAJOR_VERSION}/main/postgresql.conf \
+    && echo "archive_timeout = 120s" >> /etc/postgresql/${POSTGRES_MAJOR_VERSION}/main/postgresql.conf
+
 
 # TODO a case insensitive match would be more robust
 RUN if [ "${BUILD_TIMESCALE}" = "true" ]; then \
