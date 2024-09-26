@@ -21,14 +21,29 @@ RUN apt-get -qq update --fix-missing && apt-get -qq --yes upgrade
 RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
+    && wget -O- https://www.postgresql.org/media/keys/ACCC4CF8.asc | gpg --dearmor | sh -c 'cat > /usr/share/keyrings/postgresql.gpg' > /dev/null \
+    && echo deb [signed-by=/usr/share/keyrings/postgresql.gpg] https://apt.postgresql.org/pub/repos/apt/ ${IMAGE_VERSION}-pgdg main | tee /etc/apt/sources.list.d/pgdg.list 2>/dev/null \
+    && echo "deb http://download.osgeo.org/gdal/3.7/ubuntu focal main" | tee /etc/apt/sources.list.d/gdal.list \
+    && wget --quiet -O - http://download.osgeo.org/gdal/3.7/ubuntu/gdal.asc | gpg --dearmor -o /usr/share/keyrings/gdal.gpg \
+    && apt-get update \
     && apt-get -y --no-install-recommends install \
-        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common iputils-ping \
-        apt-transport-https curl gettext pgxnclient cmake && \
-    apt-get -y install build-essential autoconf libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
-    figlet toilet gosu; \
-    # verify that the binary works
-    gosu nobody true && \
-    dpkg-divert --local --rename --add /sbin/initctl
+        postgresql-client-${POSTGRES_MAJOR_VERSION} \
+        postgresql-common \
+        postgresql-${POSTGRES_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-ogr-fdw \
+        postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION}-scripts \
+        postgresql-plpython3-${POSTGRES_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-pgrouting \
+        postgresql-server-dev-${POSTGRES_MAJOR_VERSION} \
+        postgresql-${POSTGRES_MAJOR_VERSION}-cron \
+        postgresql-${POSTGRES_MAJOR_VERSION}-mysql-fdw \
+        gdal-bin \
+        libgdal-dev \
+    && apt-get -y --purge autoremove \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
+    && dpkg-divert --local --rename --add /sbin/initctl
 
 
 # Generating locales takes a long time. Utilize caching by running it by itself
