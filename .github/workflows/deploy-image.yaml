@@ -96,11 +96,9 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
-#          cache-from: |
-#            type=gha,scope=test
-#            type=gha,scope=prod
-#            type=gha,scope=base
-          cache-to: type=gha,scope=prod
+          cache-from: |
+            type=gha,scope=prod
+          #cache-to: type=gha,scope=prod
           target: postgis-prod
 
   publish_release_artifacts:
