@@ -508,7 +508,7 @@ function configure_replication_permissions {
 }
 
 function streaming_replication {
-  until START_COMMAND "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER} --incremental -R -vP -w --label=gis_pg_custer"
+  until START_COMMAND "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER}  -R -vP -w --label=gis_pg_custer"
     do
       echo -e "[Entrypoint] \e[1;31m Waiting for master to connect... \033[0m"
       sleep 1s
