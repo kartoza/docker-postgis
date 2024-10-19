@@ -1,5 +1,4 @@
 # Used solely for docker-compose build
-version: '3.9'
 services:
   postgis-base:
     image: kartoza/postgis:base-${DISTRO}-${IMAGE_VERSION}-${IMAGE_VARIANT}

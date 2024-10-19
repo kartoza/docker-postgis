@@ -1,6 +1,4 @@
 
-version: '2.1'
-
 volumes:
   pg-master-data-dir:
   pg-node-data-dir:

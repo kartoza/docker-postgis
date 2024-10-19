@@ -83,7 +83,7 @@ The following convention is used for tagging the images we build:
 
 So for example:
 
-``kartoza/postgis:14-3.1`` Provides PostgreSQL 14.0, PostGIS 3.1
+``kartoza/postgis:17-3.5`` Provides PostgreSQL 17.0, PostGIS 3.5
 
 **Note:** We highly recommend that you use tagged versions because successive minor versions of
 `PostgreSQL` write their database clusters into different database directories - which will cause
@@ -324,7 +324,7 @@ provided by the `timescaledb-tune`. Example,
     ```bash
     docker run -it --name timescale -e ACCEPT_TIMESCALE_TUNING=TRUE \
       -e POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb \
-      -e TIMESCALE_TUNING_PARAMS="-cpus=4" kartoza/postgis:14-3.1
+      -e TIMESCALE_TUNING_PARAMS="-cpus=4" kartoza/postgis:17-3.5
     ```
 
 **Note:** `ACCEPT_TIMESCALE_TUNING` environment variable will overwrite all configurations based
@@ -572,7 +572,7 @@ FORCE_SSL=TRUE
 The following example sets up a container with custom ssl private key and certificate:
 
 ```shell
-docker run -p 25432:5432 -e FORCE_SSL=TRUE -e SSL_DIR="/etc/ssl_certificates" -e SSL_CERT_FILE='/etc/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/etc/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/etc/ssl_certificates/root.crt' -v /tmp/postgres/letsencrypt:/etc/ssl_certificates --name ssl -d kartoza/postgis:13-3.1
+docker run -p 25432:5432 -e FORCE_SSL=TRUE -e SSL_DIR="/etc/ssl_certificates" -e SSL_CERT_FILE='/etc/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/etc/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/etc/ssl_certificates/root.crt' -v /tmp/postgres/letsencrypt:/etc/ssl_certificates --name ssl -d kartoza/postgis:13-3.5
 ```
 
 The environment variable `SSL_DIR` allows a user to specify the location
@@ -605,7 +605,7 @@ When setting up the database you need to define the following environment variab
 Example:
 
 ```shell
-docker run -p 5432:5432 -e FORCE_SSL=TRUE -e SSL_CERT_FILE='/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/ssl_certificates/root.crt' --name ssl -d kartoza/postgis:13-3.1
+docker run -p 5432:5432 -e FORCE_SSL=TRUE -e SSL_CERT_FILE='/ssl_certificates/fullchain.pem' -e SSL_KEY_FILE='/ssl_certificates/privkey.pem' -e SSL_CA_FILE='/ssl_certificates/root.crt' --name ssl -d kartoza/postgis:13-3.5
 ```
 
 On the host machine where you need to connect to the database you also 
@@ -663,7 +663,7 @@ replication methods allowed are,
 
 Replication  uses a dedicated user `REPLICATION_USER`. The role `${REPLICATION_USER}` uses the
 default group role `pg_read_all_data`. You can read more about this from the
-[PostgreSQL documentation](https://www.postgresql.org/docs/14/predefined-roles.html)
+[PostgreSQL documentation](https://www.postgresql.org/docs/17/predefined-roles.html)
 
 **Note:** When setting up replication you need to specify the password using the environment
 variable `REPLICATION_PASS`. If you do not specify it a random strong password will be generated.
@@ -679,7 +679,7 @@ is accessed from the replicant database. When edits to the master layer are save
 automatically propagated to the replicant. Note also that the replicant is read-only.
 
 ```shell
-docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432 kartoza/postgis:14.3.2
+docker run --name "streaming-replication" -e REPLICATION=true -e WAL_LEVEL='replica' -d -p 25432:5432 kartoza/postgis:17.3.2
 ```
 
 **Note** If you do not pass the env variable `REPLICATION_PASS` a random password will be generated

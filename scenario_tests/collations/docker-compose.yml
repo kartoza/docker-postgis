@@ -1,6 +1,3 @@
-
-version: '3.9'
-
 volumes:
   pg-data-dir:
   new-pg-data-dir:

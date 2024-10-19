@@ -1,6 +1,4 @@
 
-version: '3.9'
-
 volumes:
   pg-publisher-data-dir:
   pg-subscriber-data-dir:
