@@ -1,4 +1,4 @@
-version: '3.9'
+
 volumes:
   default-pg-data-dir:
   new-pg-data-dir:

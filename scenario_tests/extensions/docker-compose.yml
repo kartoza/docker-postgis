@@ -1,6 +1,4 @@
 
-version: '3.9'
-
 services:
   pg:
     image: 'kartoza/postgis:${TAG:-manual-build}'

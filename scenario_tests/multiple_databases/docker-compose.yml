@@ -1,6 +1,4 @@
 
-version: '3.9'
-
 volumes:
   pg-db-data-dir:
   pg-db-schema-dir:

@@ -1,5 +1,4 @@
 # docker-compose build
-version: '3.9'
 volumes:
   dbbackups:
   postgis-data:

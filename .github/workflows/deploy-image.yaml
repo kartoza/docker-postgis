@@ -12,17 +12,22 @@ jobs:
   deploy-image:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    if: github.actor != 'dependabot[bot]'
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      !(
+        contains(github.event.pull_request.title, '[skip-release]') ||
+        contains(github.event.comment.body, '/skiprelease')
+      ) && github.event.workflow_run.conclusion == 'success'
     env:
       latest-ref: refs/heads/develop
     strategy:
       matrix:
         postgresMajorVersion:
-          - 16
+          - 17
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 4
+          - 5
         imageVersion:
           - imageDistro: debian
             imageDistroVersion: bookworm
@@ -97,3 +102,43 @@ jobs:
             type=gha,scope=base
           cache-to: type=gha,scope=prod
           target: postgis-prod
+
+  publish_release_artifacts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: |
+      github.actor != 'dependabot[bot]' &&
+      !(
+        contains(github.event.pull_request.title, '[skip-release]') ||
+        contains(github.event.comment.body, '/skiprelease') 
+      ) &&  github.event.workflow_run.conclusion == 'success'
+    needs: [ deploy-image ]
+    strategy:
+      matrix:
+        postgresMajorVersion:
+          - 17
+        postgisMajorVersion:
+          - 3
+        postgisMinorRelease:
+          - 5
+    steps:
+      - name: Checkout code
+        id: git_checkout
+        uses: actions/checkout@v3
+        with:
+          ref: 'develop'
+
+      - name: Get Current Date
+        id: current_date
+        run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
+
+      - name: Get Latest Commit Hash
+        id: latest_commit_hash
+        run: echo "commit=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_OUTPUT
+
+      - name: publish_release
+        id: tag_releases
+        run: |
+          gh release create v${{ matrix.postgresMajorVersion }}.${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}--${{ steps.latest_commit_hash.outputs.commit }} --notes ${{ steps.latest_commit_hash.outputs.commit }} --target develop --repo $GITHUB_REPOSITORY
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
