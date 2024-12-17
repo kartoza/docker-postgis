@@ -51,3 +51,24 @@ ${VERSION} exec -T pg-schema /bin/bash /tests/test_schemas.sh
 
 
 ${VERSION} down -v
+
+
+# Run service for pg-schema
+${VERSION} up -d pg-single-db
+
+if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+  ${VERSION} logs -f &
+fi
+
+sleep 30
+
+# Preparing all databases and single schema
+until ${VERSION} exec -T pg-single-db pg_isready; do
+  sleep 1
+done;
+
+# Execute tests
+${VERSION} exec -T pg-single-db /bin/bash /tests/test_schemas.sh
+
+
+${VERSION} down -v
