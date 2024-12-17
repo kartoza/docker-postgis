@@ -264,7 +264,12 @@ if [ -z "${SSL_KEY_FILE}" ]; then
 	SSL_KEY_FILE='/etc/ssl/private/ssl-cert-snakeoil.key'
 fi
 
+# controls all login params below, defaults to false
+if [ -z "${LOGGING}" ]; then
+  LOGGING='FALSE'
+fi
 # log
+
 if [ -z "${LOGGING_COLLECTOR}" ]; then
   LOGGING_COLLECTOR='off'
 fi
@@ -453,7 +458,8 @@ fi
 IFS=','
 read -a dbarr <<< "$POSTGRES_DBNAME"
 SINGLE_DB=${dbarr[0]}
-export ${SINGLE_DB}
+echo ${SINGLE_DB} > /tmp/pg_dbname.txt
+
 
 if [ -z "${TIMEZONE}" ]; then
   TIMEZONE='Etc/UTC'

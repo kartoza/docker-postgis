@@ -38,8 +38,12 @@ cron.database_name = '${SINGLE_DB}'
 password_encryption= '${PASSWORD_AUTHENTICATION}'
 timezone='${TIMEZONE}'
 cron.use_background_workers = on
+EOF
 
+echo "include 'postgis.conf'" >> "${CONF}"
 
+if [[ "${LOGGING}" =~ [Tt][Rr][Uu][Ee] ]];then
+cat > "${ROOT_CONF}"/logging.conf <<EOF
 logging_collector='${LOGGING_COLLECTOR}'
 log_directory='${LOG_DIRECTORY}'
 log_filename='${LOG_FILENAME}'
@@ -54,10 +58,10 @@ log_connections='${LOG_CONNECTIONS}'
 log_disconnections='${LOG_DISCONNECTS}'
 log_line_prefix='${LOG_LINE_PREFIX}'
 log_timezone='${LOG_TIMEZONE}'
-
 EOF
+echo "include 'logging.conf'" >> "${CONF}"
 
-echo "include 'postgis.conf'" >> "${CONF}"
+fi
 
 # Create a config for logical replication
 if [[  "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] && "$WAL_LEVEL" == 'logical' ]]; then
