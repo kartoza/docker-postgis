@@ -645,10 +645,7 @@ function extension_install() {
 
 function directory_checker() {
   local DATA_PATH=$1
-  
   if [ -d "$DATA_PATH" ]; then
-    START_TIME=$(date +%s%N)
-
     local DB_USER_PERM
     local DB_GRP_PERM
     DB_USER_PERM=$(stat -c '%U' "${DATA_PATH}")
@@ -657,47 +654,12 @@ function directory_checker() {
     if [[ ${DB_USER_PERM} != "${USER}" ]] || [[ ${DB_GRP_PERM} != "${GROUP}" ]]; then
       chown -R "${USER}:${GROUP}" "${DATA_PATH}"
     fi
- 
   else
     chown "${USER}:${GROUP}" "${DATA_PATH}"
   fi
 }
 
-function non_root_permission() {
-  USER="$1"
-  GROUP="$2"
 
-  local START_GLOBAL=$(date +%s%N)
-
-  path_envs=(
-    "${DATADIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" 
-    "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "${SSL_DIR}" "${POSTGRES_INITDB_WALDIR}"
-  )
-
-  
-  for dir_name in "${path_envs[@]}"; do
-    [[ -n "$dir_name" ]] && directory_checker "$dir_name"
-  done
-
-  services=(
-    "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"  "/var/log/postgresql"  
-    "/var/run/postgresql" ${DATADIR} "/scripts" "/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}"
-    "${SSL_DIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "/etc/ssl"
-    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main" "/tmp/pg_*"
-  )
-
-
-  for path in "${services[@]}"; do
-    for expanded in $path; do
-      directory_checker "$expanded"
-    done
-  done
-  chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
-
-  local END_GLOBAL=$(date +%s%N)
-  local TOTAL_ELAPSED=$(( (END_GLOBAL - START_GLOBAL) / 1000000 ))
-  echo -e "[Entrypoint] \e[1;31m Total time spent in non_root_permission: .... ${TOTAL_ELAPSED} ms \033[0m"
-}
 
 function non_root_permission() {
   USER="$1"
@@ -709,7 +671,6 @@ function non_root_permission() {
     "${DATADIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" 
     "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "${SSL_DIR}" "${POSTGRES_INITDB_WALDIR}"
   )
-
 
   for dir_name in "${path_envs[@]}"; do
     [[ -n "$dir_name" ]] && directory_checker "$dir_name"
@@ -723,7 +684,6 @@ function non_root_permission() {
   )
 
   for path in "${services[@]}"; do
-    # Expand potential globs safely
     for expanded in $path; do
       directory_checker "$expanded"
     done
