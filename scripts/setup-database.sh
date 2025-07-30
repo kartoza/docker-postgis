@@ -75,10 +75,11 @@ EOF
     fi
 fi;
 
-non_root_permission postgres postgres
+#non_root_permission postgres postgres
+
 # Set proper permissions
 # needs to be done as root:
-chown -R postgres:postgres "${DATADIR}" "${WAL_ARCHIVE}"
+chown -R postgres:postgres "${DATADIR}" "${WAL_ARCHIVE}" "${SSL_DIR}"
 chmod -R 750 "${DATADIR}" "${WAL_ARCHIVE}"
 
 # test database existing
