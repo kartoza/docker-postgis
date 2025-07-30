@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 
 source /scripts/env-data.sh
-SINGLE_DB=$(cat /tmp/pg_dbname.txt)
-
-
-
 
 INITDB_WALDIR_FLAG=""
 

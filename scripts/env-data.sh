@@ -457,8 +457,8 @@ fi
 
 IFS=','
 read -a dbarr <<< "$POSTGRES_DBNAME"
-SINGLE_DB=${dbarr[0]}
-echo ${SINGLE_DB} > /tmp/pg_dbname.txt
+export SINGLE_DB=${dbarr[0]}
+
 
 
 if [ -z "${TIMEZONE}" ]; then
