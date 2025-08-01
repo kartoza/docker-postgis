@@ -457,8 +457,8 @@ fi
 
 IFS=','
 read -a dbarr <<< "$POSTGRES_DBNAME"
-SINGLE_DB=${dbarr[0]}
-echo ${SINGLE_DB} > /tmp/pg_dbname.txt
+export SINGLE_DB=${dbarr[0]}
+
 
 
 if [ -z "${TIMEZONE}" ]; then
@@ -644,31 +644,55 @@ function extension_install() {
 }
 
 function directory_checker() {
-  DATA_PATH=$1
-  if [ -d "$DATA_PATH" ];then
+  local DATA_PATH=$1
+  if [ -d "$DATA_PATH" ]; then
+    local DB_USER_PERM
+    local DB_GRP_PERM
     DB_USER_PERM=$(stat -c '%U' "${DATA_PATH}")
     DB_GRP_PERM=$(stat -c '%G' "${DATA_PATH}")
-    if [[ ${DB_USER_PERM} != "${USER}" ]] &&  [[ ${DB_GRP_PERM} != "${GROUP}"  ]];then
-      chown -R "${USER}":"${GROUP}" "${DATA_PATH}"
-    fi
-  fi
 
+    if [[ ${DB_USER_PERM} != "${USER}" ]] || [[ ${DB_GRP_PERM} != "${GROUP}" ]]; then
+      chown -R "${USER}:${GROUP}" "${DATA_PATH}"
+    fi
+  else
+    chown "${USER}:${GROUP}" "${DATA_PATH}"
+  fi
 }
+
+
+
 function non_root_permission() {
   USER="$1"
   GROUP="$2"
-  path_envs=("${DATADIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "${SSL_DIR}" "${POSTGRES_INITDB_WALDIR}")
-  for dir_names in "${path_envs[@]}";do
-    if [ ! -z "${dir_names}" ];then
-      directory_checker "${dir_names}"
-    fi
+
+  local START_GLOBAL=$(date +%s%N)
+
+  path_envs=(
+    "${DATADIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" 
+    "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "${SSL_DIR}" "${POSTGRES_INITDB_WALDIR}"
+  )
+
+  for dir_name in "${path_envs[@]}"; do
+    [[ -n "$dir_name" ]] && directory_checker "$dir_name"
   done
-  services=("/usr/lib/postgresql/" "/etc/" "/var/log/postgresql" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
-  for paths in "${services[@]}"; do
-    directory_checker "${paths}"
+
+  services=(
+    "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"  "/var/log/postgresql"  
+    "/var/run/postgresql" ${DATADIR} "/scripts" "/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}"
+    "${SSL_DIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "/etc/ssl"
+    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main" "/tmp/pg_*"
+  )
+
+  for path in "${services[@]}"; do
+    for expanded in $path; do
+      directory_checker "$expanded"
+    done
   done
   chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
 
+  local END_GLOBAL=$(date +%s%N)
+  local TOTAL_ELAPSED=$(( (END_GLOBAL - START_GLOBAL) / 1000000 ))
+  echo -e "[Entrypoint] Total time spent in non_root_permission, changing ownership of directories: \e[1;31m ${TOTAL_ELAPSED} \e[1;31m ms \033[0m"
 }
 
 function role_check() {
