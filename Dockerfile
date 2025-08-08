@@ -221,7 +221,7 @@ RUN set -eux \
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
-ENTRYPOINT ["/bin/bash", "-c", "/scripts/docker-entrypoint.sh && /usr/local/bin/stanza-create.sh && cron -f"]
+ENTRYPOINT ["/bin/bash", "-c", "/scripts/docker-entrypoint.sh"]
 
 
 
