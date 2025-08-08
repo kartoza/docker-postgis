@@ -118,6 +118,11 @@ RUN chmod 777 /var/log/pgbackrest/postgres-stanza-create.log
 # Copy pgBackRest configuration file
 COPY ./pgbackrest/pgbackrest.conf /etc/pgbackrest/pgbackrest.conf
 
+# Copy stanza-create script
+COPY ./stanza-create.sh /usr/local/bin/stanza-create.sh
+RUN chmod +x /usr/local/bin/stanza-create.sh
+
+
 # Add a backup script
 COPY ./pgbackrest/backup-script.sh /usr/local/bin/backup-script.sh
 RUN chmod +x /usr/local/bin/backup-script.sh
@@ -216,7 +221,8 @@ RUN set -eux \
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
-ENTRYPOINT ["/bin/bash", "-c", "/scripts/docker-entrypoint.sh && cron -f"]
+ENTRYPOINT ["/bin/bash", "-c", "/scripts/docker-entrypoint.sh && /usr/local/bin/stanza-create.sh && cron -f"]
+
 
 
 ##############################################################################
