@@ -599,9 +599,12 @@ function non_root_permission() {
       directory_checker "${dir_names}"
     fi
   done
-  services=("/usr/lib/postgresql/" "/etc/" "/var/log/postgresql" "/var/run/!(secrets)" "/var/lib/" "/usr/bin" "/tmp" "/scripts")
+  # Only change ownership of specific PostgreSQL directories, not entire system directories
+  services=("/var/log/postgresql" "/var/run/postgresql" "/tmp" "/scripts")
   for paths in "${services[@]}"; do
-    directory_checker "${paths}"
+    if [ -d "${paths}" ]; then
+      directory_checker "${paths}"
+    fi
   done
   chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
 

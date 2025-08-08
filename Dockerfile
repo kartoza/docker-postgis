@@ -132,7 +132,7 @@ COPY ./pgbackrest/backup-cron /etc/cron.d/backup-cron
 RUN chmod 0644 /etc/cron.d/backup-cron
 
 # Apply cron job configuration
-RUN crontab /etc/cron.d/backup-cron
+# RUN crontab /etc/cron.d/backup-cron
 
 
 # We add postgis as well to prevent build errors (that we dont see on local builds)
