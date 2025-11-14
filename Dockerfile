@@ -22,7 +22,7 @@ RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
-        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common  iputils-ping \
+        locales gnupg2 wget ca-certificates rpl pwgen   iputils-ping \
         apt-transport-https curl gettext pgxnclient cmake && \
     apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
     figlet toilet gosu; \
