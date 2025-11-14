@@ -6,7 +6,6 @@ volumes:
   
 services:
 
-
   pg-default-scram:
     image: 'kartoza/postgis:${TAG:-manual-build}'
     volumes:
@@ -23,10 +22,6 @@ services:
       timeout: 30s
       retries: 3
       test: "pg_isready"
-
-
-
-
 
   pg-default-scram-gosu:
     image: 'kartoza/postgis:${TAG:-manual-build}'

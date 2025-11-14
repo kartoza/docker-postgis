@@ -13,7 +13,7 @@ fi
 
 
 # Run service
-${VERSION} up -d  pg-default-scram  pg-default-scram-gosu
+${VERSION} up -d
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
