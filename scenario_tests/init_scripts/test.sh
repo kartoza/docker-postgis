@@ -13,17 +13,15 @@ fi
 
 
 # Run service
-${VERSION} up -d
 
-if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  ${VERSION} logs -f &
-fi
+function executeTests() {
+  service=$1
 
-sleep 60
+  ${VERSION} up -d ${service}
 
-services=("pg-default-scram  pg-default-scram-gosu")
-
-for service in "${services[@]}"; do
+  if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+    ${VERSION} logs -f &
+  fi
 
   # Execute tests
   until ${VERSION} exec -T $service pg_isready; do
@@ -33,7 +31,12 @@ for service in "${services[@]}"; do
   echo "Execute test for $service"
   ${VERSION} exec -T $service /bin/bash /tests/test.sh
 
-done
+  sleep 60
+
+  ${VERSION} down -v
+}
+
+executeTests pg
 
 
-${VERSION} down -v
+

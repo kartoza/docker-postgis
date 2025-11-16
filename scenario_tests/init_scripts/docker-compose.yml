@@ -6,7 +6,7 @@ volumes:
   
 services:
 
-  pg-default-scram:
+  pg:
     image: 'kartoza/postgis:${TAG:-manual-build}'
     volumes:
       # By default persisted volumes should be in /var/lib/postgresql
@@ -23,21 +23,5 @@ services:
       retries: 3
       test: "pg_isready"
 
-  pg-default-scram-gosu:
-    image: 'kartoza/postgis:${TAG:-manual-build}'
-    volumes:
-      # By default persisted volumes should be in /var/lib/postgresql
-      - default-pg-data-dir-scram-gs:/var/lib/postgresql
-      - ./tests/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./tests:/tests
-      - ../utils:/lib/utils
-    environment:
-      POSTGRES_PASS: 'docker'
-      RUN_AS_ROOT: false
-    healthcheck:
-      interval: 60s
-      timeout: 30s
-      retries: 3
-      test: "pg_isready"
 
   
