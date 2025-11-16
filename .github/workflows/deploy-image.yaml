@@ -23,14 +23,14 @@ jobs:
     strategy:
       matrix:
         postgresMajorVersion:
-          - 17
+          - 18
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 5
+          - 6
         imageVersion:
           - imageDistro: debian
-            imageDistroVersion: bookworm
+            imageDistroVersion: trixie
             imageDistroVariant: slim
     steps:
       - uses: actions/checkout@v5
@@ -95,11 +95,11 @@ jobs:
     strategy:
       matrix:
         postgresMajorVersion:
-          - 17
+          - 18
         postgisMajorVersion:
           - 3
         postgisMinorRelease:
-          - 5
+          - 6
     steps:
       - name: Checkout code
         id: git_checkout

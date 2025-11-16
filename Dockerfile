@@ -2,7 +2,7 @@
 # Base stage                                                                 #
 ##############################################################################
 ARG DISTRO=debian
-ARG IMAGE_VERSION=bookworm
+ARG IMAGE_VERSION=trixie
 ARG IMAGE_VARIANT=slim
 FROM $DISTRO:$IMAGE_VERSION-$IMAGE_VARIANT AS postgis-base
 LABEL maintainer="Tim Sutton<tim@kartoza.com>"
@@ -22,7 +22,7 @@ RUN set -eux \
     && export DEBIAN_FRONTEND=noninteractive \
     && apt-get update \
     && apt-get -y --no-install-recommends install \
-        locales gnupg2 wget ca-certificates rpl pwgen software-properties-common  iputils-ping \
+        locales gnupg2 wget ca-certificates rpl pwgen   iputils-ping \
         apt-transport-https curl gettext pgxnclient cmake && \
     apt-get -y install build-essential autoconf  libxml2-dev zlib1g-dev netcat-openbsd gdal-bin \
     figlet toilet gosu; \
@@ -72,9 +72,9 @@ FROM postgis-base AS postgis-prod
 
 # Reset ARG for version
 ARG IMAGE_VERSION
-ARG POSTGRES_MAJOR_VERSION=17
+ARG POSTGRES_MAJOR_VERSION=18
 ARG POSTGIS_MAJOR_VERSION=3
-ARG POSTGIS_MINOR_RELEASE=5
+ARG POSTGIS_MINOR_RELEASE=6
 # https://packagecloud.io/timescale/timescaledb
 ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false

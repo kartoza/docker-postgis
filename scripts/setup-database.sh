@@ -122,8 +122,19 @@ for db in "${dbarr[@]}";do
               fi
             done
             echo -e "\e[32m [Entrypoint] loading legacy sql in database \e[1;31m ${db}  \033[0m"
-            psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_minimal.sql || true
-            psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_gist.sql || true
+            if [[ ! -f "${SQLDIR}"/legacy_minimal.sql  ]];then
+              exit 1
+            else
+              psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_minimal.sql || true
+            fi
+
+
+            if [[ ! -f  "${SQLDIR}"/legacy_gist.sql ]];then
+              exit 1
+            else
+              psql "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -f "${SQLDIR}"/legacy_gist.sql || true
+            fi
+
 
             if [[ "${WAL_LEVEL,,}" == "logical" ]]; then
                 psql -d "${db}" -U "${POSTGRES_USER}" -p 5432 -h localhost -c "CREATE PUBLICATION logical_replication;"
