@@ -33,7 +33,7 @@ jobs:
             imageDistroVersion: trixie
             imageDistroVariant: slim
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -103,7 +103,7 @@ jobs:
     steps:
       - name: Checkout code
         id: git_checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           ref: 'develop'
 
