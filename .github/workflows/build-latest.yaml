@@ -71,7 +71,7 @@ jobs:
           cache-to: type=gha,scope=test
           target: postgis-test
       - name: Upload artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: kartoza-postgis
           path: /tmp/postgis.tar
