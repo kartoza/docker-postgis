@@ -23,7 +23,10 @@ services:
       - "25432:5432"
     restart: on-failure
     healthcheck:
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
+      interval: 5s
+      timeout: 2s
+      retries: 10
 
 
   dbbackups:
