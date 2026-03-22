@@ -22,7 +22,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-default:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -39,7 +39,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-new:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -57,7 +57,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-recreate:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -77,7 +77,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
   
   pg-custom-waldir-wrong:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -97,7 +97,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-custom-waldir-correct:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -117,7 +117,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
   
   pg-custom-waldir-not-match-1:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -137,7 +137,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
   
   pg-custom-waldir-not-match-2:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -157,5 +157,5 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "PGPASSWORD=docker pg_isready -h 127.0.0.1 -U docker -d gis"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
