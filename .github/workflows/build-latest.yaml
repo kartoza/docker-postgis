@@ -81,6 +81,7 @@ jobs:
     needs: [build-docker-image]
     timeout-minutes: 20
     if: |
+      (github.event_name != 'pull_request' || github.event.pull_request.user.login != 'dependabot[bot]') &&
       github.actor != 'dependabot[bot]' &&
       !(
         contains(github.event.pull_request.title, '[skip-release]') ||
