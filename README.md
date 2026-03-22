@@ -79,11 +79,49 @@ specified on the blog.
 
 The following convention is used for tagging the images we build:
 
+### Tagged Generic POSTGRES_MAJOR_VERSION
+
 > kartoza/postgis:[POSTGRES_MAJOR_VERSION]-[POSTGIS_MAJOR_VERSION].[POSTGIS_MINOR_RELEASE]
 
 So for example:
 
-``kartoza/postgis:17-3.5`` Provides PostgreSQL 17.0, PostGIS 3.5
+```bash
+  kartoza/postgis:17-3.5
+``` 
+
+Provides PostgreSQL 17.0, PostGIS 3.5
+
+The version 17.0 is determined at build time as
+we install the highest version available. You can
+use the command:
+
+```bash
+pg_config --version
+```
+To determine which version is installed in the image.
+
+### Tagged Specific POSTGRES_MAJOR_VERSION
+
+  After building the image locally we check which version of POSTGRES_MAJOR_VERSION has been installed.
+
+```bash
+pg_config --version
+```
+This produces a corresponding version:
+
+  ```bash
+  kartoza/postgis:[POSTGRES_MAJOR_VERSION].[POSTGRES_MAJOR_VERSION_BUGFIX]-[POSTGIS_MAJOR_VERSION].[POSTGIS_MINOR_RELEASE]
+  ```
+i.e kartoza/postgis:17.1-3.5
+
+
+### Dated Versions 
+
+   Each merged pull request produces an image
+i.e. `kartoza/postgis:18-3.6--v2026.03.09`
+and the corresponding release artifacts detail
+each change in the PR.
+
 
 **Note:** We highly recommend that you use tagged versions because successive minor versions of
 `PostgreSQL` write their database clusters into different database directories - which will cause
