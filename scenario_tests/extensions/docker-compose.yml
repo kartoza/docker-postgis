@@ -19,7 +19,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "pg_isready"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-two-extensions:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -41,7 +41,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "pg_isready"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-gosu:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -62,7 +62,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "pg_isready"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
   pg-two-extensions-gosu:
     image: 'kartoza/postgis:${TAG:-manual-build}'
@@ -84,4 +84,4 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "pg_isready"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]

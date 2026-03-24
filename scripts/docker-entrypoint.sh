@@ -2,6 +2,11 @@
 
 set -e
 
+# Reset readiness marker on container start
+if [[ -f /tmp/postgres-ready ]]; then
+  rm -f /tmp/postgres-ready
+fi
+
 source /scripts/env-data.sh
 
 # Setup postgres CONF file
@@ -93,18 +98,49 @@ fi
 
 # If no arguments passed to entrypoint, then run postgres by default
 
-if [[ $# -eq 0 ]];then
-  if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]];then
-    echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground \033[0m"
+if [[ $# -eq 0 ]]; then
+  echo -e "[Entrypoint] Postgres initialisation process completed .... starting final postgres"
+
+  if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]]; then
     non_root_permission postgres postgres
-    exec su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
+
+    exec bash -c "
+      su - postgres -c '$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF' &
+
+      pid=\$!
+
+      echo '[Entrypoint] Waiting for Postgres readiness...'
+
+      until pg_isready -h localhost -p ${POSTGRES_PORT:-5432}; do
+        sleep 1
+      done
+
+      echo '[Entrypoint] Postgres ready - creating marker'
+      touch /tmp/postgres-ready
+
+      wait \$pid
+    "
+
   else
-    echo -e "[Entrypoint] \e[1;31m Postgres initialisation process completed .... restarting in foreground with gosu \033[0m"
     non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
-    exec gosu "${USER_NAME}" bash -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF"
 
+    exec gosu "${USER_NAME}" bash -c "
+      $SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &
+
+      pid=\$!
+
+      echo '[Entrypoint] Waiting for Postgres readiness...'
+
+      until pg_isready -h localhost -p ${POSTGRES_PORT:-5432}; do
+        sleep 1
+      done
+
+      echo '[Entrypoint] Postgres ready - creating marker'
+      touch /tmp/postgres-ready
+
+      wait \$pid
+    "
   fi
-
 fi
 
 # If arguments passed, run postgres with these arguments

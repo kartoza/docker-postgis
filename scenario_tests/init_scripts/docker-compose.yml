@@ -21,7 +21,7 @@ services:
       interval: 60s
       timeout: 30s
       retries: 3
-      test: "pg_isready"
+      test: [ "CMD", "test", "-f", "/tmp/postgres-ready" ]
 
 
   
