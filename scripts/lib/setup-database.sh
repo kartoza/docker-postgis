@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
+
 
 INITDB_WALDIR_FLAG=""
 
@@ -92,7 +92,7 @@ done
 echo "postgres ready"
 
 # Setup user
-source /scripts/setup-user.sh
+source /scripts/lib/setup-user.sh
 
 export PGPASSWORD=${POSTGRES_PASS}
 

@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
 
 create_dir "${EXTRA_CONF_DIR}"
 create_dir "${CONF_LOCKFILE_DIR}"
