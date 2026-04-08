@@ -1,22 +1,20 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
+
 
 # This script will setup slave instance to use standby replication
 
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
-if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-  function START_COMMAND() {
-	  PARAM=$1
-  	gosu "${USER_NAME}" bash -c "$1"
-  }
-else
-  function START_COMMAND() {
-	  PARAM=$1
-  	su postgres -c "$1"
-  }
-fi
+START_COMMAND() {
+  local cmd="$*"
+
+  if [[ "${RUN_AS_ROOT,,}" == "false" ]]; then
+    exec gosu "$USER_NAME" bash -c "$cmd"
+  else
+    exec su -s /bin/bash postgres -c "$cmd"
+  fi
+}
 
 create_dir "${WAL_ARCHIVE}"
 
