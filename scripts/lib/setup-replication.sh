@@ -6,17 +6,6 @@ source /scripts/lib/env-data.sh
 
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
-if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-  function START_COMMAND() {
-	  PARAM=$1
-  	gosu "${USER_NAME}" bash -c "$1"
-  }
-else
-  function START_COMMAND() {
-	  PARAM=$1
-  	su postgres -c "$1"
-  }
-fi
 
 create_dir "${WAL_ARCHIVE}"
 

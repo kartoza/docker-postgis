@@ -268,70 +268,51 @@ role_creation() {
 
 expose_password() {
   local length="$1"
-  local label="$2"
-  local env_var_name="$3"
-  local tmp_file="$4"
+  local outfile="$2"
 
-  local PASS_FILE="/scripts/.pass_${length}.txt"
-  local PASS_VALUE
+  local pass_file="/scripts/.pass_${length}.txt"
+  local label
+  local color
 
-  # Load from env OR file
-  if [[ -n "${!env_var_name}" ]]; then
-    PASS_VALUE="${!env_var_name}"
-  elif [[ -f "$PASS_FILE" ]]; then
-    PASS_VALUE=$(<"$PASS_FILE")
+  if [[ "$length" == "20" ]]; then
+    label="Postgres"
+    color="1;31"
   else
-    echo "[Entrypoint] No password found for $label"
-    return 1
+    label="Replication"
+    color="1;34"
   fi
 
-  # Export dynamically
-  export "$env_var_name"="$PASS_VALUE"
+  if [[ -f "${pass_file}" ]]; then
+    USER_CREDENTIAL_PASS="$(<"${pass_file}")"
+    cp "${pass_file}" "/tmp/${outfile}.txt"
 
-  # Optional: also set PGPASSWORD if it's the main one
-  if [[ "$env_var_name" == "POSTGRES_PASS" ]]; then
-    export PGPASSWORD="$PASS_VALUE"
+    echo -e "[Entrypoint] GENERATED ${label} PASSWORD: \e[${color}m ${USER_CREDENTIAL_PASS} \033[0m"
   fi
-
-  # Write temp file if provided
-  if [[ -n "$tmp_file" ]]; then
-    printf "%s" "$PASS_VALUE" > "$tmp_file"
-    chmod 600 "$tmp_file"
-  fi
-
-  # Display
-  echo -e "\e[1;33m[Entrypoint]\033[0m Generated $label password:"
-  echo -e "\e[1;34m$PASS_VALUE\033[0m"
 }
 
-expose_credentials(){
-  expose_password 20 "PostgreSQL" "POSTGRES_PASS" "/tmp/PGPASSWORD.txt"
-  expose_password 22 "Replication" "REPLICATION_PASS" "/tmp/REPLPASSWORD.txt"
+expose_credentials() {
+  expose_password 20 "PGPASSWORD"
+  expose_password 22 "REPLPASSWORD"
 }
 
 expose_replication() {
-  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
-    local pgpass_file
-    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
-      pgpass_file="/home/${USER_NAME}/.pgpass"
-    else
-      local pg_home
-      pg_home=$(getent passwd postgres | cut -d: -f6)
-      pgpass_file="${pg_home}/.pgpass"
-    fi
-    export PGPASSFILE="${pgpass_file}"
+  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
+    echo "/home/${USER_NAME}/.pgpass" > /tmp/pg_subs.txt
+    envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
+    PGPASSFILE=$(cat /tmp/pass_command.txt)
+    rm /tmp/pg_subs.txt /tmp/pass_command.txt
   fi
 }
 
 
 
 START_COMMAND() {
-  local cmd="$*"
+  local cmd="$1"
 
-  if [[ "${RUN_AS_ROOT,,}" == "false" ]]; then
-    exec gosu "$USER_NAME" bash -c "$cmd"
+  if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+    gosu "${USER_NAME}" bash -c "$cmd"
   else
-    exec su -s /bin/bash postgres -c "$cmd"
+    su postgres -c "$cmd"
   fi
 }
 
