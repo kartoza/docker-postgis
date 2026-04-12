@@ -214,6 +214,9 @@ non_root_permission() {
       directory_checker "$expanded"
     done
   done
+  if [[ -f /tmp/pass_command.txt ]];then
+    directory_checker /tmp/pass_command.txt
+  fi
   chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
 
   local END_GLOBAL=$(date +%s%N)
@@ -287,6 +290,24 @@ expose_credentials(){
   expose_password 22 "Replication" "REPLICATION_PASS" "/tmp/REPLPASSWORD.txt"
 }
 
+expose_replication(){
+  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
+    echo "/home/${USER_NAME}/.pgpass" > /tmp/pg_subs.txt
+    envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
+    PGPASSFILE=$(cat /tmp/pass_command.txt)
+    rm /tmp/pg_subs.txt /tmp/pass_command.txt
+  fi
+}
+
+START_COMMAND() {
+  local cmd="$*"
+
+  if [[ "${RUN_AS_ROOT,,}" == "false" ]]; then
+    exec gosu "$USER_NAME" bash -c "$cmd"
+  else
+    exec su -s /bin/bash postgres -c "$cmd"
+  fi
+}
 
 
 run_service_with_arguments(){

@@ -30,12 +30,7 @@ entrypoint_figlet
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
   setup_postgres_users
 
-  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    echo "/home/${USER_NAME}/.pgpass" > /tmp/pg_subs.txt
-    envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
-    PGPASSFILE=$(cat /tmp/pass_command.txt)
-    rm /tmp/pg_subs.txt /tmp/pass_command.txt
-  fi
+  expose_replication
 
 fi
 

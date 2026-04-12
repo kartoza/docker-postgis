@@ -6,15 +6,6 @@
 
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
-START_COMMAND() {
-  local cmd="$*"
-
-  if [[ "${RUN_AS_ROOT,,}" == "false" ]]; then
-    exec gosu "$USER_NAME" bash -c "$cmd"
-  else
-    exec su -s /bin/bash postgres -c "$cmd"
-  fi
-}
 
 create_dir "${WAL_ARCHIVE}"
 
