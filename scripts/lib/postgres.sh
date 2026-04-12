@@ -311,11 +311,15 @@ expose_credentials(){
 
 expose_replication() {
   if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
-    local pgpass_file="/home/${USER_NAME}/.pgpass"
-
-    if [[ -f "${pgpass_file}" ]]; then
-      export PGPASSFILE="${pgpass_file}"
+    local pgpass_file
+    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+      pgpass_file="/home/${USER_NAME}/.pgpass"
+    else
+      local pg_home
+      pg_home=$(getent passwd postgres | cut -d: -f6)
+      pgpass_file="${pg_home}/.pgpass"
     fi
+    export PGPASSFILE="${pgpass_file}"
   fi
 }
 
@@ -345,7 +349,7 @@ else
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
     else
-      directory_ownership
+      data_directory_ownership
     fi
     source /scripts/lib/setup-replication.sh
 fi

@@ -1,11 +1,22 @@
 #!/usr/bin/env bash
 
-
+source /scripts/lib/env-data.sh
 
 # This script will setup slave instance to use standby replication
 
 # Adapted from https://github.com/DanielDent/docker-postgres-replication
 # To set up replication
+if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+  function START_COMMAND() {
+	  PARAM=$1
+  	gosu "${USER_NAME}" bash -c "$1"
+  }
+else
+  function START_COMMAND() {
+	  PARAM=$1
+  	su postgres -c "$1"
+  }
+fi
 
 create_dir "${WAL_ARCHIVE}"
 
@@ -16,7 +27,7 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
     echo "Specify the master address/hostname in REPLICATE_FROM and REPLICATE_PORT variable."
     exit 1
   fi
-  
+
 
   if [[ "${PROMOTE_MASTER}" =~ [Ff][Aa][Ll][Ss][Ee] ]];then
 
@@ -61,5 +72,3 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
 
 #end main if
 fi
-
-
