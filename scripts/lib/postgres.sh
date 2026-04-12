@@ -86,30 +86,45 @@ entry_point_script() {
   return 0
 }
 
+
 configure_replication_permissions() {
-    # Get the postgres user's home directory
-    local pg_home
-    pg_home=$(getent passwd postgres | cut -d: -f6)
+  local pg_home
+  local owner
+  local group
+  local pgpass_user
+  local pgpass_file
 
-    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-      echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
-      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" "${pg_home}"
-      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > "${pg_home}/.pgpass"
-      chmod 600 "${pg_home}/.pgpass"
-      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" "${pg_home}/.pgpass"
-      non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+  pg_home="$(getent passwd postgres | cut -d: -f6)"
 
-    else
-      chown -R postgres:postgres "${DATADIR}" ${WAL_ARCHIVE}
-      chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
-      echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as root user \033[0m"
-      chown -R postgres:postgres "${pg_home}"
-      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > "${pg_home}/.pgpass"
-      chmod 0600 "${pg_home}/.pgpass"
-      chown postgres:postgres "${pg_home}/.pgpass"
-    fi
+  if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+    echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
+
+    owner="${USER_NAME}"
+    group="${DB_GROUP_NAME}"
+    pgpass_user="${USER_NAME}"
+    pgpass_file="/home/${USER_NAME}/.pgpass"
+  else
+    echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as root user \033[0m"
+
+    owner="postgres"
+    group="postgres"
+    pgpass_user="postgres"
+    pgpass_file="${pg_home}/.pgpass"
+
+    chown -R postgres:postgres "${DATADIR}" "${WAL_ARCHIVE}"
+    chmod -R 750 "${DATADIR}" "${WAL_ARCHIVE}"
+  fi
+
+  chown -R "${owner}:${group}" "${pg_home}"
+
+  echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > "${pgpass_file}"
+  chmod 600 "${pgpass_file}"
+  chown "${owner}:${group}" "${pgpass_file}"
+
+  if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
+    non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+  fi
 }
-
 
 streaming_replication() {
   until START_COMMAND "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER}  -R -vP -w --label=gis_pg_custer"
@@ -294,14 +309,17 @@ expose_credentials(){
   expose_password 22 "Replication" "REPLICATION_PASS" "/tmp/REPLPASSWORD.txt"
 }
 
-expose_replication(){
-  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    # Get the postgres user's home directory (typically /var/lib/postgresql)
-    local pg_home
-    pg_home=$(getent passwd postgres | cut -d: -f6)
-    export PGPASSFILE="${pg_home}/.pgpass"
+expose_replication() {
+  if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
+    local pgpass_file="/home/${USER_NAME}/.pgpass"
+
+    if [[ -f "${pgpass_file}" ]]; then
+      export PGPASSFILE="${pgpass_file}"
+    fi
   fi
 }
+
+
 
 START_COMMAND() {
   local cmd="$*"
@@ -313,6 +331,25 @@ START_COMMAND() {
   fi
 }
 
+run_streaming_replication(){
+  if [[ -z "$REPLICATE_FROM" ]]; then
+    # This means this is a master instance. We check that database exists
+    echo -e "[Entrypoint] Setup master database \033[0m"
+    source /scripts/lib/setup-database.sh
+    entry_point_script
+    kill_postgres
+else
+    # This means this is a slave/replication instance.
+    echo -e "[Entrypoint] Setup replicant database \033[0m"
+    create_dir "${WAL_ARCHIVE}"
+    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
+      non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
+    else
+      directory_ownership
+    fi
+    source /scripts/lib/setup-replication.sh
+fi
+}
 
 run_service_with_arguments(){
   if [[ "${1:0:1}" = '-' ]]; then

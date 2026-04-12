@@ -35,23 +35,7 @@ expose_replication
 expose_credentials
 
 
-if [[ -z "$REPLICATE_FROM" ]]; then
-    # This means this is a master instance. We check that database exists
-    echo -e "[Entrypoint] Setup master database \033[0m"
-    source /scripts/lib/setup-database.sh
-    entry_point_script
-    kill_postgres
-else
-    # This means this is a slave/replication instance.
-    echo -e "[Entrypoint] Setup replicant database \033[0m"
-    create_dir "${WAL_ARCHIVE}"
-    if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
-      non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
-    else
-      directory_ownership
-    fi
-    source /scripts/lib/setup-replication.sh
-fi
+run_streaming_replication
 
 
 
