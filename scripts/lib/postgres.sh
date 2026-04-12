@@ -87,22 +87,26 @@ entry_point_script() {
 }
 
 configure_replication_permissions() {
+    # Get the postgres user's home directory
+    local pg_home
+    pg_home=$(getent passwd postgres | cut -d: -f6)
 
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
-      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" $(getent passwd postgres | cut -d: -f6)
-      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > /home/"${USER_NAME}"/.pgpass
-      chmod 600 /home/"${USER_NAME}"/.pgpass
-      chown -R "${USER_NAME}":"${DB_GROUP_NAME}"  /home/"${USER_NAME}"/.pgpass
+      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" "${pg_home}"
+      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > "${pg_home}/.pgpass"
+      chmod 600 "${pg_home}/.pgpass"
+      chown -R "${USER_NAME}":"${DB_GROUP_NAME}" "${pg_home}/.pgpass"
       non_root_permission "${USER_NAME}" "${DB_GROUP_NAME}"
 
     else
       chown -R postgres:postgres "${DATADIR}" ${WAL_ARCHIVE}
       chmod -R 750 "${DATADIR}" ${WAL_ARCHIVE}
       echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as root user \033[0m"
-      chown -R postgres:postgres $(getent passwd postgres | cut -d: -f6)
-      su - postgres -c "echo \"${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}\" > ~/.pgpass"
-      su - postgres -c "chmod 0600 ~/.pgpass"
+      chown -R postgres:postgres "${pg_home}"
+      echo "${REPLICATE_FROM}:${REPLICATE_PORT}:*:${REPLICATION_USER}:${REPLICATION_PASS}" > "${pg_home}/.pgpass"
+      chmod 0600 "${pg_home}/.pgpass"
+      chown postgres:postgres "${pg_home}/.pgpass"
     fi
 }
 
@@ -292,10 +296,10 @@ expose_credentials(){
 
 expose_replication(){
   if [[ "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]] ; then
-    echo "/home/${USER_NAME}/.pgpass" > /tmp/pg_subs.txt
-    envsubst < /tmp/pg_subs.txt > /tmp/pass_command.txt
-    PGPASSFILE=$(cat /tmp/pass_command.txt)
-    rm /tmp/pg_subs.txt /tmp/pass_command.txt
+    # Get the postgres user's home directory (typically /var/lib/postgresql)
+    local pg_home
+    pg_home=$(getent passwd postgres | cut -d: -f6)
+    export PGPASSFILE="${pg_home}/.pgpass"
   fi
 }
 

@@ -29,11 +29,9 @@ entrypoint_figlet
 # Gosu preparations
 if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
   setup_postgres_users
-
-  expose_replication
-
 fi
 
+expose_replication
 expose_credentials
 
 
