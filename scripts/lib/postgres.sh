@@ -35,7 +35,7 @@ restart_postgres() {
   kill_postgres
 
   # Brought postgres back up again
-  source  /scripts/env-data.sh
+  source  /scripts/lib/env-data.sh
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up
@@ -213,7 +213,7 @@ non_root_permission() {
   done
 
   services=(
-    "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
+    ${ROOT_CONF}
     "/var/log/postgresql"
     "/var/run/postgresql"
     ${DATADIR}
@@ -225,7 +225,6 @@ non_root_permission() {
     "${CONF_LOCKFILE_DIR}"
     "${EXTRA_CONF_DIR}"
     "/etc/ssl"
-    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
   )
 
   for path in "${services[@]}"; do

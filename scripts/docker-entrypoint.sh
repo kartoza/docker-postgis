@@ -11,6 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/lib/env-data.sh"
 source "${SCRIPT_DIR}/lib/utils.sh"
 source "${SCRIPT_DIR}/lib/postgres.sh"
+source "${SCRIPT_DIR}/lib/pg_conf.sh"
 source "${SCRIPT_DIR}/lib/setup-conf.sh"
 source "${SCRIPT_DIR}/lib/setup-ssl.sh"
 source "${SCRIPT_DIR}/lib/setup-pg_hba.sh"
@@ -37,9 +38,7 @@ if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
 fi
 
 expose_replication
-
 expose_credentials
-
 run_streaming_replication
 
 
@@ -47,12 +46,19 @@ run_streaming_replication
 # Entrypoint
 ##############################################
 
+# Setup database (creates users, databases, extensions) if this is the master
+# This must run before starting PostgreSQL to ensure roles exist
+if [[ -z "$REPLICATE_FROM" ]]; then
+  echo -e "[Entrypoint] Setting up database and users..."
+  source /scripts/lib/setup-database.sh
+fi
+
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]]; then
   echo -e "[Entrypoint] Postgres initialisation process completed .... starting final postgres"
 
   if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]]; then
-    non_root_permission postgres postgres
+    non_root_permission "postgres" "postgres"
 
     exec bash -c "
       su - postgres -c '$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF' &
@@ -93,8 +99,9 @@ if [[ $# -eq 0 ]]; then
   fi
 fi
 
-# If arguments passed, run postgres with these arguments
-# This will make sure entrypoint will always be executed
-run_service_with_arguments
-
-run_entrypoint_service
+# If arguments passed, run the command with proper user context
+if [[ ${RUN_AS_ROOT} =~ [Tt][Rr][Uu][Ee] ]]; then
+  exec su - postgres -c "$*"
+else
+  exec gosu "${USER_NAME}" $*
+fi
