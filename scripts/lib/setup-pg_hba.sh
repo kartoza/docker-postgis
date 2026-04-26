@@ -13,6 +13,13 @@ fi
 # Reconfigure pg_hba if environment settings changed
 cat "${ROOT_CONF}"/pg_hba.conf.template > "${ROOT_CONF}"/pg_hba.conf
 
+# Add local socket connections with trust auth for setup operations
+# This allows psql to work during initialization regardless of OS username
+# peer auth maps OS user to postgres role of same name, trust allows any local connection
+echo "local   all             all                                     trust" >> "${ROOT_CONF}"/pg_hba.conf
+echo "host    all             all             127.0.0.1/32            trust" >> "${ROOT_CONF}"/pg_hba.conf
+echo "host    all             all             ::1/128                 trust" >> "${ROOT_CONF}"/pg_hba.conf
+
 
 if [[ "${FORCE_SSL}" =~ [Ff][Aa][Ll][Ss][Ee] ]]; then
   PG_CONF_HOST='host'
