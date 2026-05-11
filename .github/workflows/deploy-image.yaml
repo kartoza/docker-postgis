@@ -102,17 +102,26 @@ jobs:
       - name: Get image versions
         id: pg_image_versions
         run: |
-          PG_VER=$(docker run --rm \
-            kartoza/postgis:prod-build \
-            bash -c "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }} \
-              | awk '/Candidate:/ {print \$2}' \
-              | sed 's/-.*//'")
-          GIS_VER=$(docker run --rm \
-            kartoza/postgis:prod-build \
-            bash -c "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }}-postgis-${{ matrix.postgisMajorVersion }} \
-              | awk '/Candidate:/ {print \$2}' \
-              | sed 's/+.*//' \
-              | sed 's/-.*//'")
+          CONTAINER_NAME=postgis-version-check
+
+          docker run -d \
+            --name ${CONTAINER_NAME} \
+            kartoza/postgis:prod-build 
+
+          PG_VER=$(docker exec ${CONTAINER_NAME} bash -c \
+            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }} \
+            | awk '/Candidate:/ {print \$2}' \
+            | sed 's/-.*//'")
+
+          GIS_VER=$(docker exec ${CONTAINER_NAME} bash -c \
+            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }}-postgis-${{ matrix.postgisMajorVersion }} \
+            | awk '/Candidate:/ {print \$2}' \
+            | sed 's/+.*//' \
+            | sed 's/-.*//'")
+
+          docker stop ${CONTAINER_NAME}
+          docker rm ${CONTAINER_NAME}
+
           echo "PG_VER=${PG_VER}" >> $GITHUB_OUTPUT
           echo "GIS_VER=${GIS_VER}" >> $GITHUB_OUTPUT
       - name: Login to DockerHub
