@@ -87,6 +87,10 @@ jobs:
           - 6
         postgisPatchMajorVersionBugs:
           - no
+        imageVersion:
+          - imageDistro: debian
+            imageDistroVersion: trixie
+            imageDistroVariant: slim
 
     steps:
       - uses: actions/checkout@v6
@@ -157,8 +161,8 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_REPO }}/postgis
-            ${{ (steps.check_generic_tag.outputs.check_generic_image == '404' || env.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}.{3}', secrets.DOCKERHUB_REPO, matrix.postgresMajorVersion, matrix.postgisMajorVersion, matrix.postgisMinorRelease) || null }}
-            ${{ (steps.check_exact_tag.outputs.check_exact_image == '404' || env.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}', secrets.DOCKERHUB_REPO, steps.pg_image_versions.outputs.PG_VER, steps.pg_image_versions.outputs.GIS_VER) || null }}
+            ${{ (steps.check_generic_tag.outputs.check_generic_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}.{3}', secrets.DOCKERHUB_REPO, matrix.postgresMajorVersion, matrix.postgisMajorVersion, matrix.postgisMinorRelease) || null }}
+            ${{ (steps.check_exact_tag.outputs.check_exact_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}', secrets.DOCKERHUB_REPO, steps.pg_image_versions.outputs.PG_VER, steps.pg_image_versions.outputs.GIS_VER) || null }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.pg_image_versions.outputs.PG_VER }}-${{ steps.pg_image_versions.outputs.GIS_VER }}--v${{ steps.current_date.outputs.formatted }}
           build-args: |
