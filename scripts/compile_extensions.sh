@@ -19,6 +19,7 @@ apt install -y  \
 
 git clone https://github.com/duckdb/pg_duckdb
 cd pg_duckdb
+git submodule update --init --recursive
 make -j 4 install
 cd ..
 apt purge -y git;rm -rf pg_duckdb
