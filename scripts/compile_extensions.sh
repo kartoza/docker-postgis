@@ -18,6 +18,6 @@ apt install -y  \
 
 git clone https://github.com/duckdb/pg_duckdb
 cd pg_duckdb
-make -j ${NUM_PROCESSORS} && make install
+make -j ${NUM_PROCESSORS} install
 cd ..
 apt purge -y git;rm -rf pg_duckdb
