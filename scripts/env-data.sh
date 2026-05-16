@@ -489,7 +489,7 @@ if [ -z "${PROMOTE_MASTER}" ]; then
   PROMOTE_MASTER=FALSE
 fi
 # usable definitions
-kill_postgres {
+kill_postgres() {
   PID=$(cat "${PG_PID}")
   kill -TERM "${PID}"
 
@@ -502,7 +502,7 @@ kill_postgres {
   return 0
 }
 
-restart_postgres {
+restart_postgres() {
 
   kill_postgres
 
@@ -523,7 +523,7 @@ restart_postgres {
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
 
-entry_point_script {
+entry_point_script() {
   SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
   IFS=','
   read -a dbarr <<< "$POSTGRES_DBNAME"
@@ -563,7 +563,7 @@ entry_point_script {
   return 0
 }
 
-configure_replication_permissions {
+configure_replication_permissions() {
 
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
@@ -583,7 +583,7 @@ configure_replication_permissions {
     fi
 }
 
-streaming_replication {
+streaming_replication() {
   until START_COMMAND "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER}  -R -vP -w --label=gis_pg_custer"
     do
       echo -e "[Entrypoint] \e[1;31m Waiting for master to connect... \033[0m"
