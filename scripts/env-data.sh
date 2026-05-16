@@ -34,7 +34,7 @@ PG_PID="/var/run/postgresql/${POSTGRES_MAJOR_VERSION}-main.pid"
 #    ie: file_env 'XYZ_DB_PASSWORD' 'example'
 # (will allow for "$XYZ_DB_PASSWORD_FILE" to fill in the value of
 #  "$XYZ_DB_PASSWORD" from a file, especially for Docker's secrets feature)
-function file_env() {
+file_env() {
 	local var="$1"
 	local fileVar="${var}_FILE"
 	local def="${2:-}"
@@ -52,7 +52,7 @@ function file_env() {
 	unset "$fileVar"
 }
 
-function boolean() {
+boolean() {
   case $1 in
     [Tt][Rr][Uu][Ee] | [Yy][Ee][Ss])
         echo 'TRUE'
@@ -67,7 +67,7 @@ file_env 'POSTGRES_PASS'
 file_env 'POSTGRES_USER'
 
 
-function create_dir() {
+create_dir() {
 DATA_PATH=$1
 
 if [[ ! -d ${DATA_PATH} ]];
@@ -77,7 +77,7 @@ then
 fi
 }
 
-function generate_random_string() {
+generate_random_string() {
   STRING_LENGTH=$1
   random_pass_string=$(cat /dev/urandom | tr -dc '[:alnum:]' | head -c "${STRING_LENGTH}")
   if [[ ! -f /scripts/.pass_${STRING_LENGTH}.txt ]]; then
@@ -328,7 +328,7 @@ fi
 
 
 # SSL mode
-function postgres_ssl_setup() {
+postgres_ssl_setup() {
   if [ -z "${PGSSLMODE}" ]; then
 	   PGSSLMODE=require
   fi
@@ -341,10 +341,11 @@ function postgres_ssl_setup() {
 }
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
+    DEFAULT_EXTENSIONS="postgis,hstore,postgis_topology,postgis_raster,pgrouting"
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb'
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS},timescaledb"
     else
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
     fi
 fi
 
@@ -397,18 +398,29 @@ if [ -z "$ACTIVATE_CRON" ]; then
 fi
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
-          SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
-        else
-          SHARED_PRELOAD_LIBRARIES='timescaledb'
-        fi
-    else
-        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
-          SHARED_PRELOAD_LIBRARIES='pg_cron'
-        fi
-    fi
+  libs=()
+
+  # add timescaledb if installed
+  if dpkg -l | grep -q "timescaledb"; then
+    libs+=("timescaledb")
+  fi
+
+  # add pg_cron if activated
+  if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]]; then
+    libs+=("pg_cron")
+  fi
+
+  # add pg_duckdb if extension is built/installed
+  if [ -f "$(pg_config --pkglibdir)/pg_duckdb.so" ]; then
+    libs+=("pg_duckdb")
+  fi
+
+  # join with commas
+  if [ ${#libs[@]} -gt 0 ]; then
+    SHARED_PRELOAD_LIBRARIES=$(IFS=,; echo "${libs[*]}")
+  fi
 fi
+
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="scram-sha-256"
@@ -476,8 +488,8 @@ fi
 if [ -z "${PROMOTE_MASTER}" ]; then
   PROMOTE_MASTER=FALSE
 fi
-# usable function definitions
-function kill_postgres {
+# usable definitions
+kill_postgres {
   PID=$(cat "${PG_PID}")
   kill -TERM "${PID}"
 
@@ -490,7 +502,7 @@ function kill_postgres {
   return 0
 }
 
-function restart_postgres {
+restart_postgres {
 
   kill_postgres
 
@@ -511,7 +523,7 @@ function restart_postgres {
 # Running extended script or sql if provided.
 # Useful for people who extends the image.
 
-function entry_point_script {
+entry_point_script {
   SETUP_LOCKFILE="${SCRIPTS_LOCKFILE_DIR}/.entry_point.lock"
   IFS=','
   read -a dbarr <<< "$POSTGRES_DBNAME"
@@ -551,7 +563,7 @@ function entry_point_script {
   return 0
 }
 
-function configure_replication_permissions {
+configure_replication_permissions {
 
     if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then
       echo -e "[Entrypoint] \e[1;31m Setup data permissions for replication as a normal user \033[0m"
@@ -571,7 +583,7 @@ function configure_replication_permissions {
     fi
 }
 
-function streaming_replication {
+streaming_replication {
   until START_COMMAND "${PG_BASEBACKUP} -X stream -h ${REPLICATE_FROM} -p ${REPLICATE_PORT} -D ${DATADIR} -U ${REPLICATION_USER}  -R -vP -w --label=gis_pg_custer"
     do
       echo -e "[Entrypoint] \e[1;31m Waiting for master to connect... \033[0m"
@@ -584,29 +596,25 @@ function streaming_replication {
 
 }
 
-function over_write_conf() {
-  if [[ -f ${ROOT_CONF}/postgis.conf ]];then
-    sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/logical_replication.conf ]];then
-    sed -i '/logical_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/logical_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/streaming_replication.conf ]];then
-    sed -i '/streaming_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/streaming_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/extra.conf ]];then
-    sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
+over_write_conf() {
+  local conf_files=(
+    "postgis.conf"
+    "logical_replication.conf"
+    "streaming_replication.conf"
+    "extra.conf"
+  )
 
-
+  for file in "${conf_files[@]}"; do
+    local path="${ROOT_CONF}/${file}"
+    if [[ -f "$path" ]]; then
+      sed -i "/${file}/d" "${ROOT_CONF}/postgresql.conf"
+      cat "$path" >> "${ROOT_CONF}/postgresql.conf"
+    fi
+  done
 }
 
 
-function extension_install() {
+extension_install() {
   DATABASE=$1
   DB_EXTENSION=$2
   IFS=':'
@@ -643,7 +651,7 @@ function extension_install() {
 
 }
 
-function directory_checker() {
+directory_checker() {
   local DATA_PATH=$1
   if [ -d "$DATA_PATH" ]; then
     local DB_USER_PERM
@@ -661,7 +669,7 @@ function directory_checker() {
 
 
 
-function non_root_permission() {
+non_root_permission() {
   USER="$1"
   GROUP="$2"
 
@@ -695,7 +703,7 @@ function non_root_permission() {
   echo -e "[Entrypoint] Total time spent in non_root_permission, changing ownership of directories: \e[1;31m ${TOTAL_ELAPSED} \e[1;31m ms \033[0m"
 }
 
-function role_check() {
+role_check() {
   ROLE_NAME=$1
   echo "Creating user $1"
   echo -e "\e[32m [Entrypoint] Creating/Updating user \e[1;31m $1  \033[0m"
@@ -707,7 +715,7 @@ function role_check() {
 
 }
 
-function role_creation() {
+role_creation() {
   ROLE_NAME=$1
   ROLE_STATUS=$2
   ROLE_PASS=$3

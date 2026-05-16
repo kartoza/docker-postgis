@@ -7,3 +7,16 @@ cd pointcloud-master && \
 cd .. && rm -Rf pointcloud-master
 
 
+#compile pg_duckdb
+apt update
+apt install -y  \
+    libreadline-dev zlib1g-dev flex bison libxml2-dev \
+    libxslt-dev libssl-dev libxml2-utils xsltproc pkg-config libc++-dev \
+    libc++abi-dev libglib2.0-dev libtinfo6 cmake libstdc++-12-dev \
+    liblz4-dev libcurl4-openssl-dev ninja-build libicu-dev git
+
+git clone https://github.com/duckdb/pg_duckdb
+cd pg_duckdb
+make install
+cd ..
+apt purge -y git;rm -rf pg_duckdb
