@@ -78,7 +78,7 @@ ARG POSTGIS_MINOR_RELEASE=6
 # https://packagecloud.io/timescale/timescaledb
 ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false
-ARG BUILD_PG_DUCKDB=true
+ARG BUILD_PG_DUCKDB=false
 
 
 

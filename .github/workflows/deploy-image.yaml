@@ -57,6 +57,7 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
+            BUILD_PG_DUCKDB=false
           cache-from: |
             type=gha,scope=prod
           target: postgis-prod
@@ -173,6 +174,7 @@ jobs:
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
+            BUILD_PG_DUCKDB=true
           cache-from: |
             type=gha,scope=prod
           target: postgis-prod
