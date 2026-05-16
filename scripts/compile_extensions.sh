@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 # Compile pointcloud extension
+NUM_PROCESSORS=$(nproc)
 wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
 cd pointcloud-master && \
-./autogen.sh && ./configure && make -j 4 && make install && \
+./autogen.sh && ./configure && make -j ${NUM_PROCESSORS} && make install && \
 cd .. && rm -Rf pointcloud-master
 
 
@@ -17,6 +18,6 @@ apt install -y  \
 
 git clone https://github.com/duckdb/pg_duckdb
 cd pg_duckdb
-make install
+make -j ${NUM_PROCESSORS} && make install
 cd ..
 apt purge -y git;rm -rf pg_duckdb
