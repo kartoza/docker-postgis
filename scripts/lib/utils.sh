@@ -81,7 +81,7 @@ setup_postgres_users() {
   ensure_user_exists
 }
 
-data_directory_ownership_old() {
+data_directory_ownership() {
   dir_ownership=("${DATADIR}" "${WAL_ARCHIVE}")
   for directory in "${dir_ownership[@]}"; do
     if [[ $(stat -c '%U' "${directory}") != "postgres" ]] && [[ $(stat -c '%G' "${directory}") != "postgres" ]];then
@@ -95,43 +95,6 @@ data_directory_ownership_old() {
   done
 }
 
-directory_ownership() {
-  local target_uid target_gid
-  target_uid=$(id -u postgres)
-  target_gid=$(id -g postgres)
-
-  local dirs=("$DATADIR" "$WAL_ARCHIVE")
-
-  for directory in "${dirs[@]}"; do
-    [[ -z "$directory" || ! -d "$directory" ]] && continue
-
-    # Get current ownership once
-    local current_uid current_gid
-    current_uid=$(stat -c '%u' "$directory")
-    current_gid=$(stat -c '%g' "$directory")
-
-    # Fix ownership only if needed
-    if [[ "$current_uid" != "$target_uid" || "$current_gid" != "$target_gid" ]]; then
-      echo "[Entrypoint] Fixing ownership: $directory"
-
-      # Incremental fix instead of full chown -R
-      find "$directory" \( ! -user "$target_uid" -o ! -group "$target_gid" \) -exec chown "$target_uid:$target_gid" {} +
-
-      # Ensure root dir itself is correct
-      chown "$target_uid:$target_gid" "$directory"
-    fi
-
-    # Fix permissions only if needed (top-level)
-    local current_perm
-    current_perm=$(stat -c '%a' "$directory")
-
-    if [[ "$current_perm" != "750" ]]; then
-      echo "[Entrypoint] Fixing permissions: $directory"
-      chmod 750 "$directory"
-    fi
-  done
-}
-
 start_postgres_marker(){
   if [[ -f /tmp/postgres-ready ]]; then
     rm -f /tmp/postgres-ready
@@ -141,11 +104,4 @@ start_postgres_marker(){
 entrypoint_figlet(){
   local START_TEXT="Kartoza Docker PostGIS"
   figlet -t ${START_TEXT}
-}
-
-kernel_configuration(){
-# Optimise PostgreSQL shared memory for PostGIS
-# shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
-echo "kernel.shmmax=${KERNEL_SHMMAX}" >> /etc/sysctl.conf
-echo "kernel.shmall=${KERNEL_SHMALL}" >> /etc/sysctl.conf
 }
