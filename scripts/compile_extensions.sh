@@ -9,6 +9,7 @@ cd .. && rm -Rf pointcloud-master
 
 
 #compile pg_duckdb
+if [ "$(echo "${BUILD_PG_DUCKDB}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then \
 apt update
 apt install -y  \
     libreadline-dev zlib1g-dev flex bison libxml2-dev \
@@ -21,3 +22,4 @@ cd pg_duckdb
 make -j 4 install
 cd ..
 apt purge -y git;rm -rf pg_duckdb
+fi
