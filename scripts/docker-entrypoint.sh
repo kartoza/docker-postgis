@@ -43,9 +43,9 @@ expose_credentials
 run_streaming_replication
 
 
-#############################################
+##############################################
 # Entrypoint
-#############################################
+##############################################
 
 # If no arguments passed to entrypoint, then run postgres by default
 if [[ $# -eq 0 ]]; then
