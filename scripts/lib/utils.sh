@@ -81,16 +81,40 @@ setup_postgres_users() {
   ensure_user_exists
 }
 
-data_directory_ownership() {
-  dir_ownership=("${DATADIR}" "${WAL_ARCHIVE}")
-  for directory in "${dir_ownership[@]}"; do
-    if [[ $(stat -c '%U' "${directory}") != "postgres" ]] && [[ $(stat -c '%G' "${directory}") != "postgres" ]];then
-      chown -R postgres:postgres "${directory}"
+
+directory_ownership() {
+  local target_uid target_gid
+  target_uid=$(id -u postgres)
+  target_gid=$(id -g postgres)
+
+  local dirs=("$DATADIR" "$WAL_ARCHIVE")
+
+  for directory in "${dirs[@]}"; do
+    [[ -z "$directory" || ! -d "$directory" ]] && continue
+
+    # Get current ownership once
+    local current_uid current_gid
+    current_uid=$(stat -c '%u' "$directory")
+    current_gid=$(stat -c '%g' "$directory")
+
+    # Fix ownership only if needed
+    if [[ "$current_uid" != "$target_uid" || "$current_gid" != "$target_gid" ]]; then
+      echo "[Entrypoint] Fixing ownership: $directory"
+
+      # Incremental fix instead of full chown -R
+      find "$directory" \( ! -user "$target_uid" -o ! -group "$target_gid" \) -exec chown "$target_uid:$target_gid" {} +
+
+      # Ensure root dir itself is correct
+      chown "$target_uid:$target_gid" "$directory"
     fi
-  done
-  for directory in "${dir_ownership[@]}"; do
-    if [ "$(stat -c %a "$directory")" != "750" ]; then
-        chmod -R 750 "$directory"
+
+    # Fix permissions only if needed (top-level)
+    local current_perm
+    current_perm=$(stat -c '%a' "$directory")
+
+    if [[ "$current_perm" != "750" ]]; then
+      echo "[Entrypoint] Fixing permissions: $directory"
+      chmod 750 "$directory"
     fi
   done
 }
