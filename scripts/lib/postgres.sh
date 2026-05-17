@@ -35,7 +35,7 @@ restart_postgres() {
   kill_postgres
 
   # Brought postgres back up again
-  source  /scripts/env-data.sh
+  source  /scripts/lib/env-data.sh
   su - postgres -c "$SETVARS $POSTGRES -D $DATADIR -c config_file=$CONF &"
 
   # wait for postgres to come up
