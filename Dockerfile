@@ -78,6 +78,7 @@ ARG POSTGIS_MINOR_RELEASE=6
 # https://packagecloud.io/timescale/timescaledb
 ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false
+ARG BUILD_PG_DUCKDB=false
 
 
 
@@ -112,8 +113,8 @@ RUN set -eux \
         postgresql-plperl-${POSTGRES_MAJOR_VERSION} && \
         pgxn install h3
 
-# TODO a case insensitive match would be more robust
-RUN if [ "${BUILD_TIMESCALE}" = "true" ]; then \
+
+RUN if [ "$(echo "${BUILD_TIMESCALE}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then \
         export DEBIAN_FRONTEND=noninteractive && \
         sh -c "echo \"deb [signed-by=/usr/share/keyrings/timescale.keyring] https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main\" > /etc/apt/sources.list.d/timescaledb.list" && \
         wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey |  gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
@@ -125,12 +126,7 @@ RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VE
      echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
-# Compile pointcloud extension
 
-RUN wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
-cd pointcloud-master && \
-./autogen.sh && ./configure && make -j 4 && make install && \
-cd .. && rm -Rf pointcloud-master
 
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
@@ -148,7 +144,7 @@ RUN chmod +x *.sh
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
 RUN set -eux \
-    && /scripts/setup.sh;rm /scripts/.pass_*
+    && /scripts/compile_extensions.sh ;/scripts/setup.sh;rm /scripts/.pass_*
 RUN echo 'figlet -t "Kartoza Docker PostGIS"' >> ~/.bashrc
 
 
