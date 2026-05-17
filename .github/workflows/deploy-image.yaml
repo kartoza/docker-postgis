@@ -2,7 +2,6 @@ name: deploy-image
 
 on:
   workflow_dispatch:
-
   workflow_run:
     workflows:
       - build-latest
