@@ -140,24 +140,20 @@ streaming_replication() {
 }
 
 over_write_conf() {
-  if [[ -f ${ROOT_CONF}/postgis.conf ]];then
-    sed -i '/postgis.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/postgis.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/logical_replication.conf ]];then
-    sed -i '/logical_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/logical_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/streaming_replication.conf ]];then
-    sed -i '/streaming_replication.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/streaming_replication.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
-  if [[ -f ${ROOT_CONF}/extra.conf ]];then
-    sed -i '/extra.conf/d' "${ROOT_CONF}"/postgresql.conf
-    cat "${ROOT_CONF}"/extra.conf >> "${ROOT_CONF}"/postgresql.conf
-  fi
+  local conf_files=(
+    "postgis.conf"
+    "logical_replication.conf"
+    "streaming_replication.conf"
+    "extra.conf"
+  )
 
-
+  for file in "${conf_files[@]}"; do
+    local path="${ROOT_CONF}/${file}"
+    if [[ -f "$path" ]]; then
+      sed -i "/${file}/d" "${ROOT_CONF}/postgresql.conf"
+      cat "$path" >> "${ROOT_CONF}/postgresql.conf"
+    fi
+  done
 }
 
 extension_install() {

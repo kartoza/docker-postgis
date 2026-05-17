@@ -179,10 +179,11 @@ env_default LOG_TIMEZONE "Etc/UTC"
 # SSL mode
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
+    DEFAULT_EXTENSIONS="postgis,hstore,postgis_topology,postgis_raster,pgrouting"
     if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting,timescaledb'
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS},timescaledb"
     else
-        POSTGRES_MULTIPLE_EXTENSIONS='postgis,hstore,postgis_topology,postgis_raster,pgrouting'
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
     fi
 fi
 
@@ -205,17 +206,27 @@ env_default EXTRA_CONF ""
 env_default ACTIVATE_CRON "TRUE"
 
 if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
-    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
-          SHARED_PRELOAD_LIBRARIES='pg_cron,timescaledb'
-        else
-          SHARED_PRELOAD_LIBRARIES='timescaledb'
-        fi
-    else
-        if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]];then
-          SHARED_PRELOAD_LIBRARIES='pg_cron'
-        fi
-    fi
+  libs=()
+
+  # add timescaledb if installed
+  if dpkg -l | grep -q "timescaledb"; then
+    libs+=("timescaledb")
+  fi
+
+  # add pg_cron if activated
+  if [[ ${ACTIVATE_CRON} =~ [Tt][Rr][Uu][Ee] ]]; then
+    libs+=("pg_cron")
+  fi
+
+  # add pg_duckdb if extension is built/installed
+  if [ -f "$(pg_config --pkglibdir)/pg_duckdb.so" ]; then
+    libs+=("pg_duckdb")
+  fi
+
+  # join with commas
+  if [ ${#libs[@]} -gt 0 ]; then
+    SHARED_PRELOAD_LIBRARIES=$(IFS=,; echo "${libs[*]}")
+  fi
 fi
 
 
