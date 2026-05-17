@@ -105,3 +105,10 @@ entrypoint_figlet(){
   local START_TEXT="Kartoza Docker PostGIS"
   figlet -t ${START_TEXT}
 }
+
+kernel_configuration(){
+# Optimise PostgreSQL shared memory for PostGIS
+# shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
+echo "kernel.shmmax=${KERNEL_SHMMAX}" >> /etc/sysctl.conf
+echo "kernel.shmall=${KERNEL_SHMALL}" >> /etc/sysctl.conf
+}
