@@ -82,7 +82,7 @@ setup_postgres_users() {
 }
 
 
-directory_ownership() {
+data_directory_ownership() {
   local target_uid target_gid
   target_uid=$(id -u postgres)
   target_gid=$(id -g postgres)
