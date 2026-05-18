@@ -112,6 +112,34 @@ jobs:
       - name: Load image
         run: |
           docker load --input /tmp/postgis.tar
+
+      - name: Get production versions
+        id: pg_prod_versions
+        run: |
+          CONTAINER_NAME=postgis-version-check-prod
+          IMAGE_VERSION_TAG=${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
+          
+          docker run -d \
+            --name ${CONTAINER_NAME} \
+            kartoza/postgis:${IMAGE_VERSION_TAG} 
+          
+          PG_VER_PROD=$(docker exec ${CONTAINER_NAME} bash -c \
+            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }} \
+            | awk '/Candidate:/ {print \$2}' \
+            | sed 's/-.*//'")
+          
+          GIS_VER_PROD=$(docker exec ${CONTAINER_NAME} bash -c \
+            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }}-postgis-${{ matrix.postgisMajorVersion }} \
+            | awk '/Candidate:/ {print \$2}' \
+            | sed 's/+.*//' \
+            | sed 's/-.*//'")
+          
+          docker stop ${CONTAINER_NAME}
+          docker rm ${CONTAINER_NAME}
+          
+          echo "PG_VER_PROD=${PG_VER_PROD}" >> $GITHUB_OUTPUT
+          echo "GIS_VER_PROD=${GIS_VER_PROD}" >> $GITHUB_OUTPUT
+
       - name: Get image versions
         id: pg_image_versions
         run: |
@@ -137,6 +165,20 @@ jobs:
 
           echo "PG_VER=${PG_VER}" >> $GITHUB_OUTPUT
           echo "GIS_VER=${GIS_VER}" >> $GITHUB_OUTPUT
+
+      - name: Compare versions
+        id: version_comparisons
+        run: |
+          PG_VER=${{ steps.pg_image_versions.outputs.PG_VER }}
+          PG_VER_PROD=${{ steps.pg_prod_versions.outputs.PG_VER_PROD }}
+          GIS_VER=${{ steps.pg_image_versions.outputs.GIS_VER }}
+          GIS_VER_PROD=${{ steps.pg_prod_versions.outputs.GIS_VER_PROD }}
+
+          if [[ "$PG_VER" > "$PG_VER_PROD" ]] || [[ "$GIS_VER" > "$GIS_VER_PROD" ]]; then
+            echo "TAG_PRODUCTION_IMAGE=TRUE" >> $GITHUB_OUTPUT
+          else
+            echo "TAG_PRODUCTION_IMAGE=FALSE" >> $GITHUB_OUTPUT
+          fi
       - name: Check if generic image tag exists
         id: check_generic_tag
         run: |
@@ -162,7 +204,7 @@ jobs:
           push: true
           tags: |
             ${{ secrets.DOCKERHUB_REPO }}/postgis
-            ${{ (steps.check_generic_tag.outputs.check_generic_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}.{3}', secrets.DOCKERHUB_REPO, matrix.postgresMajorVersion, matrix.postgisMajorVersion, matrix.postgisMinorRelease) || null }}
+            ${{ (steps.check_generic_tag.outputs.check_generic_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes' || steps.version_comparisons.outputs.TAG_PRODUCTION_IMAGE  == 'TRUE' ) && format('{0}/postgis:{1}-{2}.{3}', secrets.DOCKERHUB_REPO, matrix.postgresMajorVersion, matrix.postgisMajorVersion, matrix.postgisMinorRelease) || null }}
             ${{ (steps.check_exact_tag.outputs.check_exact_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}', secrets.DOCKERHUB_REPO, steps.pg_image_versions.outputs.PG_VER, steps.pg_image_versions.outputs.GIS_VER) || null }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}
             ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.pg_image_versions.outputs.PG_VER }}-${{ steps.pg_image_versions.outputs.GIS_VER }}--v${{ steps.current_date.outputs.formatted }}
