@@ -53,7 +53,6 @@ jobs:
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
             IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            GENERATE_ALL_LOCALE=0
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
@@ -212,7 +211,6 @@ jobs:
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
             IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            GENERATE_ALL_LOCALE=1
             POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}

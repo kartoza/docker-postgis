@@ -361,11 +361,38 @@ if [ -z "${PGCLIENTENCODING}" ]; then
   PGCLIENTENCODING="UTF8"
 fi
 
+get_first_locale() {
+    local langs="$1"
+    if [ -n "$langs" ]; then
+        # Split by comma and get first value
+        IFS=',' read -ra lang_arr <<< "$langs"
+        # Trim whitespace
+        echo "${lang_arr[0]}" | xargs
+    else
+        echo ""
+    fi
+}
+
+if [ -z "${LANGS}" ]; then
+  LANGS="en_US.UTF-8,id_ID.UTF-8"
+fi
+
+
 if [ -z "${DEFAULT_COLLATION}" ]; then
-  DEFAULT_COLLATION="en_US.UTF-8"
+    FIRST_LOCALE=$(get_first_locale "$LANGS")
+    if [ -n "$FIRST_LOCALE" ]; then
+        DEFAULT_COLLATION="$FIRST_LOCALE"
+    else
+        DEFAULT_COLLATION="en_US.UTF-8"
+    fi
 fi
 if [ -z "${DEFAULT_CTYPE}" ]; then
-  DEFAULT_CTYPE="en_US.UTF-8"
+    FIRST_LOCALE=$(get_first_locale "$LANGS")
+    if [ -n "$FIRST_LOCALE" ]; then
+        DEFAULT_CTYPE="$FIRST_LOCALE"
+    else
+        DEFAULT_CTYPE="en_US.UTF-8"
+    fi
 fi
 
 if [ -z "${TARGET_TIMELINE}" ]; then
@@ -449,6 +476,9 @@ fi
 if [ -z "${RUN_AS_ROOT}" ]; then
   RUN_AS_ROOT=true
 fi
+
+
+
 
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
@@ -724,4 +754,177 @@ role_creation() {
   su - postgres -c "psql postgres -f /tmp/setup_user.sql"
   rm /tmp/setup_user.sql
 
+}
+
+
+generate_single_locale() {
+    local locale="$1"
+    local locale_file="/etc/locale.gen"
+
+    # Skip if locale is C or C.UTF-8 (always available)
+    if [[ "$locale" == "C" ]] || [[ "$locale" == "C.UTF-8" ]]; then
+        echo -e "\e[32m [Entrypoint] Using built-in locale: \e[1;33m$locale\033[0m"
+        return 0
+    fi
+
+    # Skip empty
+    if [ -z "$locale" ]; then
+        return 0
+    fi
+
+    # Check if locale already exists in system
+    if locale -a 2>/dev/null | grep -qi "^${locale}$"; then
+        echo -e "\e[32m [Entrypoint] Locale already available: \e[1;33m$locale\033[0m"
+        return 0
+    fi
+
+    # Check if locale exists in master list
+    if ! grep -qi "^${locale} UTF-8" /etc/all.locale.gen 2>/dev/null; then
+        echo -e "\e[33m [Entrypoint] Warning: \e[1;33m$locale\e[0m\e[33m not found in master locale list\033[0m"
+        return 1
+    fi
+
+    # Generate the locale (append if multiple, overwrite if single)
+    if [ ! -f "$locale_file" ] || [ ! -s "$locale_file" ]; then
+        echo "${locale} UTF-8" > "$locale_file"
+    else
+        # Check if already in file to avoid duplicates
+        if ! grep -q "^${locale} UTF-8" "$locale_file"; then
+            echo "${locale} UTF-8" >> "$locale_file"
+        fi
+    fi
+
+    if /usr/sbin/locale-gen 2>/dev/null; then
+        echo -e "\e[32m [Entrypoint] Successfully generated: \e[1;33m$locale\033[0m"
+        return 0
+    else
+        echo -e "\e[31m [Entrypoint] Failed to generate: \e[1;33m$locale\033[0m"
+        return 1
+    fi
+}
+
+generate_multiple_locales() {
+    local langs="$1"
+    local locale_file="/etc/locale.gen"
+
+    echo -e "\e[36m [Entrypoint] Processing locales from: \e[1;33m$langs\033[0m"
+
+    # Clear locale.gen only if we're doing a full regeneration
+    > "$locale_file"
+
+    IFS=',' read -ra LANG_ARR <<< "$langs"
+    local generated_count=0
+    local valid_locales=()
+
+    for locale in "${LANG_ARR[@]}"; do
+        locale=$(echo "$locale" | xargs)  # Trim whitespace
+
+        # Skip empty strings
+        if [ -z "$locale" ]; then
+            continue
+        fi
+
+        # Skip built-in locales
+        if [[ "$locale" == "C" ]] || [[ "$locale" == "C.UTF-8" ]]; then
+            echo -e "\e[36m [Entrypoint] Skipping built-in locale: \e[1;33m$locale\033[0m"
+            continue
+        fi
+
+        # Check if exists in master list
+        if grep -qi "^${locale} UTF-8" /etc/all.locale.gen 2>/dev/null; then
+            grep "^${locale} UTF-8" /etc/all.locale.gen >> "$locale_file"
+            echo -e "\e[32m [Entrypoint] Added: \e[1;33m$locale\033[0m"
+            valid_locales+=("$locale")
+            ((generated_count++))
+        else
+            echo -e "\e[33m [Entrypoint] Skipped: \e[1;33m$locale\e[0m\e[33m (not in master list)\033[0m"
+        fi
+    done
+
+    # Generate if we have any locales
+    if [ ${#valid_locales[@]} -gt 0 ]; then
+        echo -e "\e[36m [Entrypoint] Running locale-gen for \e[1;33m$generated_count\e[0m\e[36m locale(s)...\033[0m"
+        if /usr/sbin/locale-gen 2>/dev/null; then
+            echo -e "\e[32m [Entrypoint] Successfully generated: \e[1;33m${valid_locales[*]}\033[0m"
+            return 0
+        else
+            echo -e "\e[31m [Entrypoint] locale-gen failed\033[0m"
+            return 1
+        fi
+    else
+        echo -e "\e[33m [Entrypoint] No valid locales to generate\033[0m"
+        return 1
+    fi
+}
+
+
+locale_install() {
+    SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.locales.lock"
+    LOCALE_CONFIG_HASH_FILE="${EXTRA_CONF_DIR}/.locales_config_hash"
+
+    # Calculate current configuration hash from relevant env vars
+    CURRENT_CONFIG_HASH=$(echo "${LANGS}:${DEFAULT_COLLATION}:${DEFAULT_CTYPE}" | md5sum | cut -d' ' -f1)
+
+    # Check if locales need to be (re)generated
+    NEEDS_REGENERATION=0
+
+    if [ ! -f "$SETUP_LOCKFILE" ]; then
+        echo -e "\e[36m [Entrypoint] First run detected - preparing PostgreSQL locales...\033[0m"
+        NEEDS_REGENERATION=1
+    elif [ -f "$LOCALE_CONFIG_HASH_FILE" ]; then
+        STORED_CONFIG_HASH=$(cat "$LOCALE_CONFIG_HASH_FILE")
+        if [ "$CURRENT_CONFIG_HASH" != "$STORED_CONFIG_HASH" ]; then
+            echo -e "\e[33m [Entrypoint] Locale configuration changed - regenerating locales...\033[0m"
+            NEEDS_REGENERATION=1
+            # Remove old lockfile to allow regeneration
+            rm -f "$SETUP_LOCKFILE"
+        else
+            echo -e "\e[32m [Entrypoint] Locales already configured with current settings, skipping generation\033[0m"
+            return 0
+        fi
+    else
+        # Hash file missing but lockfile exists (inconsistent state)
+        echo -e "\e[33m [Entrypoint] Inconsistent locale state, regenerating...\033[0m"
+        NEEDS_REGENERATION=1
+        rm -f "$SETUP_LOCKFILE"
+    fi
+
+    if [ $NEEDS_REGENERATION -eq 0 ]; then
+        return 0
+    fi
+
+    # Create the lockfile directory if it doesn't exist
+    mkdir -p "$(dirname "$SETUP_LOCKFILE")"
+
+    # Set default LANGS if not provided
+    if [ -z "${LANGS}" ]; then
+        LANGS="en_US.UTF-8,id_ID.UTF-8"
+        echo -e "\e[36m [Entrypoint] Using default LANGS: \e[1;33m${LANGS}\033[0m"
+    fi
+
+    # Generate locales based on LANGS (supports single or comma-separated multiple)
+    echo -e "\e[36m [Entrypoint] Generating locales from LANGS: \e[1;33m${LANGS}\033[0m"
+    if ! generate_multiple_locales "${LANGS}"; then
+        echo -e "\e[33m [Entrypoint] Failed to generate some locales, using fallback\033[0m"
+        # Ensure at least en_US.UTF-8 exists as fallback
+        if ! locale -a 2>/dev/null | grep -qi "en_US.UTF-8"; then
+            generate_single_locale "en_US.UTF-8"
+        fi
+    fi
+
+    # Also ensure DEFAULT_COLLATION and DEFAULT_CTYPE if they're not in LANGS
+    if [ -n "${DEFAULT_COLLATION}" ] && [[ ! "${LANGS}" =~ ${DEFAULT_COLLATION} ]]; then
+        echo -e "\e[36m [Entrypoint] Generating additional locale from DEFAULT_COLLATION: \e[1;33m${DEFAULT_COLLATION}\033[0m"
+        generate_single_locale "${DEFAULT_COLLATION}"
+    fi
+
+    if [ -n "${DEFAULT_CTYPE}" ] && [ "${DEFAULT_CTYPE}" != "${DEFAULT_COLLATION}" ] && [[ ! "${LANGS}" =~ ${DEFAULT_CTYPE} ]]; then
+        echo -e "\e[36m [Entrypoint] Generating additional locale from DEFAULT_CTYPE: \e[1;33m${DEFAULT_CTYPE}\033[0m"
+        generate_single_locale "${DEFAULT_CTYPE}"
+    fi
+
+    # Save configuration hash and create lockfile
+    echo "$CURRENT_CONFIG_HASH" > "$LOCALE_CONFIG_HASH_FILE"
+    touch "$SETUP_LOCKFILE"
+    echo -e "\e[32m [Entrypoint] Locale setup complete (config hash: \e[1;33m${CURRENT_CONFIG_HASH:0:8}...\e[0m\e[32m)\033[0m"
 }
