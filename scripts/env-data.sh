@@ -757,6 +757,46 @@ role_creation() {
 }
 
 
+# ============================================
+# Helper function: Check if locale is supported
+# ============================================
+is_locale_supported() {
+    local locale="$1"
+
+    # Check in /etc/all.locale.gen (custom master list)
+    if grep -qi "^${locale}" /etc/all.locale.gen 2>/dev/null; then
+        return 0
+    fi
+
+    # Check in /usr/share/i18n/SUPPORTED (Debian canonical list)
+    if [ -f "/usr/share/i18n/SUPPORTED" ] && grep -qi "^${locale}" /usr/share/i18n/SUPPORTED 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+# ============================================
+# Helper function: Get locale line from source files
+# ============================================
+
+get_locale_line() {
+    local locale="$1"
+
+    # Try custom master list first
+    if grep -i "^${locale}" /etc/all.locale.gen 2>/dev/null; then
+        return 0
+    fi
+
+    # Try Debian canonical list as fallback
+    if [ -f "/usr/share/i18n/SUPPORTED" ] && grep -i "^${locale}" /usr/share/i18n/SUPPORTED 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+# ============================================
+# Function: Generate a single locale
+# ============================================
 generate_single_locale() {
     local locale="$1"
     local locale_file="/etc/locale.gen"
@@ -778,9 +818,9 @@ generate_single_locale() {
         return 0
     fi
 
-    # Check if locale exists in master list
-    if ! grep -qi "^${locale} UTF-8" /etc/all.locale.gen 2>/dev/null; then
-        echo -e "\e[33m [Entrypoint] Warning: \e[1;33m$locale\e[0m\e[33m not found in master locale list\033[0m"
+    # Check if locale is supported
+    if ! is_locale_supported "$locale"; then
+        echo -e "\e[33m [Entrypoint] Warning: \e[1;33m$locale\e[0m\e[33m not found in locale lists\033[0m"
         return 1
     fi
 
@@ -803,6 +843,9 @@ generate_single_locale() {
     fi
 }
 
+# ============================================
+# Function: Generate multiple locales from LANGS
+# ============================================
 generate_multiple_locales() {
     local langs="$1"
     local locale_file="/etc/locale.gen"
@@ -830,14 +873,13 @@ generate_multiple_locales() {
             continue
         fi
 
-        # Check if exists in master list
-        if grep -qi "^${locale} UTF-8" /etc/all.locale.gen 2>/dev/null; then
-            grep "^${locale} UTF-8" /etc/all.locale.gen >> "$locale_file"
+        # Check if locale is supported and get the locale line
+        if get_locale_line "$locale" >> "$locale_file"; then
             echo -e "\e[32m [Entrypoint] Added: \e[1;33m$locale\033[0m"
             valid_locales+=("$locale")
             ((generated_count++))
         else
-            echo -e "\e[33m [Entrypoint] Skipped: \e[1;33m$locale\e[0m\e[33m (not in master list)\033[0m"
+            echo -e "\e[33m [Entrypoint] Skipped: \e[1;33m$locale\e[0m\e[33m (not found in locale lists)\033[0m"
         fi
     done
 
@@ -856,7 +898,6 @@ generate_multiple_locales() {
         return 1
     fi
 }
-
 
 locale_install() {
     SETUP_LOCKFILE="${EXTRA_CONF_DIR}/.locales.lock"
