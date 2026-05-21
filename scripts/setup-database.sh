@@ -43,7 +43,7 @@ if [[ -z "$(ls -A "${DATADIR}" 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][R
     create_dir "${DATADIR}"
     rm -rf "${DATADIR:?}/"*
     chown -R postgres:postgres "${DATADIR}"
-    command="$INITDB -U postgres --pwfile=<(echo $POSTGRES_PASS) -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
+    command="$INITDB -U postgres --pwfile=<(echo $POSTGRES_PASS) -E \"${DEFAULT_ENCODING}\" --lc-collate=\"${DEFAULT_COLLATION}\" --lc-ctype=\"${DEFAULT_CTYPE}\" --wal-segsize=${WAL_SEGSIZE} --auth=\"${PASSWORD_AUTHENTICATION}\" -D \"${DATADIR}\" ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
     echo -e "\e[32m [Entrypoint] Initializing Cluster with the following commands Postgres Database at  \e[1;31m $command  \033[0m"
     su - postgres -c "$command"
 else

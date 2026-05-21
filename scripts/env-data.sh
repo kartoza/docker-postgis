@@ -340,14 +340,7 @@ postgres_ssl_setup() {
 
 }
 
-if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
-    DEFAULT_EXTENSIONS="postgis,hstore,postgis_topology,postgis_raster,pgrouting"
-    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
-        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS},timescaledb"
-    else
-        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
-    fi
-fi
+
 
 
 if [ -z "${ALLOW_IP_RANGE}" ]; then
@@ -361,11 +354,87 @@ if [ -z "${PGCLIENTENCODING}" ]; then
   PGCLIENTENCODING="UTF8"
 fi
 
+get_first_locale() {
+    local langs="$1"
+    if [ -n "$langs" ]; then
+        # Split by comma and get first value
+        IFS=',' read -ra lang_arr <<< "$langs"
+        # Trim whitespace
+        echo "${lang_arr[0]}" | xargs
+    else
+        echo ""
+    fi
+}
+
+if [ -z "${LANGS}" ]; then
+  LANGS="en_US.UTF-8,id_ID.UTF-8"
+fi
+
+# ============================================
+# Convert locale from SUPPORTED format to PostgreSQL format
+# Example: "uz_UZ@cyrillic UTF-8" -> "uz_UZ.UTF-8@cyrillic"
+# Example: "ve_ZA UTF-8" -> "ve_ZA.UTF-8"
+# Example: "en_US.UTF-8 UTF-8" -> "en_US.UTF-8"
+# ============================================
+supported_to_postgres_locale() {
+    local locale_line="$1"
+    local locale charset
+
+    # Parse locale and charset from line (e.g., "uz_UZ@cyrillic UTF-8")
+    locale=$(echo "$locale_line" | awk '{print $1}')
+    charset=$(echo "$locale_line" | awk '{print $2}')
+
+    # If charset is empty, try to detect from locale
+    if [ -z "$charset" ]; then
+        # Check if locale already has charset (e.g., "en_US.UTF-8")
+        if [[ "$locale" == *.* ]]; then
+            echo "$locale"
+            return 0
+        else
+            # Default to UTF-8
+            charset="UTF-8"
+        fi
+    fi
+
+    # Handle locales with modifier (e.g., "uz_UZ@cyrillic")
+    if [[ "$locale" == *@* ]]; then
+        local base="${locale%@*}"
+        local modifier="${locale#*@}"
+        echo "${base}.${charset}@${modifier}"
+    else
+        # Simple locale without modifier
+        echo "${locale}.${charset}"
+    fi
+}
+# ============================================
+# Get first locale from LANGS and convert to PostgreSQL format
+# ============================================
+get_first_postgres_locale() {
+    local langs="$1"
+
+    # Get first locale from comma-separated list
+    local first_locale=$(echo "${langs%%,*}" | xargs)
+
+    # Convert to PostgreSQL format
+    supported_to_postgres_locale "$first_locale"
+}
+
+
 if [ -z "${DEFAULT_COLLATION}" ]; then
-  DEFAULT_COLLATION="en_US.UTF-8"
+    FIRST_LOCALE=$(get_first_postgres_locale "$LANGS")
+    if [ -n "$FIRST_LOCALE" ]; then
+        DEFAULT_COLLATION="$FIRST_LOCALE"
+    else
+        DEFAULT_COLLATION="en_US.UTF-8"
+    fi
 fi
 if [ -z "${DEFAULT_CTYPE}" ]; then
-  DEFAULT_CTYPE="en_US.UTF-8"
+    FIRST_LOCALE=$(get_first_postgres_locale "$LANGS")
+    if [ -n "$FIRST_LOCALE" ]; then
+        DEFAULT_CTYPE="$FIRST_LOCALE"
+    else
+        DEFAULT_CTYPE="en_US.UTF-8"
+    fi
 fi
 
 if [ -z "${TARGET_TIMELINE}" ]; then
@@ -421,6 +490,14 @@ if [ -z "${SHARED_PRELOAD_LIBRARIES}" ]; then
   fi
 fi
 
+if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
+    DEFAULT_EXTENSIONS="postgis,hstore,postgis_topology,postgis_raster,pgrouting"
+    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS},timescaledb"
+    else
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
+    fi
+fi
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="scram-sha-256"
@@ -449,6 +526,9 @@ fi
 if [ -z "${RUN_AS_ROOT}" ]; then
   RUN_AS_ROOT=true
 fi
+
+
+
 
 # Compatibility with official postgres variable
 # Official postgres variable gets priority
@@ -725,3 +805,298 @@ role_creation() {
   rm /tmp/setup_user.sql
 
 }
+
+
+# ============================================
+# Helper function: Check if locale is supported
+# ============================================
+is_locale_supported() {
+    local locale="$1"
+
+    # Check in /etc/all.locale.gen (custom master list)
+    if grep -qi "^${locale}" /etc/all.locale.gen 2>/dev/null; then
+        return 0
+    fi
+
+    # Check in /usr/share/i18n/SUPPORTED (Debian canonical list)
+    if [ -f "/usr/share/i18n/SUPPORTED" ] && grep -qi "^${locale}" /usr/share/i18n/SUPPORTED 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+# ============================================
+# Helper function: Get locale line from source files
+# ============================================
+
+get_locale_line() {
+    local locale="$1"
+
+    # Try custom master list first
+    if grep -i "^${locale}" /etc/all.locale.gen 2>/dev/null; then
+        return 0
+    fi
+
+    # Try Debian canonical list as fallback
+    if [ -f "/usr/share/i18n/SUPPORTED" ] && grep -i "^${locale}" /usr/share/i18n/SUPPORTED 2>/dev/null; then
+        return 0
+    fi
+
+    return 1
+}
+
+# ============================================
+# Function: Generate a single locale
+# ============================================
+generate_single_locale() {
+    local locale_line="$1"
+    local locale_file="/etc/locale.gen"
+
+    # Parse locale name (first field)
+    local locale_name=$(echo "$locale_line" | awk '{print $1}')
+
+    # Skip if locale is C or C.UTF-8 (always available)
+    if [[ "$locale_name" == "C" ]] || [[ "$locale_name" == "C.UTF-8" ]]; then
+        echo -e "\e[32m [Entrypoint] Using built-in locale: \e[1;33m$locale_name\033[0m"
+        return 0
+    fi
+
+    # Skip empty
+    if [ -z "$locale_name" ]; then
+        return 0
+    fi
+
+    # Convert to PostgreSQL format for checking
+    local postgres_locale=$(supported_to_postgres_locale "$locale_line")
+
+    # Check if locale already exists in system
+    if locale -a 2>/dev/null | grep -qi "^${postgres_locale}$"; then
+        echo -e "\e[32m [Entrypoint] Locale already available: \e[1;33m$postgres_locale\033[0m"
+        return 0
+    fi
+
+    # Check if locale is supported
+    if ! is_locale_supported "$locale_name"; then
+        echo -e "\e[33m [Entrypoint] Warning: \e[1;33m$locale_name\e[0m\e[33m not found in locale lists\033[0m"
+        return 1
+    fi
+
+    # Add to locale.gen (use original format)
+    if [ ! -f "$locale_file" ] || [ ! -s "$locale_file" ]; then
+        echo "$locale_line" > "$locale_file"
+    else
+        # Check if already in file to avoid duplicates
+        if ! grep -qi "^${locale_name}" "$locale_file"; then
+            echo "$locale_line" >> "$locale_file"
+        fi
+    fi
+
+    # Generate the locale
+    if /usr/sbin/locale-gen 2>/dev/null; then
+        echo -e "\e[32m [Entrypoint] Successfully generated: \e[1;33m$postgres_locale\033[0m"
+        return 0
+    else
+        echo -e "\e[31m [Entrypoint] Failed to generate: \e[1;33m$postgres_locale\033[0m"
+        return 1
+    fi
+}
+
+# ============================================
+# Function: Generate multiple locales from LANGS
+# ============================================
+generate_multiple_locales() {
+    local langs="$1"
+    local locale_file="/etc/locale.gen"
+
+    echo -e "\e[36m [Entrypoint] Processing locales from: \e[1;33m$langs\033[0m"
+
+    # Clear locale.gen
+    > "$locale_file"
+
+    IFS=',' read -ra LANG_ARR <<< "$langs"
+    local generated_count=0
+    local valid_locales=()
+    local postgres_locales=()
+
+    for locale_line in "${LANG_ARR[@]}"; do
+        locale_line=$(echo "$locale_line" | xargs)  # Trim whitespace
+
+        # Skip empty strings
+        if [ -z "$locale_line" ]; then
+            continue
+        fi
+
+        # Get locale name (first field)
+        local locale_name=$(echo "$locale_line" | awk '{print $1}')
+
+        # Skip built-in locales
+        if [[ "$locale_name" == "C" ]] || [[ "$locale_name" == "C.UTF-8" ]]; then
+            echo -e "\e[36m [Entrypoint] Skipping built-in locale: \e[1;33m$locale_name\033[0m"
+            continue
+        fi
+
+        # Get the locale line from source files
+        if get_locale_line "$locale_name" >> "$locale_file"; then
+            local postgres_locale=$(supported_to_postgres_locale "$locale_line")
+            echo -e "\e[32m [Entrypoint] Added: \e[1;33m$postgres_locale\033[0m"
+            valid_locales+=("$locale_line")
+            postgres_locales+=("$postgres_locale")
+            ((generated_count++))
+        else
+            echo -e "\e[33m [Entrypoint] Skipped: \e[1;33m$locale_name\e[0m\e[33m (not found in locale lists)\033[0m"
+        fi
+    done
+
+    # Generate if we have any locales
+    if [ ${#valid_locales[@]} -gt 0 ]; then
+        echo -e "\e[36m [Entrypoint] Running locale-gen for \e[1;33m$generated_count\e[0m\e[36m locale(s)...\033[0m"
+        if /usr/sbin/locale-gen 2>/dev/null; then
+            echo -e "\e[32m [Entrypoint] Successfully generated: \e[1;33m${postgres_locales[*]}\033[0m"
+            return 0
+        else
+            echo -e "\e[31m [Entrypoint] locale-gen failed\033[0m"
+            return 1
+        fi
+    else
+        echo -e "\e[33m [Entrypoint] No valid locales to generate\033[0m"
+        return 1
+    fi
+}
+
+# ============================================
+# Helper function: Get original locale format from PostgreSQL format
+# ============================================
+get_original_locale_format() {
+    local postgres_locale="$1"
+
+    # Extract components
+    local base_without_charset=$(echo "$postgres_locale" | cut -d'.' -f1)
+    local charset=$(echo "$postgres_locale" | cut -d'.' -f2 | cut -d'@' -f1)
+    local modifier=""
+
+    if [[ "$postgres_locale" == *@* ]]; then
+        modifier="@${postgres_locale#*@}"
+    fi
+
+    # Construct the original format (without charset in the locale name)
+    if [ -n "$modifier" ]; then
+        # Remove the @modifier from base for checking
+        local base_no_modifier=$(echo "$base_without_charset" | cut -d'@' -f1)
+        echo "${base_no_modifier}${modifier} ${charset}"
+    else
+        echo "${base_without_charset} ${charset}"
+    fi
+}
+
+
+
+locale_install() {
+    SETUP_LOCKFILE="${EXTRA_CONF_DIR:-/var/lib/postgresql}/.locales.lock"
+    LOCALE_CONFIG_HASH_FILE="${EXTRA_CONF_DIR:-/var/lib/postgresql}/.locales_config_hash"
+
+    # Set default LANGS if not provided
+    if [ -z "${LANGS}" ]; then
+        LANGS="en_US.UTF-8 UTF-8,id_ID.UTF-8 UTF-8"
+        echo -e "\e[36m [Entrypoint] Using default LANGS: \e[1;33m${LANGS}\033[0m"
+    fi
+
+    # Calculate current configuration hash
+    CURRENT_CONFIG_HASH=$(echo "${LANGS}:${DEFAULT_COLLATION}:${DEFAULT_CTYPE}" | md5sum | cut -d' ' -f1)
+
+    # Check if locales need to be regenerated
+    NEEDS_REGENERATION=0
+
+    if [ ! -f "$SETUP_LOCKFILE" ]; then
+        echo -e "\e[36m [Entrypoint] First run detected - preparing PostgreSQL locales...\033[0m"
+        NEEDS_REGENERATION=1
+    elif [ -f "$LOCALE_CONFIG_HASH_FILE" ]; then
+        STORED_CONFIG_HASH=$(cat "$LOCALE_CONFIG_HASH_FILE")
+        if [ "$CURRENT_CONFIG_HASH" != "$STORED_CONFIG_HASH" ]; then
+            echo -e "\e[33m [Entrypoint] Locale configuration changed - regenerating locales...\033[0m"
+            NEEDS_REGENERATION=1
+            rm -f "$SETUP_LOCKFILE"
+        else
+            echo -e "\e[32m [Entrypoint] Locales already configured with current settings, skipping generation\033[0m"
+            return 0
+        fi
+    else
+        echo -e "\e[33m [Entrypoint] Inconsistent locale state, regenerating...\033[0m"
+        NEEDS_REGENERATION=1
+        rm -f "$SETUP_LOCKFILE"
+    fi
+
+    if [ $NEEDS_REGENERATION -eq 0 ]; then
+        return 0
+    fi
+
+    # Create lockfile directory
+    mkdir -p "$(dirname "$SETUP_LOCKFILE")"
+
+    # Generate locales from LANGS
+    if ! generate_multiple_locales "${LANGS}"; then
+        echo -e "\e[33m [Entrypoint] Failed to generate some locales, using fallback\033[0m"
+        if ! locale -a 2>/dev/null | grep -qi "en_US.UTF-8"; then
+            generate_single_locale "en_US.UTF-8 UTF-8"
+        fi
+    fi
+
+    # Check if DEFAULT_COLLATION is already covered by LANGS (in PostgreSQL format)
+    local collation_covered=0
+    local ctype_covered=0
+
+    # Extract locale names from LANGS (original format)
+    IFS=',' read -ra LANG_ARR <<< "$LANGS"
+    for locale_line in "${LANG_ARR[@]}"; do
+        locale_line=$(echo "$locale_line" | xargs)
+        local postgres_format=$(supported_to_postgres_locale "$locale_line")
+
+        # Check if DEFAULT_COLLATION matches any generated locale
+        if [ -n "${DEFAULT_COLLATION}" ] && [ "$postgres_format" = "${DEFAULT_COLLATION}" ]; then
+            collation_covered=1
+        fi
+
+        # Check if DEFAULT_CTYPE matches any generated locale
+        if [ -n "${DEFAULT_CTYPE}" ] && [ "$postgres_format" = "${DEFAULT_CTYPE}" ]; then
+            ctype_covered=1
+        fi
+    done
+
+    # Also check if DEFAULT_COLLATION/DEFAULT_CTYPE are the same as first locale
+    local first_postgres_locale=$(get_first_postgres_locale "$LANGS")
+    if [ -n "${DEFAULT_COLLATION}" ] && [ "$first_postgres_locale" = "${DEFAULT_COLLATION}" ]; then
+        collation_covered=1
+    fi
+
+    if [ -n "${DEFAULT_CTYPE}" ] && [ "$first_postgres_locale" = "${DEFAULT_CTYPE}" ]; then
+        ctype_covered=1
+    fi
+
+    # Only generate DEFAULT_COLLATION if not already covered
+    if [ -n "${DEFAULT_COLLATION}" ] && [ $collation_covered -eq 0 ]; then
+        # Need to find the original format for this locale
+        local original_format=$(get_original_locale_format "${DEFAULT_COLLATION}")
+        if [ -n "$original_format" ]; then
+            echo -e "\e[36m [Entrypoint] Generating additional locale from DEFAULT_COLLATION: \e[1;33m${DEFAULT_COLLATION}\033[0m"
+            generate_single_locale "$original_format"
+        else
+            echo -e "\e[33m [Entrypoint] Skipping DEFAULT_COLLATION: \e[1;33m${DEFAULT_COLLATION}\e[0m\e[33m (already covered or not found)\033[0m"
+        fi
+    fi
+
+    # Only generate DEFAULT_CTYPE if different from COLLATION and not already covered
+    if [ -n "${DEFAULT_CTYPE}" ] && [ "${DEFAULT_CTYPE}" != "${DEFAULT_COLLATION}" ] && [ $ctype_covered -eq 0 ]; then
+        local original_format=$(get_original_locale_format "${DEFAULT_CTYPE}")
+        if [ -n "$original_format" ]; then
+            echo -e "\e[36m [Entrypoint] Generating additional locale from DEFAULT_CTYPE: \e[1;33m${DEFAULT_CTYPE}\033[0m"
+            generate_single_locale "$original_format"
+        else
+            echo -e "\e[33m [Entrypoint] Skipping DEFAULT_CTYPE: \e[1;33m${DEFAULT_CTYPE}\e[0m\e[33m (already covered or not found)\033[0m"
+        fi
+    fi
+
+    # Save configuration hash and create lockfile
+    echo "$CURRENT_CONFIG_HASH" > "$LOCALE_CONFIG_HASH_FILE"
+    touch "$SETUP_LOCKFILE"
+    echo -e "\e[32m [Entrypoint] Locale setup complete (config hash: \e[1;33m${CURRENT_CONFIG_HASH:0:8}...\e[0m\e[32m)\033[0m"
+}
+

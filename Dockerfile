@@ -30,33 +30,8 @@ RUN set -eux \
 	gosu nobody true && \
     dpkg-divert --local --rename --add /sbin/initctl
 
-
-# Generating locales takes a long time. Utilize caching by runnig it by itself
-# early in the build process.
-
-# Generate all locale only on deployment mode build
-# Set to empty string to generate only default locale
-ARG GENERATE_ALL_LOCALE=1
-ARG LANGS="en_US.UTF-8,id_ID.UTF-8"
-ARG LANG=en_US.UTF-8
-ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en \
-    LC_ALL=en_US.UTF-8
-
 COPY ./base_build/scripts/locale.gen /etc/all.locale.gen
 COPY ./base_build/scripts/locale-filter.sh /etc/locale-filter.sh
-RUN if [ -z "${GENERATE_ALL_LOCALE}" ] || [ $GENERATE_ALL_LOCALE -eq 0 ]; \
-	then \
-		cat /etc/all.locale.gen | grep "${LANG}" > /etc/locale.gen; \
-		/bin/bash /etc/locale-filter.sh; \
-	else \
-		cp -f /etc/all.locale.gen /etc/locale.gen; \
-	fi; \
-	set -eux \
-	&& /usr/sbin/locale-gen
-
-RUN update-locale ${LANG}
-
 
 # Cleanup resources
 RUN apt-get -y --purge autoremove  \
@@ -79,7 +54,6 @@ ARG POSTGIS_MINOR_RELEASE=6
 ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false
 ARG BUILD_PG_DUCKDB=false
-
 
 
 RUN set -eux \

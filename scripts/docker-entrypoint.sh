@@ -9,6 +9,8 @@ fi
 
 source /scripts/env-data.sh
 
+# Setup locales
+locale_install
 # Setup postgres CONF file
 
 source /scripts/setup-conf.sh
