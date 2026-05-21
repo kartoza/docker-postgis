@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
+#############################################
+# Bootstrap
+#############################################
+# Import env and functions
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "${SCRIPT_DIR}/lib/env-data.sh"
+
+#########################################
+# Start Configuration
+########################################
 # Add any additional setup tasks here
 chmod 600 /etc/ssl/private/ssl-cert-snakeoil.key
-
-# These tasks are run as root
-source /scripts/env-data.sh
 
 # Create backup template for conf
 cat "${CONF}" > "${CONF}".template

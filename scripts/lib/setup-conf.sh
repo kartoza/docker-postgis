@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
 
 create_dir "${EXTRA_CONF_DIR}"
 create_dir "${CONF_LOCKFILE_DIR}"
@@ -137,10 +136,7 @@ if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]] && [[ ${ACCEPT_TIMESCALE_TU
 fi
 
 
-# Optimise PostgreSQL shared memory for PostGIS
-# shmall units are pages and shmmax units are bytes(?) equivalent to the desired shared_buffer size set in setup_conf.sh - in this case 500MB
-echo "kernel.shmmax=${KERNEL_SHMMAX}" >> /etc/sysctl.conf
-echo "kernel.shmall=${KERNEL_SHMALL}" >> /etc/sysctl.conf
+kernel_configuration
 
 # Put lock file to make sure conf was not reinitialized
 touch "${SETUP_LOCKFILE}"

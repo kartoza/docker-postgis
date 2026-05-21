@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
+
 
 SETUP_LOCKFILE="${CONF_LOCKFILE_DIR}/.ssl.conf.lock"
 if [ -f "${SETUP_LOCKFILE}" ]; then

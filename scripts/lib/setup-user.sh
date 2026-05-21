@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
+
 
 # This script will setup new configured user
 

@@ -2,6 +2,7 @@
 
 # Compile pointcloud extension
 NUM_PROCESSORS=$(nproc)
+echo "compiling using ${NUM_PROCESSORS} processors"
 wget -O- https://github.com/pgpointcloud/pointcloud/archive/master.tar.gz | tar xz && \
 cd pointcloud-master && \
 ./autogen.sh && ./configure && make -j ${NUM_PROCESSORS} && make install && \
@@ -10,8 +11,7 @@ cd .. && rm -Rf pointcloud-master
 
 #compile pg_duckdb
 if [ "$(echo "${BUILD_PG_DUCKDB}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then \
-apt update
-apt install -y  \
+apt update -y;apt-get -y --no-install-recommends install  \
     libreadline-dev zlib1g-dev flex bison libxml2-dev \
     libxslt-dev libssl-dev libxml2-utils xsltproc pkg-config libc++-dev \
     libc++abi-dev libglib2.0-dev libtinfo6 cmake libstdc++-12-dev \

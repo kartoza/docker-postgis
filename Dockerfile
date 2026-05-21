@@ -119,8 +119,8 @@ RUN if [ "$(echo "${BUILD_TIMESCALE}" | tr '[:upper:]' '[:lower:]')" = "true" ];
         sh -c "echo \"deb [signed-by=/usr/share/keyrings/timescale.keyring] https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main\" > /etc/apt/sources.list.d/timescaledb.list" && \
         wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey |  gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
         apt-get update && \
-        apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
-    fi;
+        apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools; \
+    fi
 
 RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
      echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
@@ -139,7 +139,7 @@ EXPOSE 5432
 # Copy scripts
 ADD ./scripts /scripts
 WORKDIR /scripts
-RUN chmod +x *.sh
+RUN chmod +x /scripts/*.sh;chmod +x /scripts/lib/*.sh;
 
 # Run any additional tasks here that are too tedious to put in
 # this dockerfile directly.
