@@ -492,18 +492,12 @@ fi
 
 if [ -z "${POSTGRES_MULTIPLE_EXTENSIONS}" ]; then
     DEFAULT_EXTENSIONS="postgis,hstore,postgis_topology,postgis_raster,pgrouting"
-
-    # start with defaults
-    POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
-
-    # append any preload libraries that are also extensions
-    if [ -n "${SHARED_PRELOAD_LIBRARIES}" ]; then
-        POSTGRES_MULTIPLE_EXTENSIONS="${POSTGRES_MULTIPLE_EXTENSIONS},${SHARED_PRELOAD_LIBRARIES}"
+    if [[ $(dpkg -l | grep "timescaledb") > /dev/null ]];then
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS},timescaledb"
+    else
+        POSTGRES_MULTIPLE_EXTENSIONS="${DEFAULT_EXTENSIONS}"
     fi
-
-    export POSTGRES_MULTIPLE_EXTENSIONS
 fi
-
 
 if [ -z "$PASSWORD_AUTHENTICATION" ]; then
     PASSWORD_AUTHENTICATION="scram-sha-256"
