@@ -1,76 +1,73 @@
 #!/usr/bin/env bash
 
-source /scripts/env-data.sh
-
-INITDB_WALDIR_FLAG=""
-
-# Check POSTGRES_INITDB_WALDIR value
-if [[ -n "${POSTGRES_INITDB_WALDIR}" ]]; then
-    # If POSTGRES_INITDB_WALDIR is defined, make sure that it is not inside 
-    # the ${DATADIR} directory, to avoid deletions
-    case "${POSTGRES_INITDB_WALDIR}" in
-        ${DATADIR}/*)
-            # In this case, we have to fail early
-            echo "POSTGRES_INITDB_WALDIR should not be set to be inside DATADIR or PGDATA" 
-cat << EOF 1>&2
-Error!
-POSTGRES_INITDB_WALDIR should not be set to be inside DATADIR or PGDATA.
-POSTGRES_INITDB_WALDIR: ${POSTGRES_INITDB_WALDIR}
-DATADIR or PGDATA: ${DATADIR}
-EOF
-            exit 1
-            ;;
-        *)
-            # For other case, make sure the directory is created with proper permissions
-            create_dir "${POSTGRES_INITDB_WALDIR}"
-            chown -R postgres:postgres "${POSTGRES_INITDB_WALDIR}"
-            ;;
-    esac
-    # Set the --waldir flag for postgres initialization
-    INITDB_WALDIR_FLAG="--waldir ${POSTGRES_INITDB_WALDIR}"
-fi
+# Setup WAL directory configuration
+setup_waldir
 
 create_dir "${WAL_ARCHIVE}"
 
+DATADIR_RECREATE_MODE="${DATADIR_RECREATE_MODE:-never}"
 
-# test if DATADIR has content
-# Do initialization if DATADIR directory is empty, or RECREATE_DATADIR is true
-if [[ -z "$(ls -A "${DATADIR}" 2> /dev/null)" || "${RECREATE_DATADIR}" =~ [Tt][Rr][Uu][Ee] ]]; then
-    # Only attempt reinitializations if ${RECREATE_DATADIR} is true
-    # No Replicate From settings. Assume that this is a master database.
-    # Initialise db
-    echo -e "\e[32m [Entrypoint] Initializing Postgres Database at  \e[1;31m ${DATADIR}  \033[0m"
-    create_dir "${DATADIR}"
-    rm -rf "${DATADIR:?}/"*
-    chown -R postgres:postgres "${DATADIR}"
-    command="$INITDB -U postgres --pwfile=<(echo $POSTGRES_PASS) -E \"${DEFAULT_ENCODING}\" --lc-collate=\"${DEFAULT_COLLATION}\" --lc-ctype=\"${DEFAULT_CTYPE}\" --wal-segsize=${WAL_SEGSIZE} --auth=\"${PASSWORD_AUTHENTICATION}\" -D \"${DATADIR}\" ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
-    echo -e "\e[32m [Entrypoint] Initializing Cluster with the following commands Postgres Database at  \e[1;31m $command  \033[0m"
-    su - postgres -c "$command"
+if [[ "${RECREATE_ALWAYS}" =~ [Tt][Rr][Uu][Ee] ]]  || [[ "${RECREATE_ALWAYS}" = "1" ]]; then
+    DATADIR_RECREATE_MODE="always"
+elif [[ "${RECREATE_ONCE}" =~ [Tt][Rr][Uu][Ee] ]]  || [[ "${RECREATE_ONCE}" = "1" ]]; then
+    DATADIR_RECREATE_MODE="once"
+elif [[ "${RECREATE_DATADIR}" =~ [Tt][Rr][Uu][Ee] ]]  || [[ "${RECREATE_DATADIR}" = "1" ]]; then
+    DATADIR_RECREATE_MODE="once"
+fi
+
+# Track recreation state
+RECREATE_MARKER_FILE="/tmp/postgres_recreate_once.marker"
+SHOULD_RECREATE=0
+
+case "$DATADIR_RECREATE_MODE" in
+    "always")
+        echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=always, will recreate datadir on every start\033[0m"
+        SHOULD_RECREATE=1
+        ;;
+
+    "once")
+        if [ ! -f "$RECREATE_MARKER_FILE" ]; then
+            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=once, will recreate datadir (first time only)\033[0m"
+            SHOULD_RECREATE=1
+            touch "$RECREATE_MARKER_FILE"
+        else
+            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=once already performed, skipping recreation\033[0m"
+        fi
+        ;;
+
+    "empty")
+        if is_datadir_empty; then
+            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir is empty, will initialize\033[0m"
+            SHOULD_RECREATE=1
+        else
+            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir has content, skipping recreation\033[0m"
+        fi
+        ;;
+
+    "never")
+        if is_datadir_empty; then
+            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=never but datadir is empty, will initialize\033[0m"
+            SHOULD_RECREATE=1
+        else
+            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=never, using existing datadir\033[0m"
+        fi
+        ;;
+
+    *)
+        echo -e "\e[31m [Entrypoint] Unknown DATADIR_RECREATE_MODE: ${DATADIR_RECREATE_MODE}\033[0m"
+        echo -e "\e[31m [Entrypoint] Valid values: never, once, always, empty\033[0m"
+        exit 1
+        ;;
+esac
+
+# Main logic: recreate or use existing datadir
+if [[ $SHOULD_RECREATE -eq 1 ]]; then
+    # Recreate datadir
+    initialize_datadir "${INITDB_WALDIR_FLAG}"
 else
-    # If using existing datadir:
-    # Check if pg_wal symlink point to the correct directory described by POSTGRES_INITDB_WALDIR.
-    # Give warning if the value is not the same
-    if [[ -n "${POSTGRES_INITDB_WALDIR}" && \
-        "$(realpath "${POSTGRES_INITDB_WALDIR}")" != "$(realpath "$(readlink "${DATADIR}"/pg_wal)")" ]]; then
-cat << EOF 1>&2
-Warning!
-POSTGRES_INITDB_WALDIR is not the same as what pg_wal is pointing to.
-POSTGRES_INITDB_WALDIR: ${POSTGRES_INITDB_WALDIR}
-pg_wal: $(readlink "${DATADIR}"/pg_wal)
-EOF
-    fi
-
-    # Check if the pg_wal is empty.
-    # Exit the process if pg_wal is somehow empty
-    if [[ -z "$(ls -A "${DATADIR}"/pg_wal 2> /dev/null)" ]]; then
-cat << EOF 1>&2
-Error!
-Can't proceed because "${DATADIR}/pg_wal" directory is empty.
-EOF
-      exit 1
-    fi
-fi;
-
+    # Use existing datadir
+    check_existing_datadir
+fi
 #non_root_permission postgres postgres
 
 # Set proper permissions

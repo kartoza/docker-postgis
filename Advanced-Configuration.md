@@ -71,6 +71,18 @@ to specify different empty directory, like this
 The containers will use above parameters to initialize a new db cluster in the specified directory.
 If the directory is not empty, then the initialization parameter will be ignored.
 
+Also make sure that the `DEFAULT_COLLATION`,`DEFAULT_CTYPE` also
+correspond to installed locales. The image installs the following
+locales by default
+
+```
+LANGS=en_US.UTF-8,id_ID.UTF-8
+```
+
+If the environment variables `DEFAULT_COLLATION`,`DEFAULT_CTYPE`
+referer to a locale that is not installed, it will default
+to the C locale.
+
 These are some initialization parameters that will only be used to initialize a new cluster. If the
 container uses an existing cluster, it is ignored (for example, when the container restarts).
 
@@ -86,15 +98,76 @@ directory will always be available, even though it doesn't need the environment 
 If you didn't persist this location, Postgres will not be able to find the `pg_wal` directory and
 consider the instance to be broken.
 
-In addition to that, we have another parameter: `RECREATE_DATADIR` that can be used to force
-database re-initializations. If this parameter is specified as `TRUE` it will act as explicit
-consent to delete `DATADIR` and create new db cluster.
+#### PostgreSQL Datadir Recreation Modes
 
-* `RECREATE_DATADIR`: Force database re-initialization in the location `DATADIR`
+The PostgreSQL datadir recreation behavior can be controlled using the 
+`DATADIR_RECREATE_MODE` environment variable. This feature gives you 
+fine-grained control over when the database cluster should be reinitialized.
 
-If you used `RECREATE_DATADIR` and successfully created a new cluster. Remember that you should
-remove this parameter afterwards. Because, if it was not omitted, it will always recreate new db
-cluster after every container restarts.
+##### Environment Variable
+
+| Variable     | Values       | Default |
+|--------------|--------------|---------|
+| DATADIR_RECREATE_MODE | never, once, always, empty | never   |
+
+
+###### Recreation Modes
+| Variable   | Values                                                                                                                                                         | Default                             |
+|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------|
+|   never    | Never recreates the datadir. If the datadir is empty on first start, it will be initialized. Subsequent starts always use the existing datadir.                |Production environments where data persistence is critical.                                  |
+| once | Recreates the datadir only once during the container's lifetime. A marker file (/tmp/postgres_recreate_once.marker) tracks if recreation has already occurred. | Testing scenarios where you need a fresh database on first run but want to preserve data between restarts. |
+| always | Recreates the datadir on every container start. All existing data will be lost on each restart.                                                                | CI/CD pipelines, ephemeral environments, or when you need a completely fresh state every time. |
+| empty | Recreates the datadir only if the datadir is empty. If the datadir contains any data, recreation is skipped.                                                   | Development environments where you want automatic initialization for new volumes but never want to accidentally wipe existing data. |
+
+
+Examples
+
+* Never recreate datadir (production default)
+```
+docker run -e DATADIR_RECREATE_MODE=never -v pg_data:/var/lib/postgresql kartoza/postgis:18-3.6
+```
+* Recreate once per container lifetime
+```
+docker run -e DATADIR_RECREATE_MODE=once -v pg_data:/var/lib/postgresql kartoza/postgis:18-3.6
+```
+* Always recreate on every start
+```
+docker run -e DATADIR_RECREATE_MODE=always -v pg_data:/var/lib/postgresql kartoza/postgis:18-3.6
+```
+* Recreate only if datadir is empty
+```
+docker run -e DATADIR_RECREATE_MODE=empty -v pg_data:/var/lib/postgresql kartoza/postgis:18-3.6
+```
+
+###### Backward Compatibility
+The following legacy environment variables are still supported 
+and automatically mapped to the new modes:
+
+
+| Legacy Variable     | Maps to Mode      | Description           |
+|--------------|-------------------|-----------------------|
+| RECREATE_DATADIR=true | once              | Recreate datadir once |
+ | RECREATE_ONCE=true | once | Recreate datadir once |
+| RECREATE_ALWAYS=true | always | Always recreate datadir |
+
+Note: The new DATADIR_RECREATE_MODE takes precedence over legacy variables. 
+It's recommended to migrate to the new variable for better control.
+
+**Notes**:
+
+Data Loss Warning: Modes always and once (on first run) will completely wipe your PostgreSQL datadir. 
+Ensure you have proper backups when using these modes with persistent volumes.
+
+* Marker File: The once mode creates a marker file at /tmp/postgres_recreate_once.marker inside the container.
+Removing this file will cause recreation to occur on the next container start.
+
+* Empty Directory Detection: The empty and never modes both initialize the database if 
+the datadir is completely empty. This ensures the container can start successfully 
+with fresh volumes.
+
+* WAL Directory Support: All recreation modes work seamlessly with custom WAL directories 
+configured via POSTGRES_INITDB_WALDIR.
+
 
 ### Postgres Encoding
 

@@ -1100,3 +1100,69 @@ locale_install() {
     echo -e "\e[32m [Entrypoint] Locale setup complete (config hash: \e[1;33m${CURRENT_CONFIG_HASH:0:8}...\e[0m\e[32m)\033[0m"
 }
 
+is_datadir_empty() {
+    [[ -z "$(ls -A "${DATADIR}" 2> /dev/null)" ]]
+}
+
+initialize_datadir() {
+    local INITDB_WALDIR_FLAG="${1:-}"
+    echo -e "\e[32m [Entrypoint] Initializing Postgres Database at \e[1;31m${DATADIR}\033[0m"
+    create_dir "${DATADIR}"
+    rm -rf "${DATADIR:?}/"*
+    chown -R postgres:postgres "${DATADIR}"
+    command="$INITDB -U postgres --pwfile=<(echo $POSTGRES_PASS) -E ${DEFAULT_ENCODING} --lc-collate=${DEFAULT_COLLATION} --lc-ctype=${DEFAULT_CTYPE} --wal-segsize=${WAL_SEGSIZE} --auth=${PASSWORD_AUTHENTICATION} -D ${DATADIR} ${INITDB_WALDIR_FLAG} ${INITDB_EXTRA_ARGS}"
+    echo -e "\e[32m [Entrypoint] Initializing Cluster with the following command: \e[1;31m$command\033[0m"
+    su - postgres -c "$command"
+}
+
+check_existing_datadir() {
+    if [ ! -d "${DATADIR}" ]; then
+        echo "Error: DATADIR ${DATADIR} does not exist" 1>&2
+        exit 1
+    fi
+    # Check if pg_wal symlink points to the correct directory described by POSTGRES_INITDB_WALDIR
+    if [[ -n "${POSTGRES_INITDB_WALDIR}" && \
+          -L "${DATADIR}/pg_wal" && \
+          "$(realpath "${POSTGRES_INITDB_WALDIR}")" != "$(realpath "$(readlink "${DATADIR}"/pg_wal)")" ]]; then
+        cat << EOF 1>&2
+Warning!
+POSTGRES_INITDB_WALDIR is not the same as what pg_wal is pointing to.
+POSTGRES_INITDB_WALDIR: ${POSTGRES_INITDB_WALDIR}
+pg_wal: $(readlink "${DATADIR}"/pg_wal)
+EOF
+    fi
+
+    # Check if the pg_wal is empty
+    if [[ -z "$(ls -A "${DATADIR}"/pg_wal 2> /dev/null)" ]]; then
+        cat << EOF 1>&2
+Error!
+Can't proceed because "${DATADIR}/pg_wal" directory is empty.
+EOF
+        exit 1
+    fi
+}
+
+# Function to setup WAL directory configuration
+setup_waldir() {
+    # Initialize WALDIR flag
+    INITDB_WALDIR_FLAG=""
+
+    # Check POSTGRES_INITDB_WALDIR value
+    if [[ -n "${POSTGRES_INITDB_WALDIR}" ]]; then
+        # If POSTGRES_INITDB_WALDIR is defined, make sure it's not inside DATADIR
+        case "${POSTGRES_INITDB_WALDIR}" in
+            ${DATADIR}/*)
+                echo "Error: POSTGRES_INITDB_WALDIR should not be inside DATADIR" 1>&2
+                exit 1
+                ;;
+            *)
+                create_dir "${POSTGRES_INITDB_WALDIR}"
+                chown -R postgres:postgres "${POSTGRES_INITDB_WALDIR}"
+                ;;
+        esac
+        INITDB_WALDIR_FLAG="--waldir ${POSTGRES_INITDB_WALDIR}"
+    fi
+
+    # Export the flag so it can be used
+    export INITDB_WALDIR_FLAG
+}
