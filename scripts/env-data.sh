@@ -1152,14 +1152,23 @@ setup_waldir() {
         # If POSTGRES_INITDB_WALDIR is defined, make sure it's not inside DATADIR
         case "${POSTGRES_INITDB_WALDIR}" in
             ${DATADIR}/*)
-                echo "Error: POSTGRES_INITDB_WALDIR should not be inside DATADIR" 1>&2
+                # In this case, we have to fail early
+                echo "POSTGRES_INITDB_WALDIR should not be set to be inside DATADIR or PGDATA" 1>&2
+                cat << EOF 1>&2
+Error!
+POSTGRES_INITDB_WALDIR should not be set to be inside DATADIR or PGDATA.
+POSTGRES_INITDB_WALDIR: ${POSTGRES_INITDB_WALDIR}
+DATADIR or PGDATA: ${DATADIR}
+EOF
                 exit 1
                 ;;
             *)
+                # For other case, make sure the directory is created with proper permissions
                 create_dir "${POSTGRES_INITDB_WALDIR}"
                 chown -R postgres:postgres "${POSTGRES_INITDB_WALDIR}"
                 ;;
         esac
+        # Set the --waldir flag for postgres initialization
         INITDB_WALDIR_FLAG="--waldir ${POSTGRES_INITDB_WALDIR}"
     fi
 
