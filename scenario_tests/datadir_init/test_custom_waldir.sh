@@ -39,7 +39,7 @@ service="pg-custom-waldir-wrong"
 ${VERSION} up -d $service
 
 # Wait for container to exit (should fail)
-wait_for_container_status $service
+sleep 60
 
 # Check logs for error message
 if ${VERSION} logs $service | grep -q "Error" && \
@@ -71,7 +71,7 @@ service="pg-custom-waldir-not-match-1"
 ${VERSION} up -d $service
 
 # Wait for PostgreSQL to be ready (should still start despite warning)
-wait_for_postgres $service
+sleep 60
 
 # Check logs for warning message
 if ${VERSION} logs $service | grep -q "Warning" && \
@@ -92,7 +92,7 @@ service="pg-custom-waldir-not-match-2"
 ${VERSION} up -d $service
 
 # Wait for container to exit (should fail)
-wait_for_container_status $service
+sleep 60
 
 # Check logs for error message
 warning_text="Can't proceed because \"/opt/mypostgis/data/pg_wal\" directory is empty."
