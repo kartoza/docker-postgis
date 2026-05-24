@@ -18,7 +18,6 @@ determine_compose_version(){
 fi
 }
 
-
 wait_for_postgres() {
     local service=$1
     local compose_file="${2:-}"
@@ -27,23 +26,77 @@ wait_for_postgres() {
 
     echo "Waiting for $service to be ready..."
 
-    if [[ -n ${compose_file} ]];then
-      extra_args="-f ${compose_file}"
-    else
-      extra_args=
+    local extra_args=()
+
+    if [[ -n "$compose_file" ]]; then
+        extra_args=(-f "$compose_file")
     fi
 
     while [ $attempt -lt $max_attempts ]; do
-        # Check if the ready marker file exists
-        if ${VERSION} ${extra_args} exec -T $service test -f /tmp/postgres-ready 2>/dev/null; then
+
+        if ${VERSION} "${extra_args[@]}" exec -T "$service" test -f /tmp/postgres-ready; then
+
             echo "$service is ready!"
             return 0
         fi
-        sleep 2
-        ((attempt++))
+
+
+        sleep 5
+        attempt=$((attempt + 1))
     done
 
     echo "Timeout waiting for $service to be ready"
+    return 1
+}
+
+wait_for_postgres_container() {
+
+    local service=$1
+    local compose_file="${2:-}"
+    local max_attempts=60
+    local attempt=0
+
+
+    local extra_args=()
+
+    if [[ -n "$compose_file" ]]; then
+        extra_args=(-f "$compose_file")
+    fi
+
+    echo "Waiting for $service to become healthy..."
+
+    while [ $attempt -lt $max_attempts ]; do
+
+        local container_id
+        container_id=$(docker compose "${extra_args[@]}" ps -q "$service")
+        echo "attempt $((attempt)) "
+
+        if [[ -z "$container_id" ]]; then
+            echo "Container not created yet (attempt $((attempt+1))/$max_attempts)"
+            sleep 2
+            attempt=$((attempt + 1))
+            continue
+        fi
+
+        local health_status
+        health_status=$(docker inspect --format='{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' "$container_id" 2>/dev/null)
+
+        echo "Attempt $((attempt+1))/$max_attempts - Health status: $health_status"
+
+        if [[ "$health_status" == "healthy" ]]; then
+            echo "$service is healthy!"
+            return 0
+        else
+            # This includes "starting", "unhealthy", or any other status
+            echo "Waiting for container to be healthy (current: $health_status)"
+            sleep 5
+            attempt=$((attempt + 1))
+            continue
+        fi
+    done
+
+    echo "Timeout waiting for $service after $max_attempts attempts"
+
     return 1
 }
 
@@ -58,7 +111,7 @@ wait_for_container_status() {
             return 0
         fi
         sleep 2
-        ((attempt++))
+        attempt=$((attempt + 1))
     done
     return 1
 }
@@ -79,7 +132,7 @@ wait_for_log_message() {
             return 0
         fi
         sleep 2
-        ((attempt++))
+        attempt=$((attempt + 1))
     done
 
     echo "Timeout waiting for log message in $service"
