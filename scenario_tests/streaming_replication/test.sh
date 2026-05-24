@@ -19,7 +19,6 @@ fi
 
 
 # Preparing master cluster
-
 wait_for_postgres "pg-master"
 
 # Execute tests
@@ -28,6 +27,7 @@ ${VERSION} exec -T pg-master /bin/bash /tests/test_master.sh
 # Preparing node cluster
 
 wait_for_postgres "pg-node"
+
 # Execute tests
 ${VERSION} exec -T pg-node /bin/bash /tests/test_node.sh
 
@@ -47,12 +47,14 @@ fi
 # Preparing master cluster
 
 wait_for_postgres "pg-master" "docker-compose-gs.yml"
+
 # Execute tests
 ${VERSION} -f docker-compose-gs.yml exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
 
 wait_for_postgres "pg-node" "docker-compose-gs.yml"
+
 # Execute tests
 ${VERSION} -f docker-compose-gs.yml exec -T pg-node /bin/bash /tests/test_node.sh
 
@@ -108,9 +110,9 @@ ${VERSION} -f docker-compose-gs-promote.yml up -d pg-node
 # Preparing node cluster
 
 wait_for_postgres "pg-node" "docker-compose-gs-promote.yml"
+
 # Execute tests
 ${VERSION} -f docker-compose-gs-promote.yml exec -T pg-node /bin/bash /tests/test_node_promotion.sh
 
 ${VERSION} -f docker-compose-gs-promote.yml down -v
 sed -i 's/\(PROMOTE_MASTER: \)true/\1false/'  docker-compose-gs-promote.yml
-
