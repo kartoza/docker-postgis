@@ -5,11 +5,7 @@ set -e
 
 source ../test-env.sh
 
-if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
-    VERSION='docker-compose'
-  else
-    VERSION='docker compose'
-fi
+determine_compose_version
 
 
 # Run service for root user
@@ -19,27 +15,26 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 30
+
 
 services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
   # Execute tests
-  until ${VERSION} exec -T $service pg_isready; do
-    sleep 5
-    echo "Wait service to be ready"
-  done;
+
+  wait_for_postgres $service
   echo "Execute test for $service"
-  ${VERSION} exec -T $service /bin/bash /tests/test.sh
+  run_tests "$service"
 
 done
 
 # special meta test to check the setup
+echo "starting wal tests ----------------"
 bash ./test_custom_waldir.sh
 
 ${VERSION} down -v
-
+echo "completed wal tests ----------------"
 
 # Run service for none root user
 mkdir default-pg-data-dir
@@ -50,19 +45,17 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} -f docker-compose-gs.yml logs -f &
 fi
 
-sleep 30
+
 
 services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
   # Execute tests
-  until ${VERSION} -f docker-compose-gs.yml exec -T $service pg_isready; do
-    sleep 5
-    echo "Wait service to be ready"
-  done;
+
+  wait_for_postgres $service "docker-compose-gs.yml"
   echo "Execute test for $service"
-  ${VERSION} -f docker-compose-gs.yml exec -T $service /bin/bash /tests/test.sh
+  run_tests "$service" "docker-compose-gs.yml"
 
 done
 
