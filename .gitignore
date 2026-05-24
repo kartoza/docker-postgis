@@ -8,5 +8,6 @@
 venv
 .venv
 __pycache__
-
+scenario_tests/datadir_init/default-pg-data-dir
+scenario_tests/datadir_init/local-pg-data-dir
 .env
