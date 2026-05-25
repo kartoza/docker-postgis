@@ -36,7 +36,7 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
       echo -e "[Entrypoint] \e[1;31m Waiting for master to ping... \033[0m"
       sleep 1s
     done
-    if [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
+    if should_recreate_datadir || [[ "$DESTROY_DATABASE_ON_RESTART" =~ [Tt][Rr][Uu][Ee] ]]; then
       echo -e "[Entrypoint] \e[1;31m Get initial database from master \033[0m"
       configure_replication_permissions
       if [ -f "${DATADIR}/backup_label.old" ]; then
@@ -48,8 +48,9 @@ if [[ "$WAL_LEVEL" == 'replica' && "${REPLICATION}" =~ [Tt][Rr][Uu][Ee] ]]; then
    fi
 
   else
-    if [ ! -f "${DATADIR}/backup_label.old" ]; then
-      echo "Streaming replication hasn't been started yet"
+    wait_for_db
+    ping_master_status=$?
+    if [[ $ping_master_status -ne 0 ]]; then
       exit 1
     else
       if [[ ${RUN_AS_ROOT} =~ [Ff][Aa][Ll][Ss][Ee] ]];then

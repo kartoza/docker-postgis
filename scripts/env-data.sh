@@ -1175,3 +1175,119 @@ EOF
     # Export the flag so it can be used
     export INITDB_WALDIR_FLAG
 }
+
+should_recreate_datadir() {
+    if [[ -n "${SHOULD_RECREATE:-}" ]]; then
+        return ${SHOULD_RECREATE}
+    fi
+
+    # Otherwise, evaluate based on DATADIR_RECREATE_MODE
+    case "$DATADIR_RECREATE_MODE" in
+        "always")
+            return 0
+            ;;
+        "once")
+            if [ ! -f "$RECREATE_MARKER_FILE" ]; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+        "empty")
+            if is_datadir_empty; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+        "never")
+            if is_datadir_empty; then
+                return 0
+            else
+                return 1
+            fi
+            ;;
+        *)
+            echo -e "\e[31m [Entrypoint] Unknown DATADIR_RECREATE_MODE: ${DATADIR_RECREATE_MODE}\033[0m"
+            return 1
+            ;;
+    esac
+}
+
+# Function to check if recreation should happen (returns "yes" or "no")
+check_recreation_needed() {
+    if should_recreate_datadir; then
+        echo "yes"
+    else
+        echo "no"
+    fi
+}
+
+RECREATE_MARKER_FILE="/tmp/postgres_recreate_once.marker"
+SHOULD_RECREATE=0
+
+# Function to initialize the recreation decision
+init_recreation_decision() {
+    case "$DATADIR_RECREATE_MODE" in
+        "always")
+            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=always, will recreate datadir on every start\033[0m"
+            SHOULD_RECREATE=1
+            ;;
+
+        "once")
+            if [ ! -f "$RECREATE_MARKER_FILE" ]; then
+                echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=once, will recreate datadir (first time only)\033[0m"
+                SHOULD_RECREATE=1
+                touch "$RECREATE_MARKER_FILE"
+            else
+                echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=once already performed, skipping recreation\033[0m"
+            fi
+            ;;
+
+        "empty")
+            if is_datadir_empty; then
+                echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir is empty, will initialize\033[0m"
+                SHOULD_RECREATE=1
+            else
+                echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir has content, skipping recreation\033[0m"
+            fi
+            ;;
+
+        "never")
+            if is_datadir_empty; then
+                echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=never but datadir is empty, will initialize\033[0m"
+                SHOULD_RECREATE=1
+            else
+                echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=never, using existing datadir\033[0m"
+            fi
+            ;;
+
+        *)
+            echo -e "\e[31m [Entrypoint] Unknown DATADIR_RECREATE_MODE: ${DATADIR_RECREATE_MODE}\033[0m"
+            echo -e "\e[31m [Entrypoint] Valid values: never, once, always, empty\033[0m"
+            exit 1
+            ;;
+    esac
+    export SHOULD_RECREATE
+}
+
+
+wait_for_db() {
+    local max_attempts=30
+    local attempt=0
+
+    echo "Waiting for database_connection from ${REPLICATE_FROM} to be ready..."
+
+    while [ $attempt -lt $max_attempts ]; do
+        if pg_isready -p 5432 -U ${REPLICATION_USER} -h ${REPLICATE_FROM} >/dev/null 2>&1; then
+            echo "database_connection is ready!"
+            return 0
+        fi
+
+        sleep 5
+        attempt=$((attempt + 1))
+    done
+
+    echo "Timeout waiting for $database_connection to be ready"
+    return 1
+}
