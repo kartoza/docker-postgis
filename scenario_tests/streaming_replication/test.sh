@@ -16,8 +16,6 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-
-
 # Preparing master cluster
 wait_for_postgres "pg-master"
 
@@ -25,7 +23,6 @@ wait_for_postgres "pg-master"
 ${VERSION} exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-
 wait_for_postgres "pg-node"
 
 # Execute tests
@@ -36,23 +33,20 @@ ${VERSION} down -v
 ####
 # Run service as none root
 ####
+echo -e "\e[32m [Streaming Replication Test] Run service as none root \033[0m"
 ${VERSION} -f docker-compose-gs.yml up -d
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} -f docker-compose-gs.yml logs -f &
 fi
 
-
-
 # Preparing master cluster
-
 wait_for_postgres "pg-master" "docker-compose-gs.yml"
 
 # Execute tests
 ${VERSION} -f docker-compose-gs.yml exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-
 wait_for_postgres "pg-node" "docker-compose-gs.yml"
 
 # Execute tests
@@ -60,59 +54,47 @@ ${VERSION} -f docker-compose-gs.yml exec -T pg-node /bin/bash /tests/test_node.s
 
 ${VERSION} -f docker-compose-gs.yml down -v
 
+####
+# Run service as root user for node promotion
+####
+
+
+# Use override file instead of sed
+run_node_promotion(){
+  local compose_file=$1
+  local compose_override=$2
+
+  ${VERSION} -f "$compose_file"  up -d
+
+  if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+    ${VERSION} -f "$compose_file"  logs -f &
+  fi
+
+  # Bring up node with option to promote node
+  ${VERSION} -f "$compose_file" -f "$compose_override" up -d pg-node
+
+  # Preparing node cluster
+  wait_for_postgres "pg-node" "$compose_file"
+
+  # Execute tests
+  ${VERSION} -f "$compose_file" -f "$compose_override" exec -T pg-node /bin/bash /tests/test_node_promotion.sh
+
+  ${VERSION} -f "$compose_file" -f "$compose_override" down -v
+}
 
 ####
 # Run service as root user for node promotion
 ####
-${VERSION} -f docker-compose-root-promote.yml up -d
-
-if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  ${VERSION} -f docker-compose-root-promote.yml logs -f &
-fi
+echo -e "\e[32m [Streaming Replication Test] Run service as root user for node promotion \033[0m"
 
 
-
-# Update env variable
-sed -i 's/\(PROMOTE_MASTER: \)false/\1true/'  docker-compose-root-promote.yml
-
-# Bring up node with option to promote node
-
-${VERSION} -f docker-compose-root-promote.yml up -d pg-node
-
-# Preparing node cluster
-
-wait_for_postgres "pg-node" "docker-compose-root-promote.yml"
-
-# Execute tests
-${VERSION} -f docker-compose-root-promote.yml exec -T pg-node /bin/bash /tests/test_node_promotion.sh
-
-${VERSION} -f docker-compose-root-promote.yml down -v
-sed -i 's/\(PROMOTE_MASTER: \)true/\1false/'  docker-compose-root-promote.yml
+run_node_promotion "docker-compose-root-promote.yml" "docker-compose-root-promote-override.yml"
 
 ####
-# Run service as none root user for node promotion
+# Run service as root user for node promotion
 ####
-${VERSION} -f docker-compose-gs-promote.yml up -d
-
-if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  ${VERSION} -f docker-compose-gs-promote.yml logs -f &
-fi
+echo -e "\e[32m [Streaming Replication Test] Run service as none root user for node promotion \033[0m"
 
 
+run_node_promotion "docker-compose-gs-promote.yml" "docker-compose-gs-promote-override.yml"
 
-# Update env variable
-sed -i 's/\(PROMOTE_MASTER: \)false/\1true/'  docker-compose-gs-promote.yml
-
-# Bring up node with option to promote node
-
-${VERSION} -f docker-compose-gs-promote.yml up -d pg-node
-
-# Preparing node cluster
-
-wait_for_postgres "pg-node" "docker-compose-gs-promote.yml"
-
-# Execute tests
-${VERSION} -f docker-compose-gs-promote.yml exec -T pg-node /bin/bash /tests/test_node_promotion.sh
-
-${VERSION} -f docker-compose-gs-promote.yml down -v
-sed -i 's/\(PROMOTE_MASTER: \)true/\1false/'  docker-compose-gs-promote.yml

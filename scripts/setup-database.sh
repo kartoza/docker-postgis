@@ -15,50 +15,10 @@ elif [[ "${RECREATE_DATADIR}" =~ [Tt][Rr][Uu][Ee] ]]  || [[ "${RECREATE_DATADIR}
     DATADIR_RECREATE_MODE="once"
 fi
 
-# Track recreation state
-RECREATE_MARKER_FILE="/tmp/postgres_recreate_once.marker"
-SHOULD_RECREATE=0
+export DATADIR_RECREATE_MODE
 
-case "$DATADIR_RECREATE_MODE" in
-    "always")
-        echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=always, will recreate datadir on every start\033[0m"
-        SHOULD_RECREATE=1
-        ;;
-
-    "once")
-        if [ ! -f "$RECREATE_MARKER_FILE" ]; then
-            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=once, will recreate datadir (first time only)\033[0m"
-            SHOULD_RECREATE=1
-            touch "$RECREATE_MARKER_FILE"
-        else
-            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=once already performed, skipping recreation\033[0m"
-        fi
-        ;;
-
-    "empty")
-        if is_datadir_empty; then
-            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir is empty, will initialize\033[0m"
-            SHOULD_RECREATE=1
-        else
-            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=empty, datadir has content, skipping recreation\033[0m"
-        fi
-        ;;
-
-    "never")
-        if is_datadir_empty; then
-            echo -e "\e[33m [Entrypoint] DATADIR_RECREATE_MODE=never but datadir is empty, will initialize\033[0m"
-            SHOULD_RECREATE=1
-        else
-            echo -e "\e[32m [Entrypoint] DATADIR_RECREATE_MODE=never, using existing datadir\033[0m"
-        fi
-        ;;
-
-    *)
-        echo -e "\e[31m [Entrypoint] Unknown DATADIR_RECREATE_MODE: ${DATADIR_RECREATE_MODE}\033[0m"
-        echo -e "\e[31m [Entrypoint] Valid values: never, once, always, empty\033[0m"
-        exit 1
-        ;;
-esac
+# Initialize recreation decision
+init_recreation_decision
 
 # Main logic: recreate or use existing datadir
 if [[ $SHOULD_RECREATE -eq 1 ]]; then

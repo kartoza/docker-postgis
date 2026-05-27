@@ -20,6 +20,7 @@ services:
       REPLICATION_PASS: 'replicator'
       REPLICATION: 'true'
       RUN_AS_ROOT: true
+      DATADIR_RECREATE_MODE: 'once'
     healthcheck:
       interval: 60s
       timeout: 30s
