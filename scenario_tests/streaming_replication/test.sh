@@ -5,11 +5,7 @@ set -e
 
 source ../test-env.sh
 
-if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
-    VERSION='docker-compose'
-  else
-    VERSION='docker compose'
-fi
+determine_compose_version
 
 ####
 # Run service as root user
@@ -20,20 +16,14 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 30
-
 # Preparing master cluster
-until ${VERSION} exec -T pg-master pg_isready; do
-  sleep 30
-done;
+wait_for_postgres "pg-master"
 
 # Execute tests
 ${VERSION} exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-until ${VERSION} exec -T pg-node pg_isready; do
-  sleep 30
-done;
+wait_for_postgres "pg-node"
 
 # Execute tests
 ${VERSION} exec -T pg-node /bin/bash /tests/test_node.sh
@@ -43,88 +33,68 @@ ${VERSION} down -v
 ####
 # Run service as none root
 ####
+echo -e "\e[32m [Streaming Replication Test] Run service as none root \033[0m"
 ${VERSION} -f docker-compose-gs.yml up -d
 
 if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} -f docker-compose-gs.yml logs -f &
 fi
 
-sleep 30
-
 # Preparing master cluster
-until ${VERSION} -f docker-compose-gs.yml exec -T pg-master pg_isready; do
-  sleep 30
-done;
+wait_for_postgres "pg-master" "docker-compose-gs.yml"
 
 # Execute tests
 ${VERSION} -f docker-compose-gs.yml exec -T pg-master /bin/bash /tests/test_master.sh
 
 # Preparing node cluster
-until ${VERSION} -f docker-compose-gs.yml exec -T pg-node pg_isready; do
-  sleep 30
-done;
+wait_for_postgres "pg-node" "docker-compose-gs.yml"
 
 # Execute tests
 ${VERSION} -f docker-compose-gs.yml exec -T pg-node /bin/bash /tests/test_node.sh
 
 ${VERSION} -f docker-compose-gs.yml down -v
 
+####
+# Run service as root user for node promotion
+####
+
+
+# Use override file instead of sed
+run_node_promotion(){
+  local compose_file=$1
+  local compose_override=$2
+
+  ${VERSION} -f "$compose_file"  up -d
+
+  if [[ -n "${PRINT_TEST_LOGS}" ]]; then
+    ${VERSION} -f "$compose_file"  logs -f &
+  fi
+
+  # Bring up node with option to promote node
+  ${VERSION} -f "$compose_file" -f "$compose_override" up -d pg-node
+
+  # Preparing node cluster
+  wait_for_postgres "pg-node" "$compose_file"
+
+  # Execute tests
+  ${VERSION} -f "$compose_file" -f "$compose_override" exec -T pg-node /bin/bash /tests/test_node_promotion.sh
+
+  ${VERSION} -f "$compose_file" -f "$compose_override" down -v
+}
 
 ####
 # Run service as root user for node promotion
 ####
-${VERSION} -f docker-compose-root-promote.yml up -d
+echo -e "\e[32m [Streaming Replication Test] Run service as root user for node promotion \033[0m"
 
-if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  ${VERSION} -f docker-compose-root-promote.yml logs -f &
-fi
 
-sleep 30
-
-# Update env variable
-sed -i 's/\(PROMOTE_MASTER: \)false/\1true/'  docker-compose-root-promote.yml
-
-# Bring up node with option to promote node
-
-${VERSION} -f docker-compose-root-promote.yml up -d pg-node
-
-# Preparing node cluster
-until ${VERSION} -f docker-compose-root-promote.yml exec -T pg-node pg_isready; do
-  sleep 30
-done;
-
-# Execute tests
-${VERSION} -f docker-compose-root-promote.yml exec -T pg-node /bin/bash /tests/test_node_promotion.sh
-
-${VERSION} -f docker-compose-root-promote.yml down -v
-sed -i 's/\(PROMOTE_MASTER: \)true/\1false/'  docker-compose-root-promote.yml
+run_node_promotion "docker-compose-root-promote.yml" "docker-compose-root-promote-override.yml"
 
 ####
-# Run service as none root user for node promotion
+# Run service as root user for node promotion
 ####
-${VERSION} -f docker-compose-gs-promote.yml up -d
+echo -e "\e[32m [Streaming Replication Test] Run service as none root user for node promotion \033[0m"
 
-if [[ -n "${PRINT_TEST_LOGS}" ]]; then
-  ${VERSION} -f docker-compose-gs-promote.yml logs -f &
-fi
 
-sleep 30
-
-# Update env variable
-sed -i 's/\(PROMOTE_MASTER: \)false/\1true/'  docker-compose-gs-promote.yml
-
-# Bring up node with option to promote node
-
-${VERSION} -f docker-compose-gs-promote.yml up -d pg-node
-
-# Preparing node cluster
-until ${VERSION} -f docker-compose-gs-promote.yml exec -T pg-node pg_isready; do
-  sleep 30
-done;
-
-# Execute tests
-${VERSION} -f docker-compose-gs-promote.yml exec -T pg-node /bin/bash /tests/test_node_promotion.sh
-
-${VERSION} -f docker-compose-gs-promote.yml down -v
-sed -i 's/\(PROMOTE_MASTER: \)true/\1false/'  docker-compose-gs-promote.yml
+run_node_promotion "docker-compose-gs-promote.yml" "docker-compose-gs-promote-override.yml"
 

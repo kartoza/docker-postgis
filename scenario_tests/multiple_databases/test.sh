@@ -4,12 +4,9 @@
 set -e
 
 source ../test-env.sh
-if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
-    VERSION='docker-compose'
-  else
-    VERSION='docker compose'
-fi
 
+
+determine_compose_version
 
 # Run service as root
 ${VERSION} up -d pg-database
@@ -18,12 +15,11 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 30
+
 
 # Preparing all databases and all schemas
-until ${VERSION} exec -T pg-database pg_isready; do
-  sleep 1
-done;
+
+wait_for_postgres "pg-database"
 
 # Execute tests
 ${VERSION} exec -T pg-database /bin/bash /tests/test_schemas.sh
@@ -39,12 +35,11 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 30
+
 
 # Preparing all databases and single schema
-until ${VERSION} exec -T pg-schema pg_isready; do
-  sleep 1
-done;
+
+wait_for_postgres "pg-schema"
 
 # Execute tests
 ${VERSION} exec -T pg-schema /bin/bash /tests/test_schemas.sh
@@ -60,12 +55,11 @@ if [[ -n "${PRINT_TEST_LOGS}" ]]; then
   ${VERSION} logs -f &
 fi
 
-sleep 30
+
 
 # Preparing all databases and single schema
-until ${VERSION} exec -T pg-single-db pg_isready; do
-  sleep 1
-done;
+
+wait_for_postgres "pg-single-db"
 
 # Execute tests
 ${VERSION} exec -T pg-single-db /bin/bash /tests/test_schemas.sh

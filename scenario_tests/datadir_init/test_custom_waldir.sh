@@ -5,11 +5,7 @@ set -e
 
 source ../test-env.sh
 
-if [[ $(dpkg -l | grep "docker-compose") > /dev/null ]];then
-    VERSION='docker-compose'
-  else
-    VERSION='docker compose'
-fi
+determine_compose_version
 
 # This test is special
 # It is used to check the meta level of the setup.
@@ -25,19 +21,15 @@ echo "### Checking Container Recreation"
 ${VERSION} down
 ${VERSION} up -d pg-local pg-default pg-new pg-recreate
 
-sleep 60
 
 services=("pg-local" "pg-default" "pg-new" "pg-recreate")
 
 for service in "${services[@]}"; do
 
     # Execute tests
-    until ${VERSION} exec -T $service pg_isready; do
-        sleep 5
-        echo "Wait service to be ready"
-    done;
+    wait_for_postgres $service
     echo "Execute test for $service"
-    ${VERSION} exec -T $service /bin/bash /tests/test.sh
+    run_tests "$service"
 
 done
 
@@ -66,13 +58,9 @@ service="pg-custom-waldir-correct"
 for ((i=1;i<=2;i++)); do
     echo "attempt $i"
     ${VERSION} up -d $service
-    sleep 60
-    until ${VERSION} exec -T $service pg_isready; do
-        sleep 5
-        echo "Wait service to be ready"
-    done;
+    wait_for_postgres $service
     echo "Execute test for $service"
-    ${VERSION} exec -T $service /bin/bash /tests/test.sh
+    run_tests "$service"
     ${VERSION} down
 done
 
@@ -90,12 +78,9 @@ while true; do
     fi
     sleep 5
 done;
-until ${VERSION} exec -T $service pg_isready; do
-    sleep 5
-    echo "Wait service to be ready"
-done;
+wait_for_postgres $service
 echo "Execute test for $service"
-${VERSION} exec -T $service /bin/bash /tests/test.sh
+run_tests "$service"
 ${VERSION} down
 
 # Check that if the pg_wal is empty, then something is wrong and we should exit

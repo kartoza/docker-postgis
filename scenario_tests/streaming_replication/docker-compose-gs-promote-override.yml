@@ -1,0 +1,5 @@
+services:
+  pg-node:
+    environment:
+      PROMOTE_MASTER: true
+      DATADIR_RECREATE_MODE: once
