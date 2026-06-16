@@ -10,77 +10,8 @@ on:
       - completed
 
 jobs:
-  build-local_image:
-    runs-on: ubuntu-latest
-    if: |
-      github.actor != 'dependabot[bot]' &&
-      !(
-        contains(github.event.pull_request.title, '[skip-release]') ||
-        contains(github.event.comment.body, '/skiprelease')
-      ) &&
-      github.event.workflow_run.conclusion == 'success'
-    env:
-      latest-ref: refs/heads/develop
-    strategy:
-      matrix:
-        postgresMajorVersion:
-          - 18
-        postgisMajorVersion:
-          - 3
-        postgisMinorRelease:
-          - 6
-        imageVersion:
-          - imageDistro: debian
-            imageDistroVersion: trixie
-            imageDistroVariant: slim
-
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      - name: Base image hash
-        id: base_image_digest
-        shell: bash
-        run: |
-          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
-          docker pull ${BUILD_IMAGE}
-          IMAGE_DIGEST=$(docker inspect \
-            --format='{{index .RepoDigests 0}}' \
-            ${BUILD_IMAGE})
-          echo "${IMAGE_DIGEST}"
-          echo "base_image_sha=${IMAGE_DIGEST}" >> $GITHUB_OUTPUT
-      - name: Build prod local run image
-        id: docker_build_local_run
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          file: Dockerfile
-          push: false
-          tags: kartoza/postgis:prod-build
-          outputs: type=docker,dest=/tmp/postgis.tar
-          build-args: |
-            DISTRO=${{ matrix.imageVersion.imageDistro }}
-            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
-            BUILD_PG_DUCKDB=false
-            BUILD_IMAGE_SHA: ${{ steps.base_image_digest.outputs.base_image_sha }}
-          cache-from: |
-            type=gha,scope=prod
-          target: postgis-prod
-      - name: Upload artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: kartoza-postgis
-          path: /tmp/postgis.tar
-
   deploy-production-images:
     runs-on: ubuntu-latest
-    needs: [build-local_image]
     timeout-minutes: 240
     if: |
       (github.event_name != 'pull_request' || github.event.pull_request.user.login != 'dependabot[bot]') &&
@@ -91,12 +22,6 @@ jobs:
       )
     strategy:
       matrix:
-        postgresMajorVersion:
-          - 18
-        postgisMajorVersion:
-          - 3
-        postgisMinorRelease:
-          - 6
         postgisPatchMajorVersionBugs:
           - no
         imageVersion:
@@ -104,178 +29,147 @@ jobs:
             imageDistroVersion: trixie
             imageDistroVariant: slim
 
-    steps:
-      - uses: actions/checkout@v6
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-      - name: Login to DockerHub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-      - name: Download artifact
-        uses: actions/download-artifact@v8
-        with:
-          name: kartoza-postgis
-          path: /tmp
-      - name: Load image
-        run: |
-          docker load --input /tmp/postgis.tar
+        steps:
+        - uses: actions/checkout@v6
+        - name: Set up QEMU
+          uses: docker/setup-qemu-action@v4
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v4
+        - name: Login to DockerHub
+          uses: docker/login-action@v4
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Get production versions
-        id: pg_prod_versions
-        run: |
-          CONTAINER_NAME=postgis-version-check-prod
-          IMAGE_VERSION_TAG=${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}
-          
-          docker run -d \
-            --name ${CONTAINER_NAME} \
-            kartoza/postgis:${IMAGE_VERSION_TAG} 
-          
-          PG_VER_PROD=$(docker exec ${CONTAINER_NAME} bash -c \
-            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }} \
-            | awk '/Candidate:/ {print \$2}' \
-            | sed 's/-.*//'")
-          
-          GIS_VER_PROD=$(docker exec ${CONTAINER_NAME} bash -c \
-            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }}-postgis-${{ matrix.postgisMajorVersion }} \
-            | awk '/Candidate:/ {print \$2}' \
-            | sed 's/+.*//' \
-            | sed 's/-.*//'")
-          
-          docker stop ${CONTAINER_NAME}
-          docker rm ${CONTAINER_NAME}
-          
-          echo "PG_VER_PROD=${PG_VER_PROD}" >> $GITHUB_OUTPUT
-          echo "GIS_VER_PROD=${GIS_VER_PROD}" >> $GITHUB_OUTPUT
+        - name: Check latest PostGIS/PostgreSQL version
+          id: check_latest_postgis_vesion
+          shell: bash
+          run: |
+            BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+            docker run --rm \
+              -v "$PWD/.github/workflows/scripts:/scripts" \
+              -v "$GITHUB_OUTPUT:/github_output/github_output.txt" \
+              ${BUILD_IMAGE} \
+              sh /scripts/get_postgis_version.sh
 
-      - name: Get image versions
-        id: pg_image_versions
-        run: |
-          CONTAINER_NAME=postgis-version-check
+        - name: Read published image metadata
+          id: read_published_image_metadata
+          shell: bash
+          run: |
+            set -euo pipefail
+            docker pull kartoza/postgis:latest
+            CONTAINER_ID=$(docker create kartoza/postgis:latest)
+            docker cp "${CONTAINER_ID}:/etc/kartoza/build_info.env" ./build_info.env
+            docker rm "${CONTAINER_ID}"
+            VERSION_INFO=$(cat ./build_info.env)
+            echo "$VERSION_INFO"
+            GIS_VER_PROD=$(echo "$VERSION_INFO" | grep '^GIS_VER_PROD=' | cut -d= -f2)
+            PG_VER_PROD=$(echo "$VERSION_INFO" | grep '^PG_VER_PROD=' | cut -d= -f2)
+            BASE_IMAGE_SHA=$(echo "$VERSION_INFO" | grep '^BASE_IMAGE_DIGEST_SHA=' | cut -d= -f2)
+            echo "PUBLISHED_GIS_VER=$GIS_VER_PROD" >> "$GITHUB_OUTPUT"
+            echo "PUBLISHED_PG_VER=$PG_VER_PROD" >> "$GITHUB_OUTPUT"
+            echo "LATEST_BASE_IMAGE_SHA=$BASE_IMAGE_SHA" >> "$GITHUB_OUTPUT"
 
-          docker run -d \
-            --name ${CONTAINER_NAME} \
-            kartoza/postgis:prod-build 
+        - name: Compare versions
+          id: version_comparisons
+          run: |
+            PG_VER_CURRENT=${{ steps.read_published_image_metadata.outputs.PUBLISHED_PG_VER }}
+            PG_VER_LATEST=${{ steps.check_latest_postgis_vesion.outputs.PG_VER_PROD }}
+            GIS_VER_CURRENT=${{ steps.read_published_image_metadata.outputs.PUBLISHED_GIS_VER }}
+            GIS_VER_LATEST=${{ steps.check_latest_postgis_vesion.outputs.GIS_VER_PROD }}
+            if [[ "$PG_VER_LATEST" > "$PG_VER_CURRENT" ]] || [[ "$GIS_VER_LATEST" > "$GIS_VER_CURRENT" ]]; then
+              echo "TAG_PRODUCTION_IMAGE=TRUE" >> $GITHUB_OUTPUT
+            else
+              echo "TAG_PRODUCTION_IMAGE=FALSE" >> $GITHUB_OUTPUT
+            fi
 
-          PG_VER=$(docker exec ${CONTAINER_NAME} bash -c \
-            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }} \
-            | awk '/Candidate:/ {print \$2}' \
-            | sed 's/-.*//'")
+        - name: Check if generic image tag exists
+          id: check_generic_tag
+          run: |
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://hub.docker.com/v2/repositories/kartoza/postgis/tags/${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}-${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}.${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}/)
+            echo "check_generic_image=${STATUS}" >> $GITHUB_OUTPUT
 
-          GIS_VER=$(docker exec ${CONTAINER_NAME} bash -c \
-            "apt-cache policy postgresql-${{ matrix.postgresMajorVersion }}-postgis-${{ matrix.postgisMajorVersion }} \
-            | awk '/Candidate:/ {print \$2}' \
-            | sed 's/+.*//' \
-            | sed 's/-.*//'")
+        - name: Check if exact image tag exists
+          id: check_exact_tag
+          run: |
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://hub.docker.com/v2/repositories/kartoza/postgis/tags/${{ steps.check_latest_postgis_vesion.outputs.PG_VER_PROD }}-${{ steps.check_latest_postgis_vesion.outputs.GIS_VER_PROD }}/)
+            echo "check_exact_image=${STATUS}" >> $GITHUB_OUTPUT
 
-          docker stop ${CONTAINER_NAME}
-          docker rm ${CONTAINER_NAME}
+        - name: Get Current Date
+          id: current_date
+          run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
 
-          echo "PG_VER=${PG_VER}" >> $GITHUB_OUTPUT
-          echo "GIS_VER=${GIS_VER}" >> $GITHUB_OUTPUT
+        - name: Base image hash
+          id: base_image_digest
+          shell: bash
+          run: |
+            BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+            docker pull ${BUILD_IMAGE}
+            IMAGE_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${BUILD_IMAGE})
+            echo "${IMAGE_DIGEST}"
+            echo "base_image_sha=${IMAGE_DIGEST}" >> $GITHUB_OUTPUT
 
-      - name: Compare versions
-        id: version_comparisons
-        run: |
-          PG_VER=${{ steps.pg_image_versions.outputs.PG_VER }}
-          PG_VER_PROD=${{ steps.pg_prod_versions.outputs.PG_VER_PROD }}
-          GIS_VER=${{ steps.pg_image_versions.outputs.GIS_VER }}
-          GIS_VER_PROD=${{ steps.pg_prod_versions.outputs.GIS_VER_PROD }}
+        - name: Build prod image
+          id: docker_build_prod
+          uses: docker/build-push-action@v7
+          with:
+            context: .
+            platforms: linux/amd64,linux/arm64
+            file: Dockerfile
+            push: true
+            tags: |
+              ${{ secrets.DOCKERHUB_REPO }}/postgis
+              ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}-${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}.${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}
+              ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.check_latest_postgis_vesion.outputs.PG_VER_PROD }}-${{ steps.check_latest_postgis_vesion.outputs.GIS_VER_PROD }}
+              ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}-${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}.${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}--v${{ steps.current_date.outputs.formatted }}
+              ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.check_latest_postgis_vesion.outputs.PG_VER_PROD }}-${{ steps.check_latest_postgis_vesion.outputs.GIS_VER_PROD }}--v${{ steps.current_date.outputs.formatted }}
+            build-args: |
+              DISTRO=${{ matrix.imageVersion.imageDistro }}
+              IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
+              IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
+              POSTGRES_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}
+              POSTGIS_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}
+              POSTGIS_MINOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}
+              BUILD_PG_DUCKDB=false
+              BUILD_IMAGE_SHA=${{ steps.base_image_digest.outputs.base_image_sha }}
+            cache-from: |
+              type=gha,scope=prod
+            target: postgis-prod
 
-          if [[ "$PG_VER" > "$PG_VER_PROD" ]] || [[ "$GIS_VER" > "$GIS_VER_PROD" ]]; then
-            echo "TAG_PRODUCTION_IMAGE=TRUE" >> $GITHUB_OUTPUT
-          else
-            echo "TAG_PRODUCTION_IMAGE=FALSE" >> $GITHUB_OUTPUT
-          fi
-      - name: Check if generic image tag exists
-        id: check_generic_tag
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          https://hub.docker.com/v2/repositories/kartoza/postgis/tags/${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}/)
-          echo "check_generic_image=${STATUS}" >> $GITHUB_OUTPUT
-      - name: Check if exact image tag exists
-        id: check_exact_tag
-        run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-          https://hub.docker.com/v2/repositories/kartoza/postgis/tags/${{ steps.pg_image_versions.outputs.PG_VER }}-${{ steps.pg_image_versions.outputs.GIS_VER }}/)
-          echo "check_exact_image=${STATUS}" >> $GITHUB_OUTPUT
-      - name: Get Current Date
-        id: current_date
-        run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
-      - name: Base image hash
-        id: base_image_digest
-        shell: bash
-        run: |
-          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
-          docker pull ${BUILD_IMAGE}
-          IMAGE_DIGEST=$(docker inspect \
-            --format='{{index .RepoDigests 0}}' \
-            ${BUILD_IMAGE})
-          echo "${IMAGE_DIGEST}"
-          echo "base_image_sha=${IMAGE_DIGEST}" >> $GITHUB_OUTPUT
-      - name: Build prod image
-        id: docker_build_prod
-        uses: docker/build-push-action@v7
-        with:
-          context: .
-          platforms: linux/amd64,linux/arm64
-          file: Dockerfile
-          push: true
-          tags: |
-            ${{ secrets.DOCKERHUB_REPO }}/postgis
-            ${{ (steps.check_generic_tag.outputs.check_generic_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes' || steps.version_comparisons.outputs.TAG_PRODUCTION_IMAGE  == 'TRUE' ) && format('{0}/postgis:{1}-{2}.{3}', secrets.DOCKERHUB_REPO, matrix.postgresMajorVersion, matrix.postgisMajorVersion, matrix.postgisMinorRelease) || null }}
-            ${{ (steps.check_exact_tag.outputs.check_exact_image == '404' || matrix.postgisPatchMajorVersionBugs == 'yes') && format('{0}/postgis:{1}-{2}', secrets.DOCKERHUB_REPO, steps.pg_image_versions.outputs.PG_VER, steps.pg_image_versions.outputs.GIS_VER) || null }}
-            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}
-            ${{ secrets.DOCKERHUB_REPO }}/postgis:${{ steps.pg_image_versions.outputs.PG_VER }}-${{ steps.pg_image_versions.outputs.GIS_VER }}--v${{ steps.current_date.outputs.formatted }}
-          build-args: |
-            DISTRO=${{ matrix.imageVersion.imageDistro }}
-            IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
-            IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
-            BUILD_PG_DUCKDB=false
-            BUILD_IMAGE_SHA: ${{ steps.base_image_digest.outputs.base_image_sha }}
-          cache-from: |
-            type=gha,scope=prod
-          target: postgis-prod
+      publish_release_artifacts:
+      runs-on: ubuntu-latest
+      timeout-minutes: 15
+      if: |
+        github.actor != 'dependabot[bot]' &&
+        !(
+          contains(github.event.pull_request.title, '[skip-release]') ||
+          contains(github.event.comment.body, '/skiprelease')
+        ) && github.event.workflow_run.conclusion == 'success'
+      needs: [ deploy-production-images ]
+      steps:
+        - name: Checkout code
+          id: git_checkout
+          uses: actions/checkout@v6
+          with:
+            ref: 'develop'
 
-  publish_release_artifacts:
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    if: |
-      github.actor != 'dependabot[bot]' &&
-      !(
-        contains(github.event.pull_request.title, '[skip-release]') ||
-        contains(github.event.comment.body, '/skiprelease')
-      ) &&  github.event.workflow_run.conclusion == 'success'
-    needs: [deploy-production-images]
-    strategy:
-      matrix:
-        postgresMajorVersion:
-          - 18
-        postgisMajorVersion:
-          - 3
-        postgisMinorRelease:
-          - 6
-    steps:
-      - name: Checkout code
-        id: git_checkout
-        uses: actions/checkout@v6
-        with:
-          ref: 'develop'
-      - name: Get Current Date
-        id: current_date
-        run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
-      - name: Get Latest Commit Hash
-        id: latest_commit_hash
-        run: echo "commit=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_OUTPUT
-      - name: publish_release
-        id: tag_releases
-        run: |
-          gh release create v${{ matrix.postgresMajorVersion }}-${{ matrix.postgisMajorVersion }}.${{ matrix.postgisMinorRelease }}--v${{ steps.current_date.outputs.formatted }}--${{ steps.latest_commit_hash.outputs.commit }} --notes ${{ steps.latest_commit_hash.outputs.commit }} --target develop --repo $GITHUB_REPOSITORY
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        - name: Get Current Date
+          id: current_date
+          run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
+
+        - name: Get Latest Commit Hash
+          id: latest_commit_hash
+          run: echo "commit=$(git rev-parse --short "$GITHUB_SHA")" >> $GITHUB_OUTPUT
+
+        - name: publish_release
+          id: tag_releases
+          run: |
+            gh release create \
+              v${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}-${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}.${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}--v${{ steps.current_date.outputs.formatted }}--${{ steps.latest_commit_hash.outputs.commit }} \
+              --notes ${{ steps.latest_commit_hash.outputs.commit }} \
+              --target develop \
+              --repo $GITHUB_REPOSITORY
+          env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
