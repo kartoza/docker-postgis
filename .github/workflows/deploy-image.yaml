@@ -40,6 +40,17 @@ jobs:
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+      - name: Base image hash
+        id: base_image_digest
+        shell: bash
+        run: |
+          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+          docker pull ${BUILD_IMAGE}
+          IMAGE_DIGEST=$(docker inspect \
+            --format='{{index .RepoDigests 0}}' \
+            ${BUILD_IMAGE})
+          echo "${IMAGE_DIGEST}"
+          echo "base_image_sha=${IMAGE_DIGEST}" >> $GITHUB_OUTPUT
       - name: Build prod local run image
         id: docker_build_local_run
         uses: docker/build-push-action@v7
@@ -57,6 +68,7 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
             BUILD_PG_DUCKDB=false
+            BUILD_IMAGE_SHA: ${{ steps.base_image_digest.outputs.base_image_sha }}
           cache-from: |
             type=gha,scope=prod
           target: postgis-prod
@@ -193,6 +205,17 @@ jobs:
       - name: Get Current Date
         id: current_date
         run: echo "formatted=$(date -u +%Y.%m.%d)" >> $GITHUB_OUTPUT
+      - name: Base image hash
+        id: base_image_digest
+        shell: bash
+        run: |
+          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+          docker pull ${BUILD_IMAGE}
+          IMAGE_DIGEST=$(docker inspect \
+            --format='{{index .RepoDigests 0}}' \
+            ${BUILD_IMAGE})
+          echo "${IMAGE_DIGEST}"
+          echo "base_image_sha=${IMAGE_DIGEST}" >> $GITHUB_OUTPUT
       - name: Build prod image
         id: docker_build_prod
         uses: docker/build-push-action@v7
@@ -215,6 +238,7 @@ jobs:
             POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
             POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
             BUILD_PG_DUCKDB=false
+            BUILD_IMAGE_SHA: ${{ steps.base_image_digest.outputs.base_image_sha }}
           cache-from: |
             type=gha,scope=prod
           target: postgis-prod
