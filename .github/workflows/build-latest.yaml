@@ -29,12 +29,6 @@ jobs:
       )
     strategy:
       matrix:
-        postgresMajorVersion:
-          - 18
-        postgisMajorVersion:
-          - 3
-        postgisMinorRelease:
-          - 6
         imageVersion:
           - imageDistro: debian
             imageDistroVersion: trixie
@@ -45,6 +39,16 @@ jobs:
         uses: docker/setup-qemu-action@v4
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+      - name: Check latest PostGIS/PostgreSQL version
+        id: check_latest_postgis_vesion
+        shell: bash
+        run: |
+          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+          docker run --rm \
+            -v "$PWD/.github/workflows/scripts:/scripts" \
+            -v "$GITHUB_OUTPUT:/github_output/github_output.txt" \
+            ${BUILD_IMAGE} \
+            sh /scripts/get_postgis_version.sh
       - name: Build image for testing
         id: docker_build_testing_image
         uses: docker/build-push-action@v7
@@ -59,9 +63,9 @@ jobs:
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
             IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            POSTGRES_MAJOR_VERSION=${{ matrix.postgresMajorVersion }}
-            POSTGIS_MAJOR_VERSION=${{ matrix.postgisMajorVersion }}
-            POSTGIS_MINOR_VERSION=${{ matrix.postgisMinorRelease }}
+            POSTGRES_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}
+            POSTGIS_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}
+            POSTGIS_MINOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}
             BUILD_PG_DUCKDB=false
           cache-from: |
             type=gha,scope=test
