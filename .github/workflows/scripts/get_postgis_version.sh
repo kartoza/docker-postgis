@@ -62,9 +62,9 @@ printf '%s\n' \
     "PG_VER_PROD=${PG_VER_PROD}" \
     "GIS_VER_PROD=${GIS_VER_PROD}" \
     "BASE_IMAGE_DIGEST_SHA=${BASE_IMAGE_SHA}" \
-    > /tmp/github_output.txt
+    > /github_output/github_output.txt
 
-cat /tmp/github_output.txt
+cat /github_output/github_output.txt
 echo "Script finished OK"
 
 
