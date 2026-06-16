@@ -9,7 +9,9 @@ apt-get update
 apt-get install -y --no-install-recommends \
     ca-certificates \
     curl \
-    gnupg
+    gnupg \
+    jq
+
 
 install -d /usr/share/postgresql-common/pgdg
 
