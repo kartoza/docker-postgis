@@ -51,9 +51,9 @@ ARG POSTGRES_MAJOR_VERSION=18
 ARG POSTGIS_MAJOR_VERSION=3
 ARG POSTGIS_MINOR_RELEASE=6
 # https://packagecloud.io/timescale/timescaledb
-ARG TIMESCALE_VERSION=2-2.11.2
 ARG BUILD_TIMESCALE=false
 ARG BUILD_PG_DUCKDB=false
+ARG BUILD_IMAGE_SHA=''
 
 
 RUN set -eux \
@@ -90,16 +90,32 @@ RUN set -eux \
 
 RUN if [ "$(echo "${BUILD_TIMESCALE}" | tr '[:upper:]' '[:lower:]')" = "true" ]; then \
         export DEBIAN_FRONTEND=noninteractive && \
-        sh -c "echo \"deb [signed-by=/usr/share/keyrings/timescale.keyring] https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main\" > /etc/apt/sources.list.d/timescaledb.list" && \
-        wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey |  gpg --dearmor -o /usr/share/keyrings/timescale.keyring && \
+        echo "deb https://packagecloud.io/timescale/timescaledb/debian/ ${IMAGE_VERSION} main" |  tee /etc/apt/sources.list.d/timescaledb.list && \
+        wget --quiet -O - https://packagecloud.io/timescale/timescaledb/gpgkey | gpg --dearmor -o /etc/apt/trusted.gpg.d/timescaledb.gpg && \
         apt-get update && \
-        apt-get -y --no-install-recommends install timescaledb-${TIMESCALE_VERSION}-postgresql-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
+        apt-get -y --no-install-recommends install timescaledb-2-postgresql-${POSTGRES_MAJOR_VERSION} postgresql-client-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
     fi;
 
 RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
      echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
+
+
+
+RUN mkdir -p /etc/kartoza && \
+    PG_VER_PROD=$(apt-cache policy postgresql-${POSTGRES_MAJOR_VERSION} \
+      | awk '/Candidate:/ {print $2}' | sed 's/-.*//') && \
+    GIS_VER_PROD=$(apt-cache policy postgresql-${POSTGRES_MAJOR_VERSION}-postgis-${POSTGIS_MAJOR_VERSION} \
+      | awk '/Candidate:/ {print $2}' | sed 's/+.*//' | sed 's/-.*//') && \
+    printf '%s\n' \
+      "POSTGRES_MAJOR_VERSION=${POSTGRES_MAJOR_VERSION}" \
+      "POSTGIS_MAJOR_VERSION=${POSTGIS_MAJOR_VERSION}" \
+      "POSTGIS_MINOR_RELEASE=${POSTGIS_MINOR_RELEASE}" \
+      "PG_VER_PROD=${PG_VER_PROD}" \
+      "GIS_VER_PROD=${GIS_VER_PROD}" \
+      "BASE_IMAGE_DIGEST_SHA=${BUILD_IMAGE_SHA}" \
+      > /etc/kartoza/build_info.env
 
 
 # Cleanup resources
