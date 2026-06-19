@@ -53,6 +53,9 @@ jobs:
           BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
           docker run --rm \
             -e GITHUB_OUTPUT=/github_output/github_output.txt \
+            -e IMAGE_DISTRO="${{ matrix.imageVersion.imageDistro }}" \
+            -e IMAGE_VERSION="${{ matrix.imageVersion.imageDistroVersion }}" \
+            -e IMAGE_VARIANT="${{ matrix.imageVersion.imageDistroVariant }}" \
             -v "$PWD/.github/workflows/scripts:/scripts" \
             -v "$GITHUB_OUTPUT:/github_output/github_output.txt" \
             ${BUILD_IMAGE} \

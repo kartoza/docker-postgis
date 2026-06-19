@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#TODO change distro when it's updated
-DISTRO=trixie
-IMAGE_VERSION=trixie
-IMAGE_VARIANT=slim
+
+DISTRO=${IMAGE_DISTRO}
+IMAGE_VERSION=${IMAGE_VERSION}
+IMAGE_VARIANT=${IMAGE_VARIANT}
 apt-get update
 apt-get install -y --no-install-recommends \
     ca-certificates \
