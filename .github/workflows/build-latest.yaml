@@ -67,9 +67,9 @@ jobs:
             DISTRO=${{ matrix.imageVersion.imageDistro }}
             IMAGE_VERSION=${{ matrix.imageVersion.imageDistroVersion }}
             IMAGE_VARIANT=${{ matrix.imageVersion.imageDistroVariant }}
-            POSTGRES_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGRES_MAJOR_VERSION }}
-            POSTGIS_MAJOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MAJOR_VERSION }}
-            POSTGIS_MINOR_VERSION=${{ steps.check_latest_postgis_vesion.outputs.POSTGIS_MINOR_RELEASE }}
+            POSTGRES_MAJOR_VERSION=${{ steps.check_latest_postgis_version.outputs.POSTGRES_MAJOR_VERSION }}
+            POSTGIS_MAJOR_VERSION=${{ steps.check_latest_postgis_version.outputs.POSTGIS_MAJOR_VERSION }}
+            POSTGIS_MINOR_VERSION=${{ steps.check_latest_postgis_version.outputs.POSTGIS_MINOR_RELEASE }}
             BUILD_PG_DUCKDB=false
           cache-from: |
             type=gha,scope=test
