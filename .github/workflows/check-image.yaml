@@ -1,0 +1,125 @@
+name: weekly-image-updates
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0'
+
+
+
+jobs:
+  update-postgis-image-weekly:
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    strategy:
+      matrix:
+        imageVersion:
+          - imageDistro: debian
+            imageDistroVersion: trixie
+            imageDistroVariant: slim
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+
+
+      - name: Check latest PostGIS/PostgreSQL version
+        id: check_latest_postgis_version
+        shell: bash
+        run: |
+          BUILD_IMAGE="${{ matrix.imageVersion.imageDistro }}:${{ matrix.imageVersion.imageDistroVersion }}-${{ matrix.imageVersion.imageDistroVariant }}"
+          docker run --rm \
+            -e GITHUB_OUTPUT=/github_output/github_output.txt \
+            -v "$PWD/.github/workflows/scripts:/scripts" \
+            -v "$GITHUB_OUTPUT:/github_output/github_output.txt" \
+            ${BUILD_IMAGE} \
+            bash /scripts/get_postgis_version.sh
+
+      
+    
+
+      - name: Read published image metadata
+        id: read_published_image_metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker pull kartoza/postgis:latest
+          CONTAINER_ID=$(docker create kartoza/postgis:latest)
+          docker cp "${CONTAINER_ID}:/etc/kartoza/build_info.env" ./build_info.env
+          docker rm "${CONTAINER_ID}"
+
+          VERSION_INFO=$(cat ./build_info.env)
+          echo "$VERSION_INFO"
+
+          GIS_VER_PROD=$(echo "$VERSION_INFO" | grep '^GIS_VER_PROD=' | cut -d= -f2)
+          PG_VER_PROD=$(echo "$VERSION_INFO" | grep '^PG_VER_PROD=' | cut -d= -f2)
+          BASE_IMAGE_SHA=$(echo "$VERSION_INFO" | grep '^BASE_IMAGE_DIGEST_SHA=' | cut -d= -f2)
+
+          echo "PUBLISHED_GIS_VER=$GIS_VER_PROD" >> "$GITHUB_OUTPUT"
+          echo "PUBLISHED_PG_VER=$PG_VER_PROD" >> "$GITHUB_OUTPUT"
+          echo "LATEST_BASE_IMAGE_SHA=$BASE_IMAGE_SHA" >> "$GITHUB_OUTPUT"
+
+      - name: Determine if rebuild is needed
+        id: rebuild_check
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          NEEDS_BUILD=false
+
+          LATEST_GIS_VER="${{ steps.check_latest_postgis_version.outputs.GIS_VER_PROD }}"
+          PUBLISHED_GIS_VER="${{ steps.read_published_image_metadata.outputs.PUBLISHED_GIS_VER }}"
+          
+          LATEST_PG_VER="${{ steps.check_latest_postgis_version.outputs.PG_VER_PROD }}"
+          PUBLISHED_PG_VER="${{ steps.read_published_image_metadata.outputs.PUBLISHED_PG_VER }}"
+
+          
+          
+          PUBLISHED_BASE_IMAGE_DIGEST="${{ steps.read_published_image_metadata.outputs.BASE_IMAGE_SHA }}"
+          DOCKERHUB_BASE_IMAGE_DIGEST="${{ steps.check_latest_postgis_version.outputs.BASE_IMAGE_DIGEST_SHA }}"
+          
+
+          echo "Published PostGIS Version: $PUBLISHED_GIS_VER"
+          echo "Latest PostGIS:    $LATEST_GIS_VER"
+
+          echo "Published PostgreSQL:    $PUBLISHED_PG_VER"
+          echo "Latest PostgreSQL:       $LATEST_PG_VER"
+          
+          echo "Published BASE Debain Image Digest:    $PUBLISHED_BASE_IMAGE_DIGEST"
+          echo "Latest DOCKERHUB BASE Debain Image Digest:       $DOCKERHUB_BASE_IMAGE_DIGEST"
+
+          if [ "$PUBLISHED_GIS_VER" != "$LATEST_GIS_VER" ]; then
+            echo "PostgreSQL version changed"
+            NEEDS_BUILD=true
+          fi
+
+          if [ "$PUBLISHED_PG_VER" != "$LATEST_PG_VER" ]; then
+            echo "PostGIS version changed"
+            NEEDS_BUILD=true
+          fi
+          
+          if [ "$PUBLISHED_BASE_IMAGE_DIGEST" != "$DOCKERHUB_BASE_IMAGE_DIGEST" ]; then
+            echo "Base Image Sha version changed"
+            NEEDS_BUILD=true
+          fi
+
+          echo "needs_build=$NEEDS_BUILD" >> "$GITHUB_OUTPUT"
+
+      - name: Trigger build-latest workflow
+        if: steps.rebuild_check.outputs.needs_build == 'true'
+        uses: actions/github-script@v9
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-latest.yaml',
+              ref: 'develop'
+            })
