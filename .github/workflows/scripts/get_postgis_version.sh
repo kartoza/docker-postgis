@@ -19,7 +19,7 @@ curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     > /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg
 
 echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] \
-https://apt.postgresql.org/pub/repos/apt ${IMAGE_DISTRO}-pgdg main" \
+https://apt.postgresql.org/pub/repos/apt ${IMAGE_VERSION}-pgdg main" \
     > /etc/apt/sources.list.d/pgdg.list
 
 apt-get -qq update
