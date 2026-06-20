@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-#TODO change distro when it's updated
-DISTRO=trixie
-IMAGE_VERSION=trixie
-IMAGE_VARIANT=slim
+
+echo ${IMAGE_DISTRO} ${IMAGE_VERSION} ${IMAGE_VARIANT}
+
 apt-get update
 apt-get install -y --no-install-recommends \
     ca-certificates \
@@ -20,7 +19,7 @@ curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
     > /usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg
 
 echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.gpg] \
-https://apt.postgresql.org/pub/repos/apt ${DISTRO}-pgdg main" \
+https://apt.postgresql.org/pub/repos/apt ${IMAGE_VERSION}-pgdg main" \
     > /etc/apt/sources.list.d/pgdg.list
 
 apt-get -qq update
