@@ -50,9 +50,11 @@ PG_VER_PROD=$(apt-cache policy postgresql-${POSTGRES_MAJOR_VERSION} \
 POSTGIS_MINOR_RELEASE=$(echo "$GIS_VER_PROD" | cut -d. -f2)
 
 
-BASE_IMAGE_SHA=$(curl -s \
+IMAGE_SHA=$(curl -s \
   "https://hub.docker.com/v2/repositories/library/debian/tags?page_size=100&name=${IMAGE_VERSION}-${IMAGE_VARIANT}" \
   | jq -r '.results[0].digest')
+
+BASE_IMAGE_SHA="debian@${IMAGE_SHA}"
 
 printf '%s\n' \
     "POSTGRES_MAJOR_VERSION=${POSTGRES_MAJOR_VERSION}" \
