@@ -32,7 +32,7 @@ jobs:
       POSTGIS_MINOR_RELEASE: ${{ steps.check_latest_postgis_version.outputs.POSTGIS_MINOR_RELEASE }}
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v4
@@ -169,7 +169,7 @@ jobs:
     steps:
       - name: Checkout code
         id: git_checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: develop
 
