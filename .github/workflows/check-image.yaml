@@ -84,7 +84,7 @@ jobs:
 
           
           
-          PUBLISHED_BASE_IMAGE_DIGEST="${{ steps.read_published_image_metadata.outputs.BASE_IMAGE_DIGEST_SHA }}"
+          PUBLISHED_BASE_IMAGE_DIGEST="${{ steps.read_published_image_metadata.outputs.LATEST_BASE_IMAGE_SHA }}"
           DOCKERHUB_BASE_IMAGE_DIGEST="${{ steps.check_latest_postgis_version.outputs.BASE_IMAGE_DIGEST_SHA }}"
           
 
