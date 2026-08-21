@@ -16,7 +16,13 @@ jobs:
     timeout-minutes: 240
     if: |
       github.actor != 'dependabot[bot]' &&
-      github.event.workflow_run.conclusion == 'success'
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success'
+        )
+      )
     strategy:
       matrix:
         postgisPatchMajorVersionBugs:
@@ -164,7 +170,13 @@ jobs:
       - deploy-production-images
     if: |
       github.actor != 'dependabot[bot]' &&
-      github.event.workflow_run.conclusion == 'success'
+      (
+        github.event_name == 'workflow_dispatch' ||
+        (
+          github.event_name == 'workflow_run' &&
+          github.event.workflow_run.conclusion == 'success'
+        )
+      )
 
     steps:
       - name: Checkout code
