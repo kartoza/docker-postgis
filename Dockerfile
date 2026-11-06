@@ -49,7 +49,7 @@ FROM postgis-base AS postgis-prod
 ARG IMAGE_VERSION
 ARG POSTGRES_MAJOR_VERSION=18
 ARG POSTGIS_MAJOR_VERSION=3
-ARG POSTGIS_MINOR_RELEASE=6
+ARG POSTGIS_MINOR_RELEASE=7
 # https://packagecloud.io/timescale/timescaledb
 ARG BUILD_TIMESCALE=false
 ARG BUILD_PG_DUCKDB=false
@@ -96,8 +96,7 @@ RUN if [ "$(echo "${BUILD_TIMESCALE}" | tr '[:upper:]' '[:lower:]')" = "true" ];
         apt-get -y --no-install-recommends install timescaledb-2-postgresql-${POSTGRES_MAJOR_VERSION} postgresql-client-${POSTGRES_MAJOR_VERSION} timescaledb-tools;\
     fi;
 
-RUN  echo $POSTGRES_MAJOR_VERSION >/tmp/pg_version.txt && echo $POSTGIS_MAJOR_VERSION >/tmp/pg_major_version.txt && \
-     echo $POSTGIS_MINOR_RELEASE >/tmp/pg_minor_version.txt
+
 ENV \
     PATH="$PATH:/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"
 
