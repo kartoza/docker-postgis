@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-POSTGRES_MAJOR_VERSION=$(cat /tmp/pg_version.txt)
-POSTGIS_MAJOR=$(cat /tmp/pg_major_version.txt)
-POSTGIS_MINOR_RELEASE=$(cat /tmp/pg_minor_version.txt)
+VERSION_INFO=$(cat /etc/kartoza/build_info.env)
+POSTGRES_MAJOR_VERSION=$(echo "$VERSION_INFO" | grep '^POSTGRES_MAJOR_VERSION=' | cut -d= -f2)
+GIS_VER_PROD=$(echo "$VERSION_INFO" | grep '^GIS_VER_PROD=' | cut -d= -f2)
+GIS_VER_SHORT=$(echo "$GIS_VER_PROD" | cut -d '.' -f 1,2)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
 # Commented for documentation. You can specify the location of
 # pg_wal directory/volume using the following environment variable:
@@ -16,7 +17,7 @@ DEFAULT_WAL_ARCHIVE="/opt/archivedir"
 RECOVERY_CONF="$ROOT_CONF/recovery.conf"
 POSTGRES="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/postgres"
 INITDB="/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin/initdb"
-SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${POSTGIS_MAJOR}.${POSTGIS_MINOR_RELEASE}/"
+SQLDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/contrib/postgis-${GIS_VER_SHORT}/"
 EXTDIR="/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}/extension/"
 SETVARS="POSTGIS_ENABLE_OUTDB_RASTERS=1 POSTGIS_GDAL_ENABLED_DRIVERS=ENABLE_ALL"
 LOCALONLY="-c listen_addresses='127.0.0.1'"
@@ -768,7 +769,7 @@ non_root_permission() {
     "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"  "/var/log/postgresql"  
     "/var/run/postgresql" ${DATADIR} "/scripts" "/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}"
     "${SSL_DIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "/etc/ssl"
-    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main" "/tmp/pg_*"
+    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
   )
 
   for path in "${services[@]}"; do
