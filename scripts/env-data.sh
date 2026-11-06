@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 VERSION_INFO=$(cat /etc/kartoza/build_info.env)
 POSTGRES_MAJOR_VERSION=$(echo "$VERSION_INFO" | grep '^POSTGRES_MAJOR_VERSION=' | cut -d= -f2)
-POSTGIS_MAJOR=$(echo "$VERSION_INFO" | grep '^POSTGIS_MAJOR_VERSION=' | cut -d= -f2)
-POSTGIS_MINOR_RELEASE=$(echo "$VERSION_INFO" | grep '^POSTGIS_MINOR_RELEASE=' | cut -d= -f2)
 GIS_VER_PROD=$(echo "$VERSION_INFO" | grep '^GIS_VER_PROD=' | cut -d= -f2)
 GIS_VER_SHORT=$(echo "$GIS_VER_PROD" | cut -d '.' -f 1,2)
 DEFAULT_DATADIR="/var/lib/postgresql/${POSTGRES_MAJOR_VERSION}/main"
@@ -771,7 +769,7 @@ non_root_permission() {
     "/usr/lib/postgresql/${POSTGRES_MAJOR_VERSION}/bin"  "/var/log/postgresql"  
     "/var/run/postgresql" ${DATADIR} "/scripts" "/usr/share/postgresql/${POSTGRES_MAJOR_VERSION}"
     "${SSL_DIR}" "${WAL_ARCHIVE}" "${SCRIPTS_LOCKFILE_DIR}" "${CONF_LOCKFILE_DIR}" "${EXTRA_CONF_DIR}" "/etc/ssl"
-    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main" "/tmp/pg_*"
+    "/etc/postgresql/${POSTGRES_MAJOR_VERSION}/main"
   )
 
   for path in "${services[@]}"; do
